@@ -947,10 +947,10 @@ User navigates to "Transactions" page
 27. Given any page is loaded, When HTTP response headers are inspected, Then HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and CSP headers are present.
 28. Given any server action receives input, When processed, Then it is validated against a Zod schema before reaching the database or Tempo RPC.
 
-### Observability
+### Observability (MVP+)
 
-29. Given an unhandled error occurs, When Sentry captures it, Then the report includes source-mapped stack trace, breadcrumbs, and release version.
-30. Given the user completes a key action (wallet created, payment sent, payment received, logout), When the action completes, Then a PostHog event is tracked.
+29. (MVP+) Given an unhandled error occurs, When Sentry captures it, Then the report includes source-mapped stack trace, breadcrumbs, and release version.
+30. (MVP+) Given the user completes a key action (wallet created, payment sent, payment received, logout), When the action completes, Then a PostHog event is tracked.
 
 ### Deployment
 

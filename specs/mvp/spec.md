@@ -229,7 +229,9 @@ interface Payment {
 }
 ```
 
-### 6.4. Fee Sponsorship Service
+### 6.4. Fee Sponsorship Service (MVP+)
+
+> **Not built in MVP.** On testnet, transaction fees are near-zero (<$0.001) and users can pay directly in stablecoins. Fee sponsorship is added in MVP+ for a truly gasless experience.
 
 **Responsibilities:** Subsidize user transaction fees to deliver a gasless experience.
 
@@ -238,7 +240,7 @@ interface Payment {
 - Rate limiting and budget controls prevent abuse
 
 ```typescript
-// Server-side fee sponsorship
+// Server-side fee sponsorship (add in MVP+)
 const receipt = await client.token.transferSync({
   amount: parseUnits('25', 6),
   to: recipientAddress,
@@ -352,9 +354,11 @@ const sendPaymentSchema = z.object({
 });
 ```
 
-### 6.8. Observability & Analytics
+### 6.8. Observability & Analytics (MVP+)
 
-#### 6.8.1. Error Tracking — Sentry
+> **Not built in MVP.** The app works without Sentry and PostHog. These are added in MVP+ once the core treasury flows are validated. Architecture is ready — just add the packages and env vars.
+
+#### 6.8.1. Error Tracking — Sentry (MVP+)
 
 [Sentry](https://sentry.io/) provides error and performance monitoring across the full Next.js stack (RSC, Server Actions, Edge, Client).
 
@@ -365,7 +369,7 @@ const sendPaymentSchema = z.object({
 - **Alerts** on new error types, error spikes, and performance regressions
 
 ```typescript
-// sentry.client.config.ts
+// sentry.client.config.ts (add in MVP+)
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
@@ -376,7 +380,7 @@ Sentry.init({
 });
 ```
 
-#### 6.8.2. Product Analytics & Feature Flags — PostHog
+#### 6.8.2. Product Analytics & Feature Flags — PostHog (MVP+)
 
 [PostHog](https://posthog.com/) provides product analytics, session replays, feature flags, and A/B testing in a single platform. Integrates with Vercel's Flags SDK.
 
@@ -387,7 +391,7 @@ Sentry.init({
 - **Self-hostable** for data sovereignty (important for a banking app)
 
 ```typescript
-// PostHog feature flag usage
+// PostHog feature flag usage (add in MVP+)
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 
 const isBatchPaymentsEnabled = useFeatureFlagEnabled('batch-payments');
@@ -399,14 +403,14 @@ The following accounts and keys must be set up **before development begins**. Al
 
 #### Accounts to Create
 
-| Service | What to Create | How | Provides |
-|---|---|---|---|
-| **GitHub** | Repository for `spire` | github.com/new | Source code hosting, CI triggers |
-| **Vercel** | Project linked to GitHub repo | vercel.com → Import Git Repository | Hosting, `*.vercel.app` domain, preview deployments, env var storage |
-| **Neon** | Postgres project (region: `aws-us-east-1`) | console.neon.tech → New Project | `DATABASE_URL` connection string |
-| **Sentry** | Next.js project | sentry.io → Create Project → Next.js | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` |
-| **PostHog** | Project (cloud or self-hosted) | app.posthog.com → New Project | `NEXT_PUBLIC_POSTHOG_KEY`, `POSTHOG_PERSONAL_API_KEY` |
-| **Tempo Testnet** | Fee payer account | Generate a new keypair, fund via faucet | `TEMPO_FEE_PAYER_KEY` (private key) |
+| Service | What to Create | How | Provides | MVP? |
+|---|---|---|---|---|
+| **GitHub** | Repository for `spire` | github.com/new | Source code hosting, CI triggers | **Yes** |
+| **Vercel** | Project linked to GitHub repo | vercel.com → Import Git Repository | Hosting, `*.vercel.app` domain, preview deployments, env var storage | **Yes** |
+| **Neon** | Postgres project (region: `aws-us-east-1`) | console.neon.tech → New Project | `DATABASE_URL` connection string | **Yes** |
+| **Sentry** | Next.js project | sentry.io → Create Project → Next.js | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` | MVP+ |
+| **PostHog** | Project (cloud or self-hosted) | app.posthog.com → New Project | `NEXT_PUBLIC_POSTHOG_KEY`, `POSTHOG_PERSONAL_API_KEY` | MVP+ |
+| **Tempo Testnet** | Fee payer account | Generate a new keypair, fund via faucet | `TEMPO_FEE_PAYER_KEY` (private key) | MVP+ (testnet txs near-free) |
 
 > **Tempo RPC and faucet are public** — no account or API key needed.
 > RPC: `https://rpc.moderato.tempo.xyz` · Faucet: `cast rpc tempo_fundAddress <ADDRESS>`
@@ -414,28 +418,31 @@ The following accounts and keys must be set up **before development begins**. Al
 #### Setup Order
 
 ```
-1. Create GitHub repo
-2. Create Vercel project (link to GitHub repo)
-3. Create Neon project → copy DATABASE_URL
-4. Create Sentry project → copy DSN + auth token
-5. Create PostHog project → copy keys
-6. Generate Tempo fee payer keypair → fund via faucet → copy private key
-7. Add all env vars to Vercel project settings
-8. First deploy → verify *.vercel.app is live
+MVP:
+1. Create GitHub repo                              ✅ done
+2. Create Vercel project (link to GitHub repo)      ✅ done
+3. Create Neon project → DATABASE_URL               ✅ done (via Vercel integration)
+4. First deploy → verify *.vercel.app is live       ✅ done
+
+MVP+ (add when ready):
+5. Create Sentry project → copy DSN + auth token
+6. Create PostHog project → copy keys
+7. Generate Tempo fee payer keypair → fund via faucet → copy private key
+8. Add MVP+ env vars to Vercel project settings
 ```
 
 #### Environment Variables
 
 Managed through Vercel Environment Variables with per-environment scoping:
 
-| Variable | Scope | Description | Source |
-|---|---|---|---|
-| `DATABASE_URL` | All | Neon Postgres connection string | Neon console → Connection Details |
-| `TEMPO_FEE_PAYER_KEY` | Production, Preview | Fee payer account private key | Generated keypair |
-| `NEXT_PUBLIC_SENTRY_DSN` | All | Sentry DSN (public, client-safe) | Sentry → Project Settings → Client Keys |
-| `SENTRY_AUTH_TOKEN` | CI only | Sentry source map upload | Sentry → Settings → Auth Tokens |
-| `NEXT_PUBLIC_POSTHOG_KEY` | All | PostHog project API key (public) | PostHog → Project Settings |
-| `POSTHOG_PERSONAL_API_KEY` | CI only | PostHog feature flag management | PostHog → Personal API Keys |
+| Variable | Scope | Description | Source | MVP? |
+|---|---|---|---|---|
+| `DATABASE_URL` | All | Neon Postgres connection string | Neon console → Connection Details | **Yes** |
+| `TEMPO_FEE_PAYER_KEY` | Production, Preview | Fee payer account private key | Generated keypair | MVP+ (testnet txs are near-free without sponsorship) |
+| `NEXT_PUBLIC_SENTRY_DSN` | All | Sentry DSN (public, client-safe) | Sentry → Project Settings → Client Keys | MVP+ |
+| `SENTRY_AUTH_TOKEN` | CI only | Sentry source map upload | Sentry → Settings → Auth Tokens | MVP+ |
+| `NEXT_PUBLIC_POSTHOG_KEY` | All | PostHog project API key (public) | PostHog → Project Settings | MVP+ |
+| `POSTHOG_PERSONAL_API_KEY` | CI only | PostHog feature flag management | PostHog → Personal API Keys | MVP+ |
 
 **Rules:**
 - Never commit `.env` files — `.env.local` is in `.gitignore`
@@ -863,8 +870,8 @@ Enforce measurable targets to prevent regression:
 | ORM                | [Drizzle ORM](https://orm.drizzle.team/) — lightweight, type-safe, SQL-like, edge-compatible |
 | Migrations         | [Drizzle Kit](https://orm.drizzle.team/docs/kit-overview) — schema diffing, SQL generation, visual studio |
 | Validation         | Zod                                                               |
-| Error Tracking     | [Sentry](https://sentry.io/) — errors, performance tracing, source maps, release tracking |
-| Analytics / Flags  | [PostHog](https://posthog.com/) — product analytics, session replays, feature flags, A/B tests |
+| Error Tracking     | [Sentry](https://sentry.io/) — errors, performance tracing, source maps, release tracking **(MVP+)** |
+| Analytics / Flags  | [PostHog](https://posthog.com/) — product analytics, session replays, feature flags, A/B tests **(MVP+)** |
 | Hosting            | [Vercel](https://vercel.com/) — edge network, serverless functions, preview deployments |
 | Secrets            | Vercel Environment Variables (encrypted, per-environment scoping) |
 | E2E Testing        | [Playwright](https://playwright.dev/) — cross-browser, parallel execution, built-in assertions |
@@ -980,7 +987,6 @@ Pre-commit hooks (Husky + lint-staged) run `lint` and `format` on staged files t
 - [ ] Linter passes (`bun run lint`)
 - [ ] Formatting passes (`bun run format:check`)
 - [ ] Database migrations are clean (`bun run db:generate` produces no diff)
-- [ ] Sentry reports no unhandled errors in preview deployment
 - [ ] Spec updated to reflect implementation
 
 ### Feature-Specific
@@ -1006,8 +1012,8 @@ Pre-commit hooks (Husky + lint-staged) run `lint` and `format` on staged files t
 - [ ] "View all →" link on dashboard navigates to full transaction history
 - [ ] App is usable on flaky connections (cached balances + transaction history render offline)
 - [ ] Security headers present on all responses (HSTS, X-Content-Type-Options, X-Frame-Options, CSP)
-- [ ] Sentry captures errors with source maps and breadcrumbs in preview + production
-- [ ] PostHog tracks core events (treasury created, payment sent, payment received, logout)
+- [ ] (MVP+) Sentry captures errors with source maps and breadcrumbs in preview + production
+- [ ] (MVP+) PostHog tracks core events (treasury created, payment sent, payment received, logout)
 - [ ] PPR enabled: dashboard serves static shell from CDN, dynamic content streams via Suspense
 - [ ] React Compiler enabled (`reactCompiler: true`) — no manual useMemo/useCallback needed
 - [ ] View Transitions enabled — route changes animate smoothly (Chromium), degrade gracefully (Firefox/Safari)
