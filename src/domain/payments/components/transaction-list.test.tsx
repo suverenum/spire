@@ -1,5 +1,11 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  cleanup,
+  fireEvent,
+  act,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TransactionList } from "./transaction-list";
 import type { Payment } from "@/lib/tempo/types";
@@ -246,6 +252,72 @@ describe("TransactionList", () => {
       const receivedTab = screen.getByRole("tab", { name: /Received/ });
       fireEvent.click(receivedTab);
       expect(screen.getByText("No transactions yet")).toBeInTheDocument();
+    });
+  });
+
+  describe("infinite scroll", () => {
+    let intersectionCallbacks: Array<
+      (entries: { isIntersecting: boolean }[]) => void
+    >;
+
+    beforeEach(() => {
+      intersectionCallbacks = [];
+      vi.stubGlobal(
+        "IntersectionObserver",
+        class {
+          constructor(
+            callback: (entries: { isIntersecting: boolean }[]) => void,
+          ) {
+            intersectionCallbacks.push(callback);
+          }
+          observe() {}
+          disconnect() {}
+        },
+      );
+
+      // Generate 25 transactions (more than PAGE_SIZE of 20)
+      const manyTransactions: Payment[] = Array.from(
+        { length: 25 },
+        (_, i) => ({
+          id: `tx-${i}`,
+          txHash: `0x${"0".repeat(63)}${i}` as `0x${string}`,
+          from: addr,
+          to: otherAddr,
+          amount: BigInt((i + 1) * 1000000),
+          token: "AlphaUSD",
+          status: "confirmed" as const,
+          timestamp: new Date(2026, 0, 15, 12, 0, 0, 0),
+        }),
+      );
+
+      mockUseTransactions.mockReturnValue({
+        data: manyTransactions,
+        isLoading: false,
+      });
+    });
+
+    it("initially shows PAGE_SIZE items and loads more on intersection", () => {
+      renderWithQuery(<TransactionList address={addr} />);
+
+      // Should show 25 total but only render first 20
+      expect(screen.getByText("All (25)")).toBeInTheDocument();
+      const links = screen
+        .getAllByRole("link")
+        .filter((l) => l.getAttribute("href")?.startsWith("/transactions/"));
+      expect(links.length).toBe(20);
+
+      // Trigger the last registered intersection observer callback
+      const lastCallback =
+        intersectionCallbacks[intersectionCallbacks.length - 1];
+      act(() => {
+        lastCallback([{ isIntersecting: true }]);
+      });
+
+      // Now should show all 25
+      const updatedLinks = screen
+        .getAllByRole("link")
+        .filter((l) => l.getAttribute("href")?.startsWith("/transactions/"));
+      expect(updatedLinks.length).toBe(25);
     });
   });
 

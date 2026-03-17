@@ -221,6 +221,35 @@ describe("SessionGuard", () => {
     expect(clearTimeoutSpy).toHaveBeenCalled();
   });
 
+  it("handles touchSessionAction failure gracefully", async () => {
+    vi.useFakeTimers();
+    mockTouchSessionAction.mockRejectedValueOnce(new Error("Network error"));
+    const now = Date.now();
+
+    render(
+      <SessionGuard authenticatedAt={now}>
+        <p>Content</p>
+      </SessionGuard>,
+    );
+
+    // Advance past SESSION_REFRESH_MS (5 min) and trigger activity
+    await act(async () => {
+      vi.advanceTimersByTime(5 * 60 * 1000 + 1000);
+    });
+
+    act(() => {
+      fireEvent.mouseMove(window);
+    });
+
+    // Flush the rejected promise
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+
+    // Should not crash — component still renders
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  });
+
   it("activity resets the inactivity timer preventing expiration", () => {
     vi.useFakeTimers();
     const now = Date.now();

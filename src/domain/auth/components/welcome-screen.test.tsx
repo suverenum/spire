@@ -134,6 +134,20 @@ describe("WelcomeScreen", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Passkey denied");
   });
 
+  it("shows error when no account returned from passkey", async () => {
+    mockConnectAsync.mockResolvedValue({ accounts: [] });
+    render(<WelcomeScreen />, { wrapper: Wrapper });
+    const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
+
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "No account returned from passkey",
+    );
+  });
+
   it("clears previous error on new unlock attempt", async () => {
     mockLoginAction
       .mockResolvedValueOnce({ error: "First error" })

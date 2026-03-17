@@ -63,6 +63,44 @@ describe("Sheet", () => {
     fireEvent.click(overlay);
     expect(onClose).toHaveBeenCalledOnce();
   });
+
+  it("calls onClose when Escape key is pressed", () => {
+    const onClose = vi.fn();
+    render(
+      <Sheet open={true} onClose={onClose} title="Test">
+        <p>Content</p>
+      </Sheet>,
+    );
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("restores body overflow when closed after being open", () => {
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <Sheet open={true} onClose={onClose} title="Test">
+        <p>Content</p>
+      </Sheet>,
+    );
+    expect(document.body.style.overflow).toBe("hidden");
+
+    rerender(
+      <Sheet open={false} onClose={onClose} title="Test">
+        <p>Content</p>
+      </Sheet>,
+    );
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("renders without title", () => {
+    render(
+      <Sheet open={true} onClose={() => {}}>
+        <p>No title content</p>
+      </Sheet>,
+    );
+    expect(screen.getByText("No title content")).toBeInTheDocument();
+    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+  });
 });
 
 import { vi } from "vitest";

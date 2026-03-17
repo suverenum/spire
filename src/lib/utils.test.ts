@@ -58,6 +58,14 @@ describe("formatBalance", () => {
   it("formats sub-cent balance", () => {
     expect(formatBalance(5000n, 6)).toBe("0.005");
   });
+
+  it("formats negative balance", () => {
+    expect(formatBalance(-1500000n, 6)).toBe("-1.50");
+  });
+
+  it("formats negative sub-cent balance with full precision", () => {
+    expect(formatBalance(-1234n, 6)).toBe("-0.001234");
+  });
 });
 
 describe("formatDate", () => {

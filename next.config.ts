@@ -4,9 +4,9 @@ import withSerwist from "@serwist/next";
 const nextConfig = {
   reactCompiler: true,
   cacheComponents: true,
-  viewTransition: true,
   turbopack: {},
   experimental: {
+    viewTransition: true,
     optimizePackageImports: ["lucide-react", "@tanstack/react-query", "viem"],
   },
   async headers() {
@@ -57,9 +57,5 @@ export default withSentryConfig(withSW(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
-  disableLogger: true,
-  autoInstrumentServerFunctions: true,
-  autoInstrumentMiddleware: true,
-  autoInstrumentAppDirectory: true,
   tunnelRoute: "/monitoring",
 });

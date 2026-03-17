@@ -1,6 +1,10 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
-import { BalanceSkeleton, TransactionSkeleton } from "./skeletons";
+import {
+  BalanceSkeleton,
+  TransactionSkeleton,
+  DashboardSkeleton,
+} from "./skeletons";
 
 afterEach(cleanup);
 
@@ -17,5 +21,14 @@ describe("TransactionSkeleton", () => {
     const { container } = render(<TransactionSkeleton />);
     const skeletons = container.querySelectorAll(".animate-pulse");
     expect(skeletons.length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("DashboardSkeleton", () => {
+  it("renders header and content skeletons", () => {
+    const { container } = render(<DashboardSkeleton />);
+    const skeletons = container.querySelectorAll(".animate-pulse");
+    // Header (2) + BalanceSkeleton (8) + action buttons (2) + TransactionSkeleton (15)
+    expect(skeletons.length).toBeGreaterThanOrEqual(10);
   });
 });

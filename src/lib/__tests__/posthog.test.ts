@@ -47,5 +47,17 @@ describe("posthog", () => {
       initPostHog();
       expect(posthog.init).not.toHaveBeenCalled();
     });
+
+    it("initializes posthog when key is set", () => {
+      vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test_key");
+      initPostHog();
+      expect(posthog.init).toHaveBeenCalledWith("phc_test_key", {
+        api_host: "https://us.i.posthog.com",
+        person_profiles: "identified_only",
+        capture_pageview: true,
+        capture_pageleave: true,
+        autocapture: false,
+      });
+    });
   });
 });

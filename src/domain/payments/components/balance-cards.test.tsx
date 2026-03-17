@@ -136,4 +136,16 @@ describe("BalanceCards", () => {
       ),
     ).not.toBeInTheDocument();
   });
+
+  it("shows error message when fetch fails and no cached data", () => {
+    mockUseBalances.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    });
+    renderWithQuery(<BalanceCards address={addr} />);
+    expect(
+      screen.getByText("Unable to load balances. Please try again later."),
+    ).toBeInTheDocument();
+  });
 });

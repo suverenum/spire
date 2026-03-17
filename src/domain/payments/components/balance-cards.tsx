@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { formatBalance } from "@/lib/utils";
 import { useBalances } from "../hooks/use-balances";
@@ -11,8 +12,10 @@ interface BalanceCardsProps {
 
 export function BalanceCards({ address }: BalanceCardsProps) {
   const { data, isLoading, isError } = useBalances(address);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  if (isLoading && !data) {
+  if (!mounted || (isLoading && !data)) {
     return <BalanceSkeleton />;
   }
 

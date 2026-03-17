@@ -5,9 +5,14 @@ import { SendPaymentForm } from "./send-payment-form";
 
 const mockMutate = vi.fn();
 const mockUseSendPayment = vi.fn();
+const mockUseBalances = vi.fn();
 
 vi.mock("../hooks/use-send-payment", () => ({
   useSendPayment: (...args: unknown[]) => mockUseSendPayment(...args),
+}));
+
+vi.mock("../hooks/use-balances", () => ({
+  useBalances: (...args: unknown[]) => mockUseBalances(...args),
 }));
 
 afterEach(() => {
@@ -35,6 +40,7 @@ describe("SendPaymentForm", () => {
       mutate: mockMutate,
       isPending: false,
     });
+    mockUseBalances.mockReturnValue({ data: undefined });
   });
 
   it("renders nothing when closed", () => {
@@ -224,6 +230,70 @@ describe("SendPaymentForm", () => {
       expect(
         screen.queryByText("Invalid address format (0x...)"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("balance validation", () => {
+    it("shows error when amount exceeds available balance", () => {
+      mockUseBalances.mockReturnValue({
+        data: {
+          balances: [
+            {
+              token: "AlphaUSD",
+              tokenAddress: "0x20c0000000000000000000000000000000000001",
+              balance: 5000000n, // 5.00
+              decimals: 6,
+            },
+          ],
+          partial: false,
+        },
+      });
+
+      renderWithQuery(
+        <SendPaymentForm open={true} onClose={() => {}} fromAddress={addr} />,
+      );
+      const toInput = screen.getByLabelText("Recipient Address");
+      const amountInput = screen.getByLabelText("Amount");
+
+      fireEvent.change(toInput, { target: { value: validRecipient } });
+      fireEvent.change(amountInput, { target: { value: "10" } });
+      fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
+
+      expect(
+        screen.getByText("Amount exceeds available balance"),
+      ).toBeInTheDocument();
+      expect(mockMutate).not.toHaveBeenCalled();
+    });
+
+    it("allows amount within available balance", () => {
+      mockUseBalances.mockReturnValue({
+        data: {
+          balances: [
+            {
+              token: "AlphaUSD",
+              tokenAddress: "0x20c0000000000000000000000000000000000001",
+              balance: 50000000n, // 50.00
+              decimals: 6,
+            },
+          ],
+          partial: false,
+        },
+      });
+
+      renderWithQuery(
+        <SendPaymentForm open={true} onClose={() => {}} fromAddress={addr} />,
+      );
+      const toInput = screen.getByLabelText("Recipient Address");
+      const amountInput = screen.getByLabelText("Amount");
+
+      fireEvent.change(toInput, { target: { value: validRecipient } });
+      fireEvent.change(amountInput, { target: { value: "10" } });
+      fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
+
+      expect(
+        screen.queryByText("Amount exceeds available balance"),
+      ).not.toBeInTheDocument();
+      expect(mockMutate).toHaveBeenCalled();
     });
   });
 
