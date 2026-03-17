@@ -30,6 +30,17 @@ function getPersister() {
   return browserPersister;
 }
 
+export async function clearPersistedCache() {
+  try {
+    const persister = getPersister();
+    if (persister) {
+      await persister.removeClient();
+    }
+  } catch {
+    // IndexedDB may not be available in all environments
+  }
+}
+
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(makeQueryClient);
   const persister = getPersister();

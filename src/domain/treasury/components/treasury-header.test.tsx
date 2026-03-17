@@ -35,6 +35,10 @@ vi.mock("@/components/ui/toast", () => ({
   toast: vi.fn(),
 }));
 
+vi.mock("@/components/providers", () => ({
+  clearPersistedCache: vi.fn().mockResolvedValue(undefined),
+}));
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();

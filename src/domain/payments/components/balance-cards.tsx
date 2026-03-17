@@ -17,16 +17,15 @@ export function BalanceCards({ address }: BalanceCardsProps) {
   }
 
   const items = balances ?? [];
-  const totalUsd = items.reduce((sum, b) => {
-    const val = Number(b.balance) / 10 ** b.decimals;
-    return sum + val;
-  }, 0);
+  const totalBalance = items.reduce((sum, b) => sum + b.balance, 0n);
 
   return (
     <div>
       <Card className="mb-4">
         <p className="text-sm text-gray-500">Total Balance</p>
-        <p className="text-3xl font-semibold">${totalUsd.toFixed(2)}</p>
+        <p className="text-3xl font-semibold">
+          ${formatBalance(totalBalance, 6)}
+        </p>
       </Card>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {items.map((b) => (

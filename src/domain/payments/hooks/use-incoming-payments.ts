@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CACHE_KEYS } from "@/lib/constants";
+import { CACHE_KEYS, SUPPORTED_TOKENS } from "@/lib/constants";
 import { toast } from "@/components/ui/toast";
 import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
+
+// keccak256("Transfer(address,address,uint256)")
+const TRANSFER_TOPIC =
+  "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
 const POLLING_INTERVAL = 15_000;
 
@@ -81,8 +85,9 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
             params: [
               "logs",
               {
+                address: Object.values(SUPPORTED_TOKENS).map((t) => t.address),
                 topics: [
-                  null,
+                  TRANSFER_TOPIC,
                   null,
                   `0x000000000000000000000000${address.slice(2)}`,
                 ],

@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_MS } from "./constants";
 
 export interface SessionData {
@@ -10,7 +10,14 @@ export interface SessionData {
 }
 
 function getSessionSecret(): string {
-  return process.env.SESSION_SECRET ?? "dev-secret-change-in-production";
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SESSION_SECRET must be set in production");
+    }
+    return "dev-secret-change-in-production";
+  }
+  return secret;
 }
 
 function sign(payload: string): string {
@@ -31,7 +38,13 @@ function decode(value: string): SessionData | null {
     const payload = value.slice(0, dotIndex);
     const signature = value.slice(dotIndex + 1);
 
-    if (sign(payload) !== signature) return null;
+    const expected = sign(payload);
+    if (expected.length !== signature.length) return null;
+    const isValid = timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(signature),
+    );
+    if (!isValid) return null;
 
     return JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
   } catch {

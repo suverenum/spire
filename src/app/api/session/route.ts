@@ -6,5 +6,9 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
-  return NextResponse.json({ authenticated: true, session });
+  return NextResponse.json({
+    authenticated: true,
+    tempoAddress: session.tempoAddress,
+    treasuryName: session.treasuryName,
+  });
 }

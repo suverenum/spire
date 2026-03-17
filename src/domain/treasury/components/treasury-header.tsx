@@ -8,6 +8,7 @@ import { truncateAddress } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { Copy, LogOut, Settings } from "lucide-react";
 import { logoutAction } from "@/domain/auth/actions/auth-actions";
+import { clearPersistedCache } from "@/components/providers";
 import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
 interface TreasuryHeaderProps {
@@ -33,6 +34,7 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
     setIsLoggingOut(true);
     trackEvent(AnalyticsEvents.LOGOUT);
     queryClient.clear();
+    await clearPersistedCache();
     try {
       await logoutAction();
     } catch {

@@ -15,6 +15,12 @@ interface SendPaymentParams {
   fromAddress: `0x${string}`;
 }
 
+function parseTokenAmount(amount: string, decimals: number): bigint {
+  const [whole = "0", frac = ""] = amount.split(".");
+  const paddedFrac = frac.padEnd(decimals, "0").slice(0, decimals);
+  return BigInt(whole + paddedFrac);
+}
+
 export function useSendPayment(fromAddress: `0x${string}` | undefined) {
   const queryClient = useQueryClient();
 
@@ -45,7 +51,7 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
         txHash: `0x${"0".repeat(64)}` as `0x${string}`,
         from: addr,
         to: params.to,
-        amount: BigInt(Math.floor(parseFloat(params.amount) * 1e6)),
+        amount: parseTokenAmount(params.amount, 6),
         token: params.token,
         memo: params.memo,
         status: "pending",
