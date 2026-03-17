@@ -27,12 +27,16 @@ export default function CreateTreasuryPage() {
           setError("Passkey authentication is not available in this browser");
           return;
         }
-        const result = await connectAsync({ connector: connectors[0] });
-        const address = result.accounts[0];
-        if (!address) {
+        const result = await connectAsync({
+          connector: connectors[0],
+          capabilities: { type: "sign-up" },
+        } as Parameters<typeof connectAsync>[0]);
+        const account = result.accounts[0];
+        if (!account) {
           setError("No account returned from passkey");
           return;
         }
+        const address = typeof account === "string" ? account : account.address;
 
         // Sign a server-generated challenge to prove key ownership
         const challenge = await getCreateChallengeAction();
