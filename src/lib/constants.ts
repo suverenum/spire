@@ -1,4 +1,5 @@
 export const TEMPO_RPC_URL = "https://rpc.moderato.tempo.xyz";
+export const TEMPO_WS_URL = TEMPO_RPC_URL.replace(/^https/, "wss");
 export const TEMPO_CHAIN_ID = 42431;
 export const TEMPO_EXPLORER_URL = "https://explore.tempo.xyz";
 

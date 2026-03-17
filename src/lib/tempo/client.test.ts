@@ -40,10 +40,11 @@ describe("tempo client", () => {
 
   it("fetches balances for an address", async () => {
     const { fetchBalances } = await import("./client");
-    const balances = await fetchBalances(addr);
-    expect(Array.isArray(balances)).toBe(true);
-    expect(balances.length).toBe(4); // 4 supported tokens
-    for (const b of balances) {
+    const result = await fetchBalances(addr);
+    expect(result.partial).toBe(false);
+    expect(Array.isArray(result.balances)).toBe(true);
+    expect(result.balances.length).toBe(4); // 4 supported tokens
+    for (const b of result.balances) {
       expect(b).toHaveProperty("token");
       expect(b).toHaveProperty("tokenAddress");
       expect(b).toHaveProperty("balance");
@@ -65,46 +66,44 @@ describe("tempo client", () => {
   });
 
   describe("fetchBalances error handling", () => {
-    it("returns zero balance when readContract throws for a token", async () => {
+    it("returns successful balances when some readContract calls fail", async () => {
       // Make readContract fail for the first call, succeed for the rest
       mockReadContract
         .mockRejectedValueOnce(new Error("Contract read failed"))
         .mockResolvedValue(5000000n);
 
       const { fetchBalances } = await import("./client");
-      const balances = await fetchBalances(addr);
+      const result = await fetchBalances(addr);
 
-      expect(balances.length).toBe(4);
-      // First token should have balance 0n due to error
-      expect(balances[0].balance).toBe(0n);
-      // Other tokens should have real balances
-      expect(balances[1].balance).toBe(5000000n);
+      // Only successful tokens are returned (3 out of 4)
+      expect(result.balances.length).toBe(3);
+      expect(result.partial).toBe(true);
+      for (const b of result.balances) {
+        expect(b.balance).toBe(5000000n);
+      }
     });
 
-    it("returns zero balance for all tokens when all readContract calls fail", async () => {
+    it("throws when all readContract calls fail", async () => {
       mockReadContract.mockRejectedValue(new Error("RPC unavailable"));
 
       const { fetchBalances } = await import("./client");
-      const balances = await fetchBalances(addr);
 
-      expect(balances.length).toBe(4);
-      for (const b of balances) {
-        expect(b.balance).toBe(0n);
-      }
+      await expect(fetchBalances(addr)).rejects.toThrow(
+        "Failed to fetch balances: all RPC calls failed",
+      );
     });
   });
 
   describe("fetchTransactions error handling", () => {
-    it("skips token when getContractEvents throws", async () => {
+    it("throws when all getContractEvents calls fail", async () => {
       // All token event fetches fail
       mockGetContractEvents.mockRejectedValue(new Error("Contract not found"));
 
       const { fetchTransactions } = await import("./client");
-      const txs = await fetchTransactions(addr);
 
-      // Should return empty array, not throw
-      expect(Array.isArray(txs)).toBe(true);
-      expect(txs.length).toBe(0);
+      await expect(fetchTransactions(addr)).rejects.toThrow(
+        "Failed to fetch transactions: all RPC calls failed",
+      );
     });
 
     it("returns transactions from working tokens even when some fail", async () => {

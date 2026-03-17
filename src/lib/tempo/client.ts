@@ -1,7 +1,7 @@
 import { createPublicClient, http, type PublicClient } from "viem";
 import { TEMPO_RPC_URL, TEMPO_CHAIN_ID, SUPPORTED_TOKENS } from "../constants";
 import { tip20Abi } from "./abi";
-import type { AccountBalance, Payment } from "./types";
+import type { AccountBalance, BalancesResult, Payment } from "./types";
 
 const tempoChain = {
   id: TEMPO_CHAIN_ID,
@@ -29,37 +29,39 @@ export function getTempoClient(): PublicClient {
 
 export async function fetchBalances(
   address: `0x${string}`,
-): Promise<AccountBalance[]> {
+): Promise<BalancesResult> {
   const client = getTempoClient();
   const tokens = Object.values(SUPPORTED_TOKENS);
 
-  const balances = await Promise.all(
+  const results = await Promise.allSettled(
     tokens.map(async (token) => {
-      try {
-        const balance = (await client.readContract({
-          address: token.address,
-          abi: tip20Abi,
-          functionName: "balanceOf",
-          args: [address],
-        })) as bigint;
-        return {
-          token: token.name,
-          tokenAddress: token.address,
-          balance,
-          decimals: token.decimals,
-        };
-      } catch {
-        return {
-          token: token.name,
-          tokenAddress: token.address,
-          balance: 0n,
-          decimals: token.decimals,
-        };
-      }
+      const balance = (await client.readContract({
+        address: token.address,
+        abi: tip20Abi,
+        functionName: "balanceOf",
+        args: [address],
+      })) as bigint;
+      return {
+        token: token.name,
+        tokenAddress: token.address,
+        balance,
+        decimals: token.decimals,
+      };
     }),
   );
 
-  return balances;
+  const failures = results.filter((r) => r.status === "rejected");
+  if (failures.length === results.length) {
+    throw new Error("Failed to fetch balances: all RPC calls failed");
+  }
+
+  const balances: AccountBalance[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled") {
+      balances.push(r.value);
+    }
+  }
+  return { balances, partial: failures.length > 0 };
 }
 
 export async function fetchTransactions(
@@ -71,6 +73,7 @@ export async function fetchTransactions(
   const allPayments: Payment[] = [];
   const blockTimestamps = new Map<bigint, Date>();
 
+  let failures = 0;
   for (const token of tokens) {
     try {
       const logs = await client.getContractEvents({
@@ -127,9 +130,14 @@ export async function fetchTransactions(
           });
         }
       }
-    } catch {
-      // Token contract may not exist on testnet yet
+    } catch (err) {
+      failures++;
+      console.error(`Failed to fetch ${token.name} transactions:`, err);
     }
+  }
+
+  if (failures === tokens.length) {
+    throw new Error("Failed to fetch transactions: all RPC calls failed");
   }
 
   return allPayments.sort(

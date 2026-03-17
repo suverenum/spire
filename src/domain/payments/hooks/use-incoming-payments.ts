@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CACHE_KEYS, SUPPORTED_TOKENS } from "@/lib/constants";
+import { CACHE_KEYS, SUPPORTED_TOKENS, TEMPO_WS_URL } from "@/lib/constants";
 import { toast } from "@/components/ui/toast";
 import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
@@ -70,8 +70,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
     };
 
     try {
-      const wsUrl = "wss://rpc.moderato.tempo.xyz";
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(TEMPO_WS_URL);
       wsRef.current = ws;
 
       ws.onopen = () => {

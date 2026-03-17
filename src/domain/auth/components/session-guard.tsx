@@ -7,6 +7,7 @@ import {
   logoutAction,
   touchSessionAction,
 } from "@/domain/auth/actions/auth-actions";
+import { clearPersistedCache } from "@/components/providers";
 
 const SESSION_REFRESH_MS = 5 * 60 * 1000; // Refresh session every 5 min of activity
 
@@ -47,8 +48,13 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
       const timeSinceActivity = now - lastActivityRef.current;
 
       if (timeSinceActivity > SESSION_MAX_AGE_MS) {
-        logoutAction().catch(() => {
-          // redirect throws in server actions
+        clearPersistedCache().finally(() => {
+          logoutAction().catch(() => {
+            // logoutAction calls redirect("/") which throws in server actions.
+            // If it fails for a different reason, force a client-side redirect
+            // so the user never stays on a protected page after session expiry.
+            router.replace("/");
+          });
         });
         return;
       }

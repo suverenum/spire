@@ -32,7 +32,9 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 
         const tokenName =
           Object.keys(SUPPORTED_TOKENS).find(
-            (k) => SUPPORTED_TOKENS[k as TokenName].address === vars.token,
+            (k) =>
+              SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() ===
+              vars.token.toLowerCase(),
           ) ?? "Unknown";
 
         const optimisticPayment: Payment = {
@@ -65,7 +67,9 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
       onSuccess: (_data, vars) => {
         const tokenName =
           Object.keys(SUPPORTED_TOKENS).find(
-            (k) => SUPPORTED_TOKENS[k as TokenName].address === vars.token,
+            (k) =>
+              SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() ===
+              vars.token.toLowerCase(),
           ) ?? "";
         toast("Payment sent successfully!", "success");
         trackEvent(AnalyticsEvents.PAYMENT_SENT, {

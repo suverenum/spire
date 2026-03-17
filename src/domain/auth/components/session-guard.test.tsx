@@ -9,10 +9,12 @@ import {
 import { SessionGuard } from "./session-guard";
 
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
+    replace: mockReplace,
     prefetch: vi.fn(),
   }),
 }));
@@ -25,6 +27,12 @@ vi.mock("@/domain/auth/actions/auth-actions", () => ({
   touchSessionAction: (...args: unknown[]) => mockTouchSessionAction(...args),
 }));
 
+const mockClearPersistedCache = vi.fn().mockResolvedValue(undefined);
+
+vi.mock("@/components/providers", () => ({
+  clearPersistedCache: (...args: unknown[]) => mockClearPersistedCache(...args),
+}));
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -34,8 +42,11 @@ afterEach(() => {
 describe("SessionGuard", () => {
   beforeEach(() => {
     mockPush.mockReset();
+    mockReplace.mockReset();
     mockLogoutAction.mockReset();
     mockLogoutAction.mockRejectedValue(new Error("NEXT_REDIRECT"));
+    mockClearPersistedCache.mockReset();
+    mockClearPersistedCache.mockResolvedValue(undefined);
   });
 
   it("renders children", () => {
@@ -56,7 +67,7 @@ describe("SessionGuard", () => {
     expect(screen.getByText("Still valid")).toBeInTheDocument();
   });
 
-  it("logs out when session has already expired on mount", () => {
+  it("logs out when session has already expired on mount", async () => {
     vi.useFakeTimers();
     // authenticatedAt from 20 minutes ago (max is 15 min)
     const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
@@ -67,11 +78,17 @@ describe("SessionGuard", () => {
       </SessionGuard>,
     );
 
+    // Flush the clearPersistedCache promise chain
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+
     // Should logout immediately on mount because the session already expired
+    expect(mockClearPersistedCache).toHaveBeenCalled();
     expect(mockLogoutAction).toHaveBeenCalled();
   });
 
-  it("redirects when inactivity exceeds SESSION_MAX_AGE_MS", () => {
+  it("redirects when inactivity exceeds SESSION_MAX_AGE_MS", async () => {
     vi.useFakeTimers();
     const now = Date.now();
 
@@ -82,10 +99,12 @@ describe("SessionGuard", () => {
     );
 
     // Advance time by 16 minutes without any activity
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(16 * 60 * 1000);
+      await vi.runAllTimersAsync();
     });
 
+    expect(mockClearPersistedCache).toHaveBeenCalled();
     expect(mockLogoutAction).toHaveBeenCalled();
   });
 
