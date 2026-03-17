@@ -70,15 +70,35 @@ export async function fetchTransactions(
   const client = getTempoClient();
   const tokens = Object.values(SUPPORTED_TOKENS);
 
-  // Fetch events for all tokens in parallel
+  // Fetch sent and received events per token using indexed topic filters
+  // so the RPC node filters by address instead of returning all chain events
   const tokenResults = await Promise.allSettled(
     tokens.map(async (token) => {
-      const logs = await client.getContractEvents({
-        address: token.address,
-        abi: tip20Abi,
-        eventName: "Transfer",
-        fromBlock: "earliest",
-        toBlock: "latest",
+      const [sentLogs, receivedLogs] = await Promise.all([
+        client.getContractEvents({
+          address: token.address,
+          abi: tip20Abi,
+          eventName: "Transfer",
+          args: { from: address },
+          fromBlock: "earliest",
+          toBlock: "latest",
+        }),
+        client.getContractEvents({
+          address: token.address,
+          abi: tip20Abi,
+          eventName: "Transfer",
+          args: { to: address },
+          fromBlock: "earliest",
+          toBlock: "latest",
+        }),
+      ]);
+      // Deduplicate self-transfers that appear in both queries
+      const seen = new Set<string>();
+      const logs = [...sentLogs, ...receivedLogs].filter((log) => {
+        const key = `${log.transactionHash}-${log.logIndex ?? 0}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
       return { token, logs };
     }),

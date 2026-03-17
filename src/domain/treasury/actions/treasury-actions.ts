@@ -110,21 +110,19 @@ export async function createTreasuryAction(
     };
   }
 
-  // Auto-fund wallet via Tempo testnet faucet (best-effort, non-blocking)
-  try {
-    await fetch(TEMPO_RPC_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "tempo_fundAddress",
-        params: [row.tempo_address],
-        id: 1,
-      }),
-    });
-  } catch {
+  // Auto-fund wallet via Tempo testnet faucet (fire-and-forget, non-blocking)
+  fetch(TEMPO_RPC_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      method: "tempo_fundAddress",
+      params: [row.tempo_address],
+      id: 1,
+    }),
+  }).catch(() => {
     // Faucet failure is non-fatal on testnet
-  }
+  });
 
   await createSession({
     treasuryId: row.id,

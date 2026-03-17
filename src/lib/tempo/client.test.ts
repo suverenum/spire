@@ -107,9 +107,11 @@ describe("tempo client", () => {
     });
 
     it("returns transactions from working tokens even when some fail", async () => {
-      // First token fails, second returns events
+      // First token fails (both sent+received queries run, but Promise.all rejects),
+      // second token returns events from its sent query
       mockGetContractEvents
-        .mockRejectedValueOnce(new Error("First token fails"))
+        .mockRejectedValueOnce(new Error("First token fails")) // token 1 sent
+        .mockResolvedValueOnce([]) // token 1 received (consumed but Promise.all rejects)
         .mockResolvedValueOnce([
           {
             transactionHash: "0x" + "ab".repeat(32),
@@ -120,7 +122,7 @@ describe("tempo client", () => {
               value: 1000000n,
             },
           },
-        ])
+        ]) // token 2 sent
         .mockResolvedValue([]);
 
       const { fetchTransactions } = await import("./client");
