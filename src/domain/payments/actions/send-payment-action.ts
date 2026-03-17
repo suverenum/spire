@@ -2,9 +2,6 @@
 
 import { getSession } from "@/lib/session";
 import { sendPaymentSchema } from "@/lib/validations";
-import { SUPPORTED_TOKENS } from "@/lib/constants";
-import { getFeePayer } from "@/lib/tempo/fee-sponsor";
-import type { TokenName } from "@/lib/constants";
 
 export interface SendPaymentResult {
   success: boolean;
@@ -38,46 +35,15 @@ export async function sendPaymentAction(
     };
   }
 
-  const { to, amount, token, memo } = parsed.data;
-  const tokenConfig = SUPPORTED_TOKENS[token as TokenName];
+  // TODO: Replace mock with real Tempo SDK call:
+  //   const tokenConfig = SUPPORTED_TOKENS[token as TokenName];
+  //   const feePayer = getFeePayer();
+  //   client.token.transferSync({ amount, to, token: tokenConfig.address, memo, feePayer })
+  const mockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
 
-  // Resolve fee sponsorship — payments are always gasless for the user
-  const feePayer = getFeePayer();
-
-  try {
-    // Submit transfer via Tempo SDK with fee sponsorship.
-    // The feePayer parameter ensures the user pays $0 in gas fees:
-    // - Remote mode (feePayer: true): routes to Tempo's public testnet sponsor service
-    // - Local mode (feePayer: PrivateKeyAccount): uses the app's fee payer account
-    //
-    // Full SDK integration (passkey-signed transactions) uses:
-    //   client.token.transferSync({
-    //     amount: parseUnits(amount, tokenConfig.decimals),
-    //     to: to as `0x${string}`,
-    //     token: tokenConfig.address,
-    //     memo: memo ? stringToHex(memo, { size: 32 }) : undefined,
-    //     feePayer,
-    //   })
-    //
-    // For testnet MVP, simulate the transaction with the fee sponsorship wired in.
-    void feePayer;
-    void tokenConfig;
-    void to;
-    void amount;
-    void memo;
-
-    const mockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
-
-    return {
-      success: true,
-      txHash: mockHash,
-      gasless: true,
-    };
-  } catch {
-    return {
-      success: false,
-      error: "Transaction failed. Please try again.",
-      gasless: false,
-    };
-  }
+  return {
+    success: true,
+    txHash: mockHash,
+    gasless: true,
+  };
 }

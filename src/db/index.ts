@@ -12,7 +12,7 @@ export function getDb(): NeonHttpDatabase<typeof schema> {
   return dbInstance;
 }
 
-// Convenience re-export for backwards compatibility
+// Lazy proxy that defers connection until first access (allows builds without DATABASE_URL)
 export const db = new Proxy({} as NeonHttpDatabase<typeof schema>, {
   get(_, prop) {
     return Reflect.get(getDb(), prop);

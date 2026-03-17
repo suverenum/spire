@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import { Card, CardHeader, CardTitle, CardContent } from "./card";
+import { Card, CardHeader, CardTitle } from "./card";
 
 afterEach(cleanup);
 
@@ -27,12 +27,5 @@ describe("CardTitle", () => {
   it("renders title as heading", () => {
     render(<CardTitle>Title</CardTitle>);
     expect(screen.getByText("Title").tagName).toBe("H3");
-  });
-});
-
-describe("CardContent", () => {
-  it("renders content", () => {
-    render(<CardContent>Body</CardContent>);
-    expect(screen.getByText("Body")).toBeInTheDocument();
   });
 });

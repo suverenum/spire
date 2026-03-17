@@ -6,7 +6,15 @@ import {
   fireEvent,
   act,
 } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TreasuryHeader } from "./treasury-header";
+
+function renderWithClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
 
 const mockPush = vi.fn();
 
@@ -46,34 +54,34 @@ describe("TreasuryHeader", () => {
   });
 
   it("renders treasury name", () => {
-    render(<TreasuryHeader name="My Treasury" address={addr} />);
+    renderWithClient(<TreasuryHeader name="My Treasury" address={addr} />);
     expect(screen.getByText("My Treasury")).toBeInTheDocument();
   });
 
   it("renders truncated address", () => {
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
     expect(screen.getByText(/0x1234...5678/)).toBeInTheDocument();
   });
 
   it("renders settings button", () => {
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
     expect(screen.getByLabelText("Settings")).toBeInTheDocument();
   });
 
   it("renders logout button", () => {
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
     expect(screen.getByLabelText("Logout")).toBeInTheDocument();
   });
 
   it("navigates to settings on settings button click", () => {
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
     fireEvent.click(screen.getByLabelText("Settings"));
     expect(mockPush).toHaveBeenCalledWith("/settings");
   });
 
   it("copies address to clipboard on address button click", async () => {
     const { toast: mockToast } = await import("@/components/ui/toast");
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
 
     // The address button is the one with the truncated address text
     const addressButton = screen.getByText(/0x1234...5678/).closest("button");
@@ -95,7 +103,7 @@ describe("TreasuryHeader", () => {
       },
     });
 
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
     const addressButton = screen.getByText(/0x1234...5678/).closest("button");
 
     await act(async () => {
@@ -107,7 +115,7 @@ describe("TreasuryHeader", () => {
 
   it("calls logoutAction on logout button click", async () => {
     mockLogoutAction.mockResolvedValue(undefined);
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
 
     await act(async () => {
       fireEvent.click(screen.getByLabelText("Logout"));
@@ -125,7 +133,7 @@ describe("TreasuryHeader", () => {
       }),
     );
 
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
     const logoutButton = screen.getByLabelText("Logout");
 
     await act(async () => {
@@ -142,7 +150,7 @@ describe("TreasuryHeader", () => {
 
   it("handles logoutAction throwing (redirect throws)", async () => {
     mockLogoutAction.mockRejectedValue(new Error("NEXT_REDIRECT"));
-    render(<TreasuryHeader name="Test" address={addr} />);
+    renderWithClient(<TreasuryHeader name="Test" address={addr} />);
 
     // Should not throw
     await act(async () => {

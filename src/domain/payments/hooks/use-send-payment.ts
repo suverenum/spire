@@ -25,7 +25,11 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
       formData.set("amount", params.amount);
       formData.set("token", params.token);
       if (params.memo) formData.set("memo", params.memo);
-      return sendPaymentAction(formData);
+      const result = await sendPaymentAction(formData);
+      if (!result.success) {
+        throw new Error(result.error ?? "Payment failed");
+      }
+      return result;
     },
     onMutate: async (params) => {
       const addr = fromAddress ?? ("" as `0x${string}`);
@@ -65,15 +69,11 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
       toast("Payment failed. Please try again.", "error");
     },
     onSuccess: (result, vars) => {
-      if (result.success) {
-        toast("Payment sent successfully!", "success");
-        trackEvent(AnalyticsEvents.PAYMENT_SENT, {
-          token: vars.token,
-          amount: vars.amount,
-        });
-      } else {
-        toast(result.error ?? "Payment failed", "error");
-      }
+      toast("Payment sent successfully!", "success");
+      trackEvent(AnalyticsEvents.PAYMENT_SENT, {
+        token: vars.token,
+        amount: vars.amount,
+      });
     },
     onSettled: () => {
       if (fromAddress) {

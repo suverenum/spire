@@ -11,14 +11,16 @@ export function truncateAddress(address: string): string {
 }
 
 export function formatBalance(balance: bigint, decimals: number): string {
+  const negative = balance < 0n;
+  const abs = negative ? -balance : balance;
   const divisor = BigInt(10 ** decimals);
-  const whole = balance / divisor;
-  const fractional = balance % divisor;
+  const whole = abs / divisor;
+  const fractional = abs % divisor;
   const fractionalStr = fractional
     .toString()
     .padStart(decimals, "0")
     .slice(0, 2);
-  return `${whole.toString()}.${fractionalStr}`;
+  return `${negative ? "-" : ""}${whole.toString()}.${fractionalStr}`;
 }
 
 export function formatDate(date: Date): string {

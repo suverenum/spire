@@ -10,7 +10,6 @@ import { toast } from "@/components/ui/toast";
 import { updateTreasuryNameAction } from "@/domain/treasury/actions/treasury-actions";
 
 interface SettingsContentProps {
-  treasuryId: string;
   treasuryName: string;
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SESSION_MAX_AGE_MS } from "@/lib/constants";
+import { logoutAction } from "@/domain/auth/actions/auth-actions";
 
 interface SessionGuardProps {
   children: React.ReactNode;
@@ -30,7 +31,9 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
         timeSinceAuth > SESSION_MAX_AGE_MS ||
         timeSinceActivity > SESSION_MAX_AGE_MS
       ) {
-        router.push("/?expired=true");
+        logoutAction().catch(() => {
+          // redirect throws in server actions
+        });
         return;
       }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { truncateAddress } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
@@ -16,6 +17,7 @@ interface TreasuryHeaderProps {
 
 export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   async function handleCopyAddress() {
@@ -30,6 +32,7 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
   async function handleLogout() {
     setIsLoggingOut(true);
     trackEvent(AnalyticsEvents.LOGOUT);
+    queryClient.clear();
     try {
       await logoutAction();
     } catch {

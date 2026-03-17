@@ -17,6 +17,12 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+const mockLogoutAction = vi.fn().mockRejectedValue(new Error("NEXT_REDIRECT"));
+
+vi.mock("@/domain/auth/actions/auth-actions", () => ({
+  logoutAction: (...args: unknown[]) => mockLogoutAction(...args),
+}));
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -26,6 +32,8 @@ afterEach(() => {
 describe("SessionGuard", () => {
   beforeEach(() => {
     mockPush.mockReset();
+    mockLogoutAction.mockReset();
+    mockLogoutAction.mockRejectedValue(new Error("NEXT_REDIRECT"));
   });
 
   it("renders children", () => {
@@ -62,7 +70,7 @@ describe("SessionGuard", () => {
       vi.advanceTimersByTime(60_000);
     });
 
-    expect(mockPush).toHaveBeenCalledWith("/?expired=true");
+    expect(mockLogoutAction).toHaveBeenCalled();
   });
 
   it("redirects when inactivity exceeds SESSION_MAX_AGE_MS", () => {
@@ -80,7 +88,7 @@ describe("SessionGuard", () => {
       vi.advanceTimersByTime(16 * 60 * 1000);
     });
 
-    expect(mockPush).toHaveBeenCalledWith("/?expired=true");
+    expect(mockLogoutAction).toHaveBeenCalled();
   });
 
   it("does not redirect when session is fresh and user is active", () => {
@@ -216,6 +224,6 @@ describe("SessionGuard", () => {
     });
 
     // Should redirect because timeSinceAuth > SESSION_MAX_AGE_MS (15 min)
-    expect(mockPush).toHaveBeenCalledWith("/?expired=true");
+    expect(mockLogoutAction).toHaveBeenCalled();
   });
 });

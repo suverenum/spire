@@ -5,10 +5,6 @@ vi.mock("@/lib/session", () => ({
   getSession: vi.fn(),
 }));
 
-vi.mock("@/lib/tempo/fee-sponsor", () => ({
-  getFeePayer: vi.fn(() => true),
-}));
-
 import { getSession } from "@/lib/session";
 
 const mockGetSession = vi.mocked(getSession);

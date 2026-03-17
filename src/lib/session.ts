@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { createHmac } from "crypto";
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_MS } from "./constants";
 
 export interface SessionData {
@@ -8,13 +9,31 @@ export interface SessionData {
   authenticatedAt: number;
 }
 
+function getSessionSecret(): string {
+  return process.env.SESSION_SECRET ?? "dev-secret-change-in-production";
+}
+
+function sign(payload: string): string {
+  return createHmac("sha256", getSessionSecret()).update(payload).digest("hex");
+}
+
 function encode(data: SessionData): string {
-  return Buffer.from(JSON.stringify(data)).toString("base64");
+  const payload = Buffer.from(JSON.stringify(data)).toString("base64");
+  const signature = sign(payload);
+  return `${payload}.${signature}`;
 }
 
 function decode(value: string): SessionData | null {
   try {
-    return JSON.parse(Buffer.from(value, "base64").toString("utf-8"));
+    const dotIndex = value.lastIndexOf(".");
+    if (dotIndex === -1) return null;
+
+    const payload = value.slice(0, dotIndex);
+    const signature = value.slice(dotIndex + 1);
+
+    if (sign(payload) !== signature) return null;
+
+    return JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
   } catch {
     return null;
   }

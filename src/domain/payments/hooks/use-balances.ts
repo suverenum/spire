@@ -26,8 +26,6 @@ export function useBalances(address: `0x${string}` | undefined) {
     queryKey: CACHE_KEYS.balances(address ?? ""),
     queryFn: () => fetchBalancesClient(address!),
     enabled: !!address,
-    staleTime: 5_000,
-    gcTime: 5 * 60_000,
     placeholderData: keepPreviousData,
   });
 }

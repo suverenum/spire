@@ -13,7 +13,7 @@ module.exports = {
     assert: {
       assertions: {
         "largest-contentful-paint": ["error", { maxNumericValue: 400 }],
-        interactive: ["error", { maxNumericValue: 100 }],
+        "total-blocking-time": ["error", { maxNumericValue: 200 }],
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.05 }],
       },
     },

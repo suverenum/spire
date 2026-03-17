@@ -61,5 +61,11 @@ export async function updateTreasuryNameAction(
     .set({ name })
     .where(eq(treasuries.id, session.treasuryId));
 
+  await createSession({
+    treasuryId: session.treasuryId,
+    tempoAddress: session.tempoAddress,
+    treasuryName: name,
+  });
+
   return {};
 }

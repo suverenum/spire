@@ -59,9 +59,11 @@ describe("sendPaymentSchema", () => {
   });
 
   it("accepts payment without memo", () => {
-    const withoutMemo = { ...validPayment };
-    delete withoutMemo.memo;
-    const result = sendPaymentSchema.safeParse(withoutMemo);
+    const result = sendPaymentSchema.safeParse({
+      to: validPayment.to,
+      amount: validPayment.amount,
+      token: validPayment.token,
+    });
     expect(result.success).toBe(true);
   });
 
@@ -71,6 +73,22 @@ describe("sendPaymentSchema", () => {
       amount: "100",
     });
     expect(result.success).toBe(true);
+  });
+
+  it("rejects zero amount", () => {
+    const result = sendPaymentSchema.safeParse({
+      ...validPayment,
+      amount: "0",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects zero decimal amount", () => {
+    const result = sendPaymentSchema.safeParse({
+      ...validPayment,
+      amount: "0.00",
+    });
+    expect(result.success).toBe(false);
   });
 
   it("rejects negative amount format", () => {

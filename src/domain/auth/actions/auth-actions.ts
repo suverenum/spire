@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createSession, destroySession, getSession } from "@/lib/session";
+import { createSession, destroySession } from "@/lib/session";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -31,8 +31,4 @@ export async function loginAction(
 export async function logoutAction(): Promise<void> {
   await destroySession();
   redirect("/");
-}
-
-export async function getSessionAction() {
-  return getSession();
 }

@@ -17,7 +17,7 @@ function TransactionRow({ tx, address }: { tx: Payment; address: string }) {
 
   return (
     <Link
-      href={`/transactions/${tx.id}`}
+      href={`/transactions/${encodeURIComponent(tx.id)}`}
       className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
     >
       <div

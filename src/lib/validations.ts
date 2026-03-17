@@ -4,7 +4,10 @@ export const addressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
 export const sendPaymentSchema = z.object({
   to: addressSchema,
-  amount: z.string().regex(/^\d+(\.\d{1,6})?$/),
+  amount: z
+    .string()
+    .regex(/^\d+(\.\d{1,6})?$/)
+    .refine((v) => Number(v) > 0, "Amount must be greater than zero"),
   token: z.enum(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]),
   memo: z.string().max(256).optional(),
 });

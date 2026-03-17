@@ -282,11 +282,8 @@ describe("SendPaymentForm", () => {
     it("resets form and calls onClose on successful mutation", () => {
       const onClose = vi.fn();
       mockMutate.mockImplementation(
-        (
-          _params: unknown,
-          options: { onSuccess: (result: { success: boolean }) => void },
-        ) => {
-          options.onSuccess({ success: true });
+        (_params: unknown, options: { onSuccess: () => void }) => {
+          options.onSuccess();
         },
       );
 
@@ -306,16 +303,11 @@ describe("SendPaymentForm", () => {
       expect(amountInput).toHaveValue("");
     });
 
-    it("does not reset form if mutation result is not successful", () => {
+    it("does not reset form if mutation throws (server failure)", () => {
       const onClose = vi.fn();
-      mockMutate.mockImplementation(
-        (
-          _params: unknown,
-          options: { onSuccess: (result: { success: boolean }) => void },
-        ) => {
-          options.onSuccess({ success: false });
-        },
-      );
+      mockMutate.mockImplementation(() => {
+        // Mutation throws on server failure, onSuccess is never called
+      });
 
       renderWithQuery(
         <SendPaymentForm open={true} onClose={onClose} fromAddress={addr} />,

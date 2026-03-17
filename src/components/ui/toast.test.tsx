@@ -60,7 +60,12 @@ describe("Toast", () => {
     expect(screen.getByText("Temporary")).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(3999);
+    });
+    expect(screen.getByText("Temporary")).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
     });
     expect(screen.queryByText("Temporary")).not.toBeInTheDocument();
     vi.useRealTimers();

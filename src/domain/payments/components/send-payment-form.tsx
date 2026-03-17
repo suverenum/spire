@@ -12,7 +12,6 @@ interface SendPaymentFormProps {
   open: boolean;
   onClose: () => void;
   fromAddress: `0x${string}`;
-  availableBalance?: bigint;
 }
 
 export function SendPaymentForm({
@@ -57,13 +56,11 @@ export function SendPaymentForm({
         fromAddress,
       },
       {
-        onSuccess: (result) => {
-          if (result.success) {
-            setTo("");
-            setAmount("");
-            setMemo("");
-            onClose();
-          }
+        onSuccess: () => {
+          setTo("");
+          setAmount("");
+          setMemo("");
+          onClose();
         },
       },
     );

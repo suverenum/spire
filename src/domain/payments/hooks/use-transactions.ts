@@ -32,8 +32,6 @@ export function useTransactions(address: `0x${string}` | undefined) {
     queryKey: CACHE_KEYS.transactions(address ?? ""),
     queryFn: () => fetchTransactionsClient(address!),
     enabled: !!address,
-    staleTime: 5_000,
-    gcTime: 5 * 60_000,
     placeholderData: keepPreviousData,
   });
 }
