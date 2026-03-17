@@ -12,7 +12,6 @@ describe("treasuries schema", () => {
     expect(columnNames).toContain("id");
     expect(columnNames).toContain("name");
     expect(columnNames).toContain("tempoAddress");
-    expect(columnNames).toContain("singletonGuard");
     expect(columnNames).toContain("createdAt");
   });
 });

@@ -6,19 +6,11 @@ import { db } from "@/db";
 import { treasuries } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export async function loginAction(
-  treasuryId: string,
   connectedAddress: string,
-): Promise<{ error?: string; tempoAddress?: string }> {
-  if (!UUID_RE.test(treasuryId)) {
-    return { error: "Invalid treasury ID" };
-  }
-
+): Promise<{ error?: string; tempoAddress?: string; treasuryName?: string }> {
   if (!ADDRESS_RE.test(connectedAddress)) {
     return { error: "Invalid wallet address" };
   }
@@ -26,15 +18,11 @@ export async function loginAction(
   const result = await db
     .select()
     .from(treasuries)
-    .where(eq(treasuries.id, treasuryId));
+    .where(eq(treasuries.tempoAddress, connectedAddress.toLowerCase()));
   const treasury = result[0];
 
   if (!treasury) {
-    return { error: "Treasury not found" };
-  }
-
-  if (treasury.tempoAddress.toLowerCase() !== connectedAddress.toLowerCase()) {
-    return { error: "Passkey does not match this treasury" };
+    return { error: "No treasury found for this passkey" };
   }
 
   await createSession({
@@ -43,7 +31,7 @@ export async function loginAction(
     treasuryName: treasury.name,
   });
 
-  return { tempoAddress: treasury.tempoAddress };
+  return { tempoAddress: treasury.tempoAddress, treasuryName: treasury.name };
 }
 
 export async function touchSessionAction(): Promise<void> {

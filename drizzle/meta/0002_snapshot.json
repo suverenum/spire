@@ -1,0 +1,66 @@
+{
+  "id": "c850f3b5-ba09-47d7-8055-9416652b0233",
+  "prevId": "679bf053-1173-4ad7-be9e-931a27322958",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.treasuries": {
+      "name": "treasuries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tempo_address": {
+          "name": "tempo_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "treasuries_tempo_address_unique": {
+          "name": "treasuries_tempo_address_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "tempo_address"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

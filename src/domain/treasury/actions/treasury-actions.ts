@@ -6,7 +6,7 @@ import { treasuries } from "@/db/schema";
 import { createSession, getSession } from "@/lib/session";
 import { createTreasurySchema } from "@/lib/validations";
 import { TEMPO_RPC_URL } from "@/lib/constants";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
@@ -20,46 +20,37 @@ export async function createTreasuryAction(
     return { error: "Please enter a valid treasury name." };
   }
 
-  const tempoAddress = formData.get("tempoAddress") as string;
-  if (!tempoAddress || !ADDRESS_RE.test(tempoAddress)) {
+  const rawAddress = formData.get("tempoAddress") as string;
+  if (!rawAddress || !ADDRESS_RE.test(rawAddress)) {
     return { error: "Invalid Tempo address from passkey." };
   }
+  const tempoAddress = rawAddress.toLowerCase();
 
-  // Atomic check-and-insert with DB-level singleton guard.
-  // The WHERE NOT EXISTS prevents most concurrent duplicates, and the
-  // singleton_guard UNIQUE constraint catches any remaining race window.
-  let row: { id: string; name: string; tempo_address: string } | undefined;
+  let row: { id: string; name: string; tempoAddress: string };
   try {
-    const result = await db.execute<{
-      id: string;
-      name: string;
-      tempo_address: string;
-    }>(
-      sql`INSERT INTO treasuries (name, tempo_address)
-          SELECT ${parsed.data.name}, ${tempoAddress}
-          WHERE NOT EXISTS (SELECT 1 FROM treasuries LIMIT 1)
-          RETURNING id, name, tempo_address`,
-    );
-    row = result.rows[0];
+    const [inserted] = await db
+      .insert(treasuries)
+      .values({
+        name: parsed.data.name,
+        tempoAddress,
+      })
+      .returning({
+        id: treasuries.id,
+        name: treasuries.name,
+        tempoAddress: treasuries.tempoAddress,
+      });
+    row = inserted;
   } catch (err: unknown) {
-    // Unique constraint violation (PostgreSQL SQLSTATE 23505) = concurrent race lost.
-    // Covers the singleton_guard constraint (and the unlikely tempo_address collision).
     const pgCode =
       err != null && typeof err === "object" && "code" in err
         ? (err as { code: unknown }).code
         : undefined;
     if (pgCode === "23505") {
       return {
-        error: "A treasury already exists. Only one treasury is supported.",
+        error: "A treasury already exists for this passkey.",
       };
     }
     throw err;
-  }
-
-  if (!row) {
-    return {
-      error: "A treasury already exists. Only one treasury is supported.",
-    };
   }
 
   // Auto-fund wallet via Tempo testnet faucet (fire-and-forget, non-blocking)
@@ -69,7 +60,7 @@ export async function createTreasuryAction(
     body: JSON.stringify({
       jsonrpc: "2.0",
       method: "tempo_fundAddress",
-      params: [row.tempo_address],
+      params: [row.tempoAddress],
       id: 1,
     }),
   }).catch(() => {
@@ -78,7 +69,7 @@ export async function createTreasuryAction(
 
   await createSession({
     treasuryId: row.id,
-    tempoAddress: row.tempo_address as `0x${string}`,
+    tempoAddress: row.tempoAddress as `0x${string}`,
     treasuryName: row.name,
   });
 

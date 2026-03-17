@@ -9,17 +9,14 @@ import {
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig } from "@/lib/wagmi";
-import { LockScreen } from "./lock-screen";
+import { WelcomeScreen } from "./welcome-screen";
 
 const mockLoginAction = vi.fn();
-const mockGetLoginChallengeAction = vi.fn();
 const mockConnectAsync = vi.fn();
-const mockSignMessageAsync = vi.fn();
 const mockPush = vi.fn();
 
 vi.mock("../actions/auth-actions", () => ({
   loginAction: (...args: unknown[]) => mockLoginAction(...args),
-  getLoginChallengeAction: () => mockGetLoginChallengeAction(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -38,9 +35,6 @@ vi.mock("wagmi", async (importOriginal) => {
       connectAsync: mockConnectAsync,
       connectors: [{ id: "webAuthn", name: "WebAuthn" }],
     }),
-    useSignMessage: () => ({
-      signMessageAsync: mockSignMessageAsync,
-    }),
   };
 });
 
@@ -58,52 +52,47 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("LockScreen", () => {
+describe("WelcomeScreen", () => {
   beforeEach(() => {
     mockLoginAction.mockReset();
     mockLoginAction.mockResolvedValue({
       tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+      treasuryName: "My Treasury",
     });
-    mockGetLoginChallengeAction.mockReset();
-    mockGetLoginChallengeAction.mockResolvedValue("Sign in to Spire: abc123");
     mockConnectAsync.mockReset();
     mockConnectAsync.mockResolvedValue({
       accounts: ["0x1234567890abcdef1234567890abcdef12345678"],
     });
-    mockSignMessageAsync.mockReset();
-    mockSignMessageAsync.mockResolvedValue("0xmocksignature");
     mockPush.mockReset();
   });
 
-  it("renders treasury name", () => {
-    render(<LockScreen treasuryId="123" treasuryName="My Treasury" />, {
-      wrapper: Wrapper,
-    });
-    expect(screen.getByText("My Treasury")).toBeInTheDocument();
-  });
-
-  it("shows passkey prompt text", () => {
-    render(<LockScreen treasuryId="123" treasuryName="Test" />, {
-      wrapper: Wrapper,
-    });
-    expect(
-      screen.getByText("Authenticate with your passkey to continue"),
-    ).toBeInTheDocument();
+  it("renders Spire branding", () => {
+    render(<WelcomeScreen />, { wrapper: Wrapper });
+    expect(screen.getByText("Spire")).toBeInTheDocument();
   });
 
   it("renders unlock button", () => {
-    render(<LockScreen treasuryId="123" treasuryName="Test" />, {
-      wrapper: Wrapper,
-    });
+    render(<WelcomeScreen />, { wrapper: Wrapper });
     expect(
       screen.getByRole("button", { name: /Unlock with Passkey/ }),
     ).toBeInTheDocument();
   });
 
-  it("calls loginAction with address on button click and navigates", async () => {
-    render(<LockScreen treasuryId="123" treasuryName="Test" />, {
-      wrapper: Wrapper,
-    });
+  it("renders create treasury button", () => {
+    render(<WelcomeScreen />, { wrapper: Wrapper });
+    expect(
+      screen.getByRole("button", { name: /Create Treasury/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("navigates to /create on create button click", () => {
+    render(<WelcomeScreen />, { wrapper: Wrapper });
+    fireEvent.click(screen.getByRole("button", { name: /Create Treasury/ }));
+    expect(mockPush).toHaveBeenCalledWith("/create");
+  });
+
+  it("calls loginAction with address on unlock and navigates", async () => {
+    render(<WelcomeScreen />, { wrapper: Wrapper });
     const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
 
     await act(async () => {
@@ -111,23 +100,17 @@ describe("LockScreen", () => {
     });
 
     expect(mockConnectAsync).toHaveBeenCalled();
-    expect(mockGetLoginChallengeAction).toHaveBeenCalled();
-    expect(mockSignMessageAsync).toHaveBeenCalledWith({
-      message: "Sign in to Spire: abc123",
-    });
     expect(mockLoginAction).toHaveBeenCalledWith(
-      "123",
       "0x1234567890abcdef1234567890abcdef12345678",
-      "0xmocksignature",
     );
     expect(mockPush).toHaveBeenCalledWith("/dashboard");
   });
 
-  it("shows error message when loginAction returns error", async () => {
-    mockLoginAction.mockResolvedValue({ error: "Authentication failed" });
-    render(<LockScreen treasuryId="123" treasuryName="Test" />, {
-      wrapper: Wrapper,
+  it("shows error when loginAction returns error", async () => {
+    mockLoginAction.mockResolvedValue({
+      error: "No treasury found for this passkey",
     });
+    render(<WelcomeScreen />, { wrapper: Wrapper });
     const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
 
     await act(async () => {
@@ -135,15 +118,13 @@ describe("LockScreen", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Authentication failed",
+      "No treasury found for this passkey",
     );
   });
 
   it("shows error when passkey connection fails", async () => {
     mockConnectAsync.mockRejectedValue(new Error("Passkey denied"));
-    render(<LockScreen treasuryId="123" treasuryName="Test" />, {
-      wrapper: Wrapper,
-    });
+    render(<WelcomeScreen />, { wrapper: Wrapper });
     const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
 
     await act(async () => {
@@ -156,11 +137,11 @@ describe("LockScreen", () => {
   it("clears previous error on new unlock attempt", async () => {
     mockLoginAction
       .mockResolvedValueOnce({ error: "First error" })
-      .mockResolvedValueOnce({});
+      .mockResolvedValueOnce({
+        tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+      });
 
-    render(<LockScreen treasuryId="123" treasuryName="Test" />, {
-      wrapper: Wrapper,
-    });
+    render(<WelcomeScreen />, { wrapper: Wrapper });
     const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
 
     await act(async () => {
