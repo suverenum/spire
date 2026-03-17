@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { sendPaymentAction } from "../send-payment-action";
+import { validatePaymentAction } from "../send-payment-action";
 
 vi.mock("@/lib/session", () => ({
   getSession: vi.fn(),
@@ -17,20 +17,19 @@ function makeFormData(data: Record<string, string>): FormData {
   return fd;
 }
 
-describe("sendPaymentAction", () => {
+describe("validatePaymentAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("returns error when not authenticated", async () => {
     mockGetSession.mockResolvedValue(null);
-    const result = await sendPaymentAction(makeFormData({}));
-    expect(result.success).toBe(false);
+    const result = await validatePaymentAction(makeFormData({}));
+    expect(result.valid).toBe(false);
     expect(result.error).toBe("Not authenticated");
-    expect(result.gasless).toBe(false);
   });
 
-  it("returns error for invalid input", async () => {
+  it("returns error for invalid address", async () => {
     mockGetSession.mockResolvedValue({
       treasuryId: "1",
       tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
@@ -38,19 +37,18 @@ describe("sendPaymentAction", () => {
       authenticatedAt: Date.now(),
     });
 
-    const result = await sendPaymentAction(
+    const result = await validatePaymentAction(
       makeFormData({
         to: "invalid-address",
         amount: "10",
         token: "AlphaUSD",
       }),
     );
-    expect(result.success).toBe(false);
+    expect(result.valid).toBe(false);
     expect(result.error).toBeDefined();
-    expect(result.gasless).toBe(false);
   });
 
-  it("returns success with gasless flag and tx hash for valid payment", async () => {
+  it("returns valid for correct payment parameters", async () => {
     mockGetSession.mockResolvedValue({
       treasuryId: "1",
       tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
@@ -58,7 +56,7 @@ describe("sendPaymentAction", () => {
       authenticatedAt: Date.now(),
     });
 
-    const result = await sendPaymentAction(
+    const result = await validatePaymentAction(
       makeFormData({
         to: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
         amount: "100",
@@ -66,12 +64,11 @@ describe("sendPaymentAction", () => {
         memo: "Test payment",
       }),
     );
-    expect(result.success).toBe(true);
-    expect(result.txHash).toMatch(/^0x[a-f0-9]{64}$/);
-    expect(result.gasless).toBe(true);
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
   });
 
-  it("returns success without memo", async () => {
+  it("returns valid for payment without memo", async () => {
     mockGetSession.mockResolvedValue({
       treasuryId: "1",
       tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
@@ -79,14 +76,33 @@ describe("sendPaymentAction", () => {
       authenticatedAt: Date.now(),
     });
 
-    const result = await sendPaymentAction(
+    const result = await validatePaymentAction(
       makeFormData({
         to: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
         amount: "50.123456",
         token: "BetaUSD",
       }),
     );
-    expect(result.success).toBe(true);
-    expect(result.gasless).toBe(true);
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it("returns error for invalid token", async () => {
+    mockGetSession.mockResolvedValue({
+      treasuryId: "1",
+      tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+      treasuryName: "Test",
+      authenticatedAt: Date.now(),
+    });
+
+    const result = await validatePaymentAction(
+      makeFormData({
+        to: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEbb",
+        amount: "10",
+        token: "InvalidToken",
+      }),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeDefined();
   });
 });

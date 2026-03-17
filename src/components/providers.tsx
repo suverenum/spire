@@ -3,7 +3,9 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { WagmiProvider } from "wagmi";
 import { createIDBPersister } from "@/lib/idb-persister";
+import { wagmiConfig } from "@/lib/wagmi";
 import { Toaster } from "@/components/ui/toast";
 import { initPostHog } from "@/lib/posthog";
 
@@ -51,29 +53,36 @@ export function Providers({ children }: { children: ReactNode }) {
 
   if (persister) {
     return (
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{
-          persister,
-          maxAge: 1000 * 60 * 60 * 24,
-          dehydrateOptions: {
-            shouldDehydrateQuery: (query) => {
-              const prefix = query.queryKey[0];
-              return prefix === "balances" || prefix === "transactions";
+      <WagmiProvider config={wagmiConfig}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister,
+            maxAge: 1000 * 60 * 60 * 24,
+            dehydrateOptions: {
+              shouldDehydrateQuery: (query) => {
+                const prefix = query.queryKey[0];
+                return (
+                  query.state.status === "success" &&
+                  (prefix === "balances" || prefix === "transactions")
+                );
+              },
             },
-          },
-        }}
-      >
-        {children}
-        <Toaster />
-      </PersistQueryClientProvider>
+          }}
+        >
+          {children}
+          <Toaster />
+        </PersistQueryClientProvider>
+      </WagmiProvider>
     );
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <Toaster />
-    </QueryClientProvider>
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster />
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

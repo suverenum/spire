@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useConnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Fingerprint } from "lucide-react";
@@ -12,16 +13,35 @@ export default function CreateTreasuryPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { connectAsync, connectors } = useConnect();
 
   function handleSubmit(formData: FormData) {
     setError(null);
     startTransition(async () => {
-      const result = await createTreasuryAction(formData);
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        trackEvent(AnalyticsEvents.TREASURY_CREATED);
-        router.push("/dashboard");
+      try {
+        if (!connectors[0]) {
+          setError("Passkey authentication is not available in this browser");
+          return;
+        }
+        const result = await connectAsync({ connector: connectors[0] });
+        const address = result.accounts[0];
+        if (!address) {
+          setError("No account returned from passkey");
+          return;
+        }
+
+        formData.set("tempoAddress", address);
+        const actionResult = await createTreasuryAction(formData);
+        if (actionResult?.error) {
+          setError(actionResult.error);
+        } else {
+          trackEvent(AnalyticsEvents.TREASURY_CREATED);
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Passkey creation failed",
+        );
       }
     });
   }

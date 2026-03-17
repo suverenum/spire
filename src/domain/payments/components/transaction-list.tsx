@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ArrowDownLeft, ArrowUpRight, Search } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Search, Loader2 } from "lucide-react";
 import { cn, truncateAddress, formatBalance, formatDate } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useTransactions } from "../hooks/use-transactions";
 import { TransactionSkeleton } from "@/components/skeletons";
 import type { Payment } from "@/lib/tempo/types";
+
+const PAGE_SIZE = 20;
 
 interface TransactionListProps {
   address: `0x${string}`;
@@ -80,6 +82,59 @@ function TxRow({ tx, address }: { tx: Payment; address: string }) {
   );
 }
 
+function InfiniteList({
+  items,
+  address,
+}: {
+  items: Payment[];
+  address: string;
+}) {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const hasMore = visibleCount < items.length;
+
+  const loadMore = useCallback(() => {
+    setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, items.length));
+  }, [items.length]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
+
+  const visible = items.slice(0, visibleCount);
+
+  if (items.length === 0) {
+    return <EmptyState />;
+  }
+
+  return (
+    <div className="space-y-2">
+      {visible.map((tx) => (
+        <TxRow key={tx.id} tx={tx} address={address} />
+      ))}
+      {hasMore && (
+        <div ref={sentinelRef} className="flex justify-center py-4">
+          <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TransactionList({ address }: TransactionListProps) {
   const { data: transactions, isLoading } = useTransactions(address);
   const [search, setSearch] = useState("");
@@ -129,39 +184,15 @@ export function TransactionList({ address }: TransactionListProps) {
         </TabsList>
 
         <TabsContent value="all" className="mt-4">
-          {filtered.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="space-y-2">
-              {filtered.map((tx) => (
-                <TxRow key={tx.id} tx={tx} address={address} />
-              ))}
-            </div>
-          )}
+          <InfiniteList items={filtered} address={address} />
         </TabsContent>
 
         <TabsContent value="sent" className="mt-4">
-          {sent.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="space-y-2">
-              {sent.map((tx) => (
-                <TxRow key={tx.id} tx={tx} address={address} />
-              ))}
-            </div>
-          )}
+          <InfiniteList items={sent} address={address} />
         </TabsContent>
 
         <TabsContent value="received" className="mt-4">
-          {received.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="space-y-2">
-              {received.map((tx) => (
-                <TxRow key={tx.id} tx={tx} address={address} />
-              ))}
-            </div>
-          )}
+          <InfiniteList items={received} address={address} />
         </TabsContent>
       </Tabs>
     </div>

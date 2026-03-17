@@ -173,7 +173,7 @@ describe("SendPaymentForm", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows error for memo exceeding 256 characters", () => {
+    it("shows error for memo exceeding 32 characters", () => {
       renderWithQuery(
         <SendPaymentForm open={true} onClose={() => {}} fromAddress={addr} />,
       );
@@ -184,15 +184,15 @@ describe("SendPaymentForm", () => {
       fireEvent.change(toInput, { target: { value: validRecipient } });
       fireEvent.change(amountInput, { target: { value: "10" } });
       fireEvent.change(memoInput, {
-        target: { value: "a".repeat(257) },
+        target: { value: "a".repeat(33) },
       });
       fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
       expect(
-        screen.getByText("Memo must be 256 characters or less"),
+        screen.getByText("Memo must be 32 characters or less"),
       ).toBeInTheDocument();
     });
 
-    it("does not show memo error for exactly 256 characters", () => {
+    it("does not show memo error for exactly 32 characters", () => {
       renderWithQuery(
         <SendPaymentForm open={true} onClose={() => {}} fromAddress={addr} />,
       );
@@ -203,11 +203,11 @@ describe("SendPaymentForm", () => {
       fireEvent.change(toInput, { target: { value: validRecipient } });
       fireEvent.change(amountInput, { target: { value: "10" } });
       fireEvent.change(memoInput, {
-        target: { value: "a".repeat(256) },
+        target: { value: "a".repeat(32) },
       });
       fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
       expect(
-        screen.queryByText("Memo must be 256 characters or less"),
+        screen.queryByText("Memo must be 32 characters or less"),
       ).not.toBeInTheDocument();
     });
 

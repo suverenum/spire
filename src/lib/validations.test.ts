@@ -138,10 +138,10 @@ describe("sendPaymentSchema", () => {
     }
   });
 
-  it("rejects memo over 256 characters", () => {
+  it("rejects memo over 32 characters", () => {
     const result = sendPaymentSchema.safeParse({
       ...validPayment,
-      memo: "a".repeat(257),
+      memo: "a".repeat(33),
     });
     expect(result.success).toBe(false);
   });

@@ -11,7 +11,7 @@ export const sendPaymentSchema = z.object({
     .regex(/^(0|[1-9]\d*)(\.\d{1,6})?$/, "Amount must be a valid number")
     .refine((v) => Number(v) > 0, "Amount must be greater than 0"),
   token: z.enum(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]),
-  memo: z.string().max(256, "Memo must be 256 characters or less").optional(),
+  memo: z.string().max(32, "Memo must be 32 characters or less").optional(),
 });
 
 export const createTreasurySchema = z.object({

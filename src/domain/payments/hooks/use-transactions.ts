@@ -4,7 +4,9 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { CACHE_KEYS } from "@/lib/constants";
 import type { Payment } from "@/lib/tempo/types";
 
-async function fetchTransactionsClient(address: string): Promise<Payment[]> {
+export async function fetchTransactionsClient(
+  address: string,
+): Promise<Payment[]> {
   const res = await fetch(
     `/api/transactions?address=${encodeURIComponent(address)}`,
   );
