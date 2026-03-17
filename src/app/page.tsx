@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { asc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
@@ -5,7 +6,28 @@ import { db } from "@/db";
 import { treasuries } from "@/db/schema";
 import { LockScreen } from "@/domain/auth/components/lock-screen";
 
-export default async function Home() {
+export default function Home() {
+  return (
+    <Suspense fallback={<HomeSkeleton />}>
+      <HomeLoader />
+    </Suspense>
+  );
+}
+
+function HomeSkeleton() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+      <div className="w-full max-w-sm text-center">
+        <h1 className="text-4xl font-semibold tracking-tight">Spire</h1>
+        <p className="mt-2 text-gray-500">
+          Treasury management on Tempo blockchain
+        </p>
+      </div>
+    </div>
+  );
+}
+
+async function HomeLoader() {
   const session = await getSession();
 
   if (session) {
