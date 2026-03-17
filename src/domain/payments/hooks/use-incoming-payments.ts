@@ -50,6 +50,8 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
   useEffect(() => {
     if (!address) return;
 
+    let cleaned = false;
+
     const invalidateData = () => {
       queryClient.invalidateQueries({ queryKey: CACHE_KEYS.balances(address) });
       queryClient.invalidateQueries({
@@ -58,7 +60,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
     };
 
     const startPolling = () => {
-      if (pollingRef.current) return;
+      if (cleaned || pollingRef.current) return;
       pollingRef.current = setInterval(invalidateData, POLLING_INTERVAL);
     };
 
@@ -74,6 +76,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
       wsRef.current = ws;
 
       ws.onopen = () => {
+        if (cleaned) return;
         setConnected(true);
         stopPolling();
         ws.send(
@@ -97,6 +100,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
       };
 
       ws.onmessage = (event) => {
+        if (cleaned) return;
         try {
           const data = JSON.parse(event.data);
           if (data.method === "eth_subscription") {
@@ -110,11 +114,13 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
       };
 
       ws.onclose = () => {
+        if (cleaned) return;
         setConnected(false);
         startPolling();
       };
 
       ws.onerror = () => {
+        if (cleaned) return;
         setConnected(false);
         startPolling();
       };
@@ -124,6 +130,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
     }
 
     return () => {
+      cleaned = true;
       wsRef.current?.close();
       wsRef.current = null;
       stopPolling();
