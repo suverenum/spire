@@ -90,7 +90,11 @@ export async function fetchTransactions(
         const from = args.from;
         const to = args.to;
 
-        if (from === address || to === address) {
+        const addrLower = address.toLowerCase();
+        if (
+          from?.toLowerCase() === addrLower ||
+          to?.toLowerCase() === addrLower
+        ) {
           const blockNumber = log.blockNumber;
           if (blockNumber != null && !blockTimestamps.has(blockNumber)) {
             try {

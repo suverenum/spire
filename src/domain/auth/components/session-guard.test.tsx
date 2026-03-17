@@ -67,12 +67,7 @@ describe("SessionGuard", () => {
       </SessionGuard>,
     );
 
-    // The check runs after 60 seconds timeout
-    act(() => {
-      vi.advanceTimersByTime(60_000);
-    });
-
-    // Should logout because the session expired before the page was loaded
+    // Should logout immediately on mount because the session already expired
     expect(mockLogoutAction).toHaveBeenCalled();
   });
 

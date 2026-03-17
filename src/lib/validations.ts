@@ -8,7 +8,7 @@ export const sendPaymentSchema = z.object({
   to: addressSchema,
   amount: z
     .string()
-    .regex(/^\d+(\.\d{1,6})?$/, "Amount must be a valid number")
+    .regex(/^(0|[1-9]\d*)(\.\d{1,6})?$/, "Amount must be a valid number")
     .refine((v) => Number(v) > 0, "Amount must be greater than 0"),
   token: z.enum(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]),
   memo: z.string().max(256, "Memo must be 256 characters or less").optional(),

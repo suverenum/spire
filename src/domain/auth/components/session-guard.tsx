@@ -62,7 +62,7 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
     window.addEventListener("click", handleActivity);
     window.addEventListener("touchstart", handleActivity);
 
-    timeoutRef.current = setTimeout(checkExpiry, 60_000);
+    checkExpiry();
 
     return () => {
       window.removeEventListener("mousemove", handleActivity);

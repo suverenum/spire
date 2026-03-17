@@ -91,6 +91,22 @@ describe("sendPaymentSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects amount with leading zeros", () => {
+    const result = sendPaymentSchema.safeParse({
+      ...validPayment,
+      amount: "01.50",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts zero-prefixed decimal like 0.50", () => {
+    const result = sendPaymentSchema.safeParse({
+      ...validPayment,
+      amount: "0.50",
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects negative amount format", () => {
     const result = sendPaymentSchema.safeParse({
       ...validPayment,
