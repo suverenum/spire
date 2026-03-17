@@ -18,6 +18,7 @@ build/
 # test
 playwright-report/
 test-results/
+coverage/
 
 # IDE
 .vscode/
