@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { SUPPORTED_TOKENS, type TokenName } from "@/lib/constants";
 import { useSendPayment } from "../hooks/use-send-payment";
+import { sendPaymentSchema } from "@/lib/validations";
 import { Send } from "lucide-react";
 
 interface SendPaymentFormProps {
@@ -28,20 +29,27 @@ export function SendPaymentForm({
   const sendMutation = useSendPayment(fromAddress);
 
   function validate(): boolean {
+    const result = sendPaymentSchema.safeParse({
+      to,
+      amount,
+      token,
+      memo: memo || undefined,
+    });
+
+    if (result.success) {
+      setErrors({});
+      return true;
+    }
+
     const newErrors: Record<string, string> = {};
-
-    if (!/^0x[a-fA-F0-9]{40}$/.test(to)) {
-      newErrors.to = "Invalid address format (0x...)";
+    for (const issue of result.error.issues) {
+      const field = String(issue.path[0] ?? "");
+      if (field && !newErrors[field]) {
+        newErrors[field] = issue.message;
+      }
     }
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      newErrors.amount = "Amount must be greater than 0";
-    }
-    if (memo && memo.length > 256) {
-      newErrors.memo = "Memo must be 256 characters or less";
-    }
-
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return false;
   }
 
   function handleSubmit() {

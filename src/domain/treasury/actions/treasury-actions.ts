@@ -51,10 +51,12 @@ export async function updateTreasuryNameAction(
   const session = await getSession();
   if (!session) return { error: "Not authenticated" };
 
-  const name = formData.get("name") as string;
-  if (!name || name.length > 100) {
+  const raw = { name: formData.get("name") };
+  const parsed = createTreasurySchema.safeParse(raw);
+  if (!parsed.success) {
     return { error: "Please enter a valid name." };
   }
+  const name = parsed.data.name;
 
   await db
     .update(treasuries)

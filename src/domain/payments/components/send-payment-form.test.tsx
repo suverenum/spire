@@ -63,7 +63,7 @@ describe("SendPaymentForm", () => {
       screen.getByText("Invalid address format (0x...)"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Amount must be greater than 0"),
+      screen.getByText("Amount must be a valid number"),
     ).toBeInTheDocument();
   });
 
@@ -157,7 +157,7 @@ describe("SendPaymentForm", () => {
       fireEvent.change(amountInput, { target: { value: "-5" } });
       fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
       expect(
-        screen.getByText("Amount must be greater than 0"),
+        screen.getByText("Amount must be a valid number"),
       ).toBeInTheDocument();
     });
 
@@ -169,7 +169,7 @@ describe("SendPaymentForm", () => {
       fireEvent.change(amountInput, { target: { value: "abc" } });
       fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
       expect(
-        screen.getByText("Amount must be greater than 0"),
+        screen.getByText("Amount must be a valid number"),
       ).toBeInTheDocument();
     });
 

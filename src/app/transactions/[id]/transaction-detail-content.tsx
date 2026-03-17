@@ -16,7 +16,7 @@ export function TransactionDetailContent({
   tempoAddress,
   treasuryName,
 }: TransactionDetailContentProps) {
-  const { data: transactions } = useTransactions(tempoAddress);
+  const { data: transactions, isLoading } = useTransactions(tempoAddress);
   const tx = transactions?.find((t) => t.id === transactionId);
 
   return (
@@ -36,7 +36,9 @@ export function TransactionDetailContent({
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         <h2 className="mb-4 text-2xl font-semibold">Transaction Detail</h2>
-        {tx ? (
+        {isLoading && !tx ? (
+          <p className="text-gray-500">Loading transaction...</p>
+        ) : tx ? (
           <TransactionDetail transaction={tx} userAddress={tempoAddress} />
         ) : (
           <p className="text-gray-500">Transaction not found.</p>

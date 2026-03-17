@@ -13,7 +13,7 @@ export function truncateAddress(address: string): string {
 export function formatBalance(balance: bigint, decimals: number): string {
   const negative = balance < 0n;
   const abs = negative ? -balance : balance;
-  const divisor = BigInt(10 ** decimals);
+  const divisor = 10n ** BigInt(decimals);
   const whole = abs / divisor;
   const fractional = abs % divisor;
   const fractionalStr = fractional
