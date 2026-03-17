@@ -13,6 +13,11 @@ out/
 # build
 dist/
 build/
+*.tsbuildinfo
+
+# test
+playwright-report/
+test-results/
 
 # IDE
 .vscode/
@@ -25,3 +30,6 @@ Thumbs.db
 # Claude Code local settings
 .claude/
 .vercel
+
+# ralphex progress logs
+.ralphex/progress/

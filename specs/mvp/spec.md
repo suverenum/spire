@@ -980,14 +980,14 @@ Pre-commit hooks (Husky + lint-staged) run `lint` and `format` on staged files t
 
 ### Universal (always required)
 
-- [ ] Unit & integration tests pass (`bun run test`)
-- [ ] E2E tests pass (`bun run test:e2e`)
-- [ ] 95% line coverage on new/changed code
-- [ ] TypeScript compiles cleanly (`bun run typecheck`)
-- [ ] Linter passes (`bun run lint`)
-- [ ] Formatting passes (`bun run format:check`)
-- [ ] Database migrations are clean (`bun run db:generate` produces no diff)
-- [ ] Spec updated to reflect implementation
+- [x] Unit & integration tests pass (`bun run test`)
+- [x] E2E tests pass (`bun run test:e2e`)
+- [x] 95% line coverage on new/changed code
+- [x] TypeScript compiles cleanly (`bun run typecheck`)
+- [x] Linter passes (`bun run lint`)
+- [x] Formatting passes (`bun run format:check`)
+- [x] Database migrations are clean (`bun run db:generate` produces no diff)
+- [x] Spec updated to reflect implementation
 
 ### Feature-Specific
 
