@@ -1,6 +1,7 @@
 import nextConfig from "eslint-config-next";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
+import importPlugin from "eslint-plugin-import";
 
 const eslintConfig = [
 	...nextConfig,
@@ -8,9 +9,17 @@ const eslintConfig = [
 	...nextTypescript,
 	{
 		files: ["**/*.ts", "**/*.tsx"],
+		plugins: {
+			import: importPlugin,
+		},
 		languageOptions: {
 			parserOptions: {
 				projectService: true,
+			},
+		},
+		settings: {
+			"import/resolver": {
+				typescript: true,
 			},
 		},
 		rules: {
@@ -35,6 +44,11 @@ const eslintConfig = [
 				"error",
 				{ checksVoidReturn: { attributes: false } },
 			],
+
+			// Import safety
+			"import/no-cycle": "error",
+			"import/no-self-import": "error",
+			"import/no-duplicates": "error",
 		},
 	},
 	{

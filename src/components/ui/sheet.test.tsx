@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { Sheet } from "./sheet";
 
@@ -102,5 +102,3 @@ describe("Sheet", () => {
 		expect(screen.queryByRole("heading")).not.toBeInTheDocument();
 	});
 });
-
-import { vi } from "vitest";
