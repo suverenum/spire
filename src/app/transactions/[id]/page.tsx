@@ -19,6 +19,7 @@ export default async function TransactionDetailPage({ params }: Props) {
       transactionId={id}
       tempoAddress={session.tempoAddress}
       treasuryName={session.treasuryName}
+      authenticatedAt={session.authenticatedAt}
     />
   );
 }

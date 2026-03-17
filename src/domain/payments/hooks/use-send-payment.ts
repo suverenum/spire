@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { parseUnits, pad, stringToHex } from "viem";
 import { Hooks } from "wagmi/tempo";
 import { CACHE_KEYS, SUPPORTED_TOKENS, type TokenName } from "@/lib/constants";
-import type { Payment } from "@/lib/tempo/types";
+import type { BalancesResult, Payment } from "@/lib/tempo/types";
 import { toast } from "@/components/ui/toast";
 import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
@@ -23,18 +23,26 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
     mutation: {
       onMutate: async (vars) => {
         const addr = fromAddress ?? ("" as `0x${string}`);
+        const tokenStr = String(vars.token).toLowerCase();
         await queryClient.cancelQueries({
           queryKey: CACHE_KEYS.transactions(addr),
         });
-        const previous = queryClient.getQueryData<Payment[]>(
+        await queryClient.cancelQueries({
+          queryKey: CACHE_KEYS.balances(addr),
+        });
+
+        const previousTxs = queryClient.getQueryData<Payment[]>(
           CACHE_KEYS.transactions(addr),
+        );
+        const previousBalances = queryClient.getQueryData<BalancesResult>(
+          CACHE_KEYS.balances(addr),
         );
 
         const tokenName =
           Object.keys(SUPPORTED_TOKENS).find(
             (k) =>
               SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() ===
-              vars.token.toLowerCase(),
+              tokenStr,
           ) ?? "Unknown";
 
         const optimisticPayment: Payment = {
@@ -53,23 +61,43 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
           (old) => [optimisticPayment, ...(old ?? [])],
         );
 
-        return { previous };
+        if (previousBalances) {
+          queryClient.setQueryData<BalancesResult>(CACHE_KEYS.balances(addr), {
+            ...previousBalances,
+            balances: previousBalances.balances.map((b) =>
+              b.tokenAddress.toLowerCase() === tokenStr
+                ? { ...b, balance: b.balance - vars.amount }
+                : b,
+            ),
+          });
+        }
+
+        return { previousTxs, previousBalances };
       },
       onError: (_err, _vars, context) => {
-        if (context?.previous && fromAddress) {
-          queryClient.setQueryData(
-            CACHE_KEYS.transactions(fromAddress),
-            context.previous,
-          );
+        if (fromAddress) {
+          if (context?.previousTxs) {
+            queryClient.setQueryData(
+              CACHE_KEYS.transactions(fromAddress),
+              context.previousTxs,
+            );
+          }
+          if (context?.previousBalances) {
+            queryClient.setQueryData(
+              CACHE_KEYS.balances(fromAddress),
+              context.previousBalances,
+            );
+          }
         }
         toast("Payment failed. Please try again.", "error");
       },
       onSuccess: (_data, vars) => {
+        const successTokenStr = String(vars.token).toLowerCase();
         const tokenName =
           Object.keys(SUPPORTED_TOKENS).find(
             (k) =>
               SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() ===
-              vars.token.toLowerCase(),
+              successTokenStr,
           ) ?? "";
         toast("Payment sent successfully!", "success");
         trackEvent(AnalyticsEvents.PAYMENT_SENT, {

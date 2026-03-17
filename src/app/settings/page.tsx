@@ -8,5 +8,10 @@ export default async function SettingsPage() {
     redirect("/");
   }
 
-  return <SettingsContent treasuryName={session.treasuryName} />;
+  return (
+    <SettingsContent
+      treasuryName={session.treasuryName}
+      authenticatedAt={session.authenticatedAt}
+    />
+  );
 }

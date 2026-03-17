@@ -173,7 +173,7 @@ describe("SendPaymentForm", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows error for memo exceeding 32 characters", () => {
+    it("shows error for memo exceeding 32 bytes", () => {
       renderWithQuery(
         <SendPaymentForm open={true} onClose={() => {}} fromAddress={addr} />,
       );
@@ -188,11 +188,11 @@ describe("SendPaymentForm", () => {
       });
       fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
       expect(
-        screen.getByText("Memo must be 32 characters or less"),
+        screen.getByText("Memo must be 32 bytes or less"),
       ).toBeInTheDocument();
     });
 
-    it("does not show memo error for exactly 32 characters", () => {
+    it("does not show memo error for exactly 32 bytes", () => {
       renderWithQuery(
         <SendPaymentForm open={true} onClose={() => {}} fromAddress={addr} />,
       );
@@ -207,7 +207,7 @@ describe("SendPaymentForm", () => {
       });
       fireEvent.click(screen.getByRole("button", { name: /Send Payment/ }));
       expect(
-        screen.queryByText("Memo must be 32 characters or less"),
+        screen.queryByText("Memo must be 32 bytes or less"),
       ).not.toBeInTheDocument();
     });
 

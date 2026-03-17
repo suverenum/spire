@@ -138,12 +138,30 @@ describe("sendPaymentSchema", () => {
     }
   });
 
-  it("rejects memo over 32 characters", () => {
+  it("rejects memo over 32 bytes (ASCII)", () => {
     const result = sendPaymentSchema.safeParse({
       ...validPayment,
       memo: "a".repeat(33),
     });
     expect(result.success).toBe(false);
+  });
+
+  it("rejects memo over 32 bytes (multi-byte characters)", () => {
+    // 11 emoji x 4 bytes each = 44 bytes > 32
+    const result = sendPaymentSchema.safeParse({
+      ...validPayment,
+      memo: "\u{1F600}".repeat(11),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts memo within 32 bytes with multi-byte characters", () => {
+    // 8 emoji x 4 bytes each = 32 bytes
+    const result = sendPaymentSchema.safeParse({
+      ...validPayment,
+      memo: "\u{1F600}".repeat(8),
+    });
+    expect(result.success).toBe(true);
   });
 
   it("rejects invalid address", () => {

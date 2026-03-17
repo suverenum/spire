@@ -36,9 +36,11 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
       lastActivityRef.current = Date.now();
       const now = Date.now();
       if (now - lastRefreshRef.current > SESSION_REFRESH_MS) {
+        const prev = lastRefreshRef.current;
         lastRefreshRef.current = now;
         touchSessionAction().catch(() => {
-          // Session may have expired server-side
+          // Reset so next activity retries the refresh
+          lastRefreshRef.current = prev;
         });
       }
     };

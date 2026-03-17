@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { parseUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { SUPPORTED_TOKENS, type TokenName } from "@/lib/constants";
 import { useSendPayment } from "../hooks/use-send-payment";
+import { useBalances } from "../hooks/use-balances";
 import { sendPaymentSchema } from "@/lib/validations";
 import { Send } from "lucide-react";
 
@@ -27,6 +29,7 @@ export function SendPaymentForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const sendMutation = useSendPayment(fromAddress);
+  const { data: balancesData } = useBalances(fromAddress);
 
   function validate(): boolean {
     const result = sendPaymentSchema.safeParse({
@@ -36,20 +39,40 @@ export function SendPaymentForm({
       memo: memo || undefined,
     });
 
-    if (result.success) {
-      setErrors({});
-      return true;
-    }
-
     const newErrors: Record<string, string> = {};
-    for (const issue of result.error.issues) {
-      const field = String(issue.path[0] ?? "");
-      if (field && !newErrors[field]) {
-        newErrors[field] = issue.message;
+
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const field = String(issue.path[0] ?? "");
+        if (field && !newErrors[field]) {
+          newErrors[field] = issue.message;
+        }
       }
     }
+
+    // Check amount <= available balance (spec requirement)
+    if (!newErrors.amount && amount) {
+      const tokenConfig = SUPPORTED_TOKENS[token];
+      if (tokenConfig && balancesData) {
+        const tokenBalance = balancesData.balances.find(
+          (b) =>
+            b.tokenAddress.toLowerCase() === tokenConfig.address.toLowerCase(),
+        );
+        if (tokenBalance) {
+          try {
+            const parsedAmount = parseUnits(amount, tokenConfig.decimals);
+            if (parsedAmount > tokenBalance.balance) {
+              newErrors.amount = "Amount exceeds available balance";
+            }
+          } catch {
+            // parseUnits failure is caught by schema validation above
+          }
+        }
+      }
+    }
+
     setErrors(newErrors);
-    return false;
+    return Object.keys(newErrors).length === 0;
   }
 
   function handleSubmit() {
