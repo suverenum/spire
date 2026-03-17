@@ -980,47 +980,47 @@ Pre-commit hooks (Husky + lint-staged) run `lint` and `format` on staged files t
 
 ### Universal (always required)
 
-- [ ] Unit & integration tests pass (`bun run test`)
-- [ ] E2E tests pass (`bun run test:e2e`)
-- [ ] 95% line coverage on new/changed code
-- [ ] TypeScript compiles cleanly (`bun run typecheck`)
-- [ ] Linter passes (`bun run lint`)
-- [ ] Formatting passes (`bun run format:check`)
-- [ ] Database migrations are clean (`bun run db:generate` produces no diff)
-- [ ] Spec updated to reflect implementation
+- [x] Unit & integration tests pass (`bun run test`)
+- [x] E2E tests pass (`bun run test:e2e`)
+- [x] 95% line coverage on new/changed code
+- [x] TypeScript compiles cleanly (`bun run typecheck`)
+- [x] Linter passes (`bun run lint`)
+- [x] Formatting passes (`bun run format:check`)
+- [x] Database migrations are clean (`bun run db:generate` produces no diff)
+- [x] Spec updated to reflect implementation
 
 ### Feature-Specific
 
-- [ ] User can create a treasury with a name and passkey authentication
-- [ ] Treasury name displayed in header, editable in settings
-- [ ] No financial data visible before passkey authentication (lock screen)
-- [ ] Logout clears session + persisted cache → lock screen
-- [ ] Session expires after 15 minutes of inactivity → lock screen
-- [ ] Dashboard displays real-time stablecoin balances from Tempo
-- [ ] Dashboard renders cached data in <100ms for returning users (persisted query cache)
-- [ ] User can send a stablecoin payment with memo
-- [ ] Send form validates address format, balance, and required fields with inline errors
-- [ ] Send payment uses optimistic update — UI updates before chain confirmation
-- [ ] Optimistic update rolls back correctly on transaction failure
-- [ ] Receive sheet shows wallet address + QR code with one-tap copy
-- [ ] Incoming payments appear in real-time via WebSocket (no manual refresh)
-- [ ] "Live updates paused" banner shown when WebSocket disconnects, with polling fallback
-- [ ] Payments are gasless (fee sponsorship working)
-- [ ] Transaction history with All/Sent/Received tabs and address search
-- [ ] Transaction detail view with copyable fields and block explorer link
-- [ ] Empty state shown when no transactions exist
-- [ ] "View all →" link on dashboard navigates to full transaction history
-- [ ] App is usable on flaky connections (cached balances + transaction history render offline)
-- [ ] Security headers present on all responses (HSTS, X-Content-Type-Options, X-Frame-Options, CSP)
-- [ ] (MVP+) Sentry captures errors with source maps and breadcrumbs in preview + production
-- [ ] (MVP+) PostHog tracks core events (treasury created, payment sent, payment received, logout)
-- [ ] PPR enabled: dashboard serves static shell from CDN, dynamic content streams via Suspense
-- [ ] React Compiler enabled (`reactCompiler: true`) — no manual useMemo/useCallback needed
-- [ ] View Transitions enabled — route changes animate smoothly (Chromium), degrade gracefully (Firefox/Safari)
-- [ ] Service worker precaches app shell — repeat visits load in <200ms
-- [ ] Lighthouse CI: LCP < 400ms, INP < 100ms, CLS < 0.05
-- [ ] Client JS bundle < 100kb gzipped (initial load)
-- [ ] App deployed and accessible on a `*.vercel.app` domain
+- [x] User can create a treasury with a name and passkey authentication
+- [x] Treasury name displayed in header, editable in settings
+- [x] No financial data visible before passkey authentication (lock screen)
+- [x] Logout clears session + persisted cache → lock screen
+- [x] Session expires after 15 minutes of inactivity → lock screen
+- [x] Dashboard displays real-time stablecoin balances from Tempo
+- [x] Dashboard renders cached data in <100ms for returning users (persisted query cache)
+- [x] User can send a stablecoin payment with memo
+- [x] Send form validates address format, balance, and required fields with inline errors
+- [x] Send payment uses optimistic update — UI updates before chain confirmation
+- [x] Optimistic update rolls back correctly on transaction failure
+- [x] Receive sheet shows wallet address + QR code with one-tap copy
+- [x] Incoming payments appear in real-time via WebSocket (no manual refresh)
+- [x] "Live updates paused" banner shown when WebSocket disconnects, with polling fallback
+- [x] Payments are gasless (fee sponsorship working)
+- [x] Transaction history with All/Sent/Received tabs and address search
+- [x] Transaction detail view with copyable fields and block explorer link
+- [x] Empty state shown when no transactions exist
+- [x] "View all →" link on dashboard navigates to full transaction history
+- [x] App is usable on flaky connections (cached balances + transaction history render offline)
+- [x] Security headers present on all responses (HSTS, X-Content-Type-Options, X-Frame-Options, CSP)
+- [x] (MVP+) Sentry captures errors with source maps and breadcrumbs in preview + production
+- [x] (MVP+) PostHog tracks core events (treasury created, payment sent, payment received, logout)
+- [x] PPR enabled: dashboard serves static shell from CDN, dynamic content streams via Suspense
+- [x] React Compiler enabled (`reactCompiler: true`) — no manual useMemo/useCallback needed
+- [x] View Transitions enabled — route changes animate smoothly (Chromium), degrade gracefully (Firefox/Safari)
+- [x] Service worker precaches app shell — repeat visits load in <200ms
+- [x] Lighthouse CI: LCP < 400ms, INP < 100ms, CLS < 0.05
+- [x] Client JS bundle < 100kb gzipped (initial load)
+- [x] App deployed and accessible on a `*.vercel.app` domain
 
 ## 9. Post-MVP Roadmap (Deferred)
 

@@ -1,0 +1,80 @@
+{
+  "id": "679bf053-1173-4ad7-be9e-931a27322958",
+  "prevId": "fc730be4-12f6-4e6c-98e9-c4c7cea99e91",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.treasuries": {
+      "name": "treasuries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tempo_address": {
+          "name": "tempo_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "singleton_guard": {
+          "name": "singleton_guard",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "treasuries_tempo_address_unique": {
+          "name": "treasuries_tempo_address_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "tempo_address"
+          ]
+        },
+        "treasuries_singleton_guard_unique": {
+          "name": "treasuries_singleton_guard_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "singleton_guard"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

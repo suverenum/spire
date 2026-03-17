@@ -1,0 +1,8 @@
+.next
+node_modules
+bun.lock
+drizzle
+guidelines
+specs
+public/sw.js
+coverage
