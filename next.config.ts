@@ -2,7 +2,10 @@ import withSerwist from "@serwist/next";
 
 const nextConfig = {
   reactCompiler: true,
-  viewTransition: true,
+  turbopack: {},
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@tanstack/react-query", "viem"],
+  },
   async headers() {
     return [
       {
@@ -30,7 +33,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "font-src 'self'",
-              "connect-src 'self' https://rpc.moderato.tempo.xyz wss://rpc.moderato.tempo.xyz",
+              "connect-src 'self' https://rpc.moderato.tempo.xyz wss://rpc.moderato.tempo.xyz https://sponsor.moderato.tempo.xyz",
               "frame-ancestors 'none'",
             ].join("; "),
           },

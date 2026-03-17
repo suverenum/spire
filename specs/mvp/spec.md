@@ -1005,7 +1005,7 @@ Pre-commit hooks (Husky + lint-staged) run `lint` and `format` on staged files t
 - [x] Receive sheet shows wallet address + QR code with one-tap copy
 - [x] Incoming payments appear in real-time via WebSocket (no manual refresh)
 - [x] "Live updates paused" banner shown when WebSocket disconnects, with polling fallback
-- [ ] Payments are gasless (fee sponsorship working)
+- [x] Payments are gasless (fee sponsorship working)
 - [x] Transaction history with All/Sent/Received tabs and address search
 - [x] Transaction detail view with copyable fields and block explorer link
 - [x] Empty state shown when no transactions exist
@@ -1018,9 +1018,9 @@ Pre-commit hooks (Husky + lint-staged) run `lint` and `format` on staged files t
 - [x] React Compiler enabled (`reactCompiler: true`) — no manual useMemo/useCallback needed
 - [x] View Transitions enabled — route changes animate smoothly (Chromium), degrade gracefully (Firefox/Safari)
 - [x] Service worker precaches app shell — repeat visits load in <200ms
-- [ ] Lighthouse CI: LCP < 400ms, INP < 100ms, CLS < 0.05
-- [ ] Client JS bundle < 100kb gzipped (initial load)
-- [ ] App deployed and accessible on a `*.vercel.app` domain
+- [x] Lighthouse CI: LCP < 400ms, INP < 100ms, CLS < 0.05
+- [x] Client JS bundle < 100kb gzipped (initial load)
+- [x] App deployed and accessible on a `*.vercel.app` domain
 
 ## 9. Post-MVP Roadmap (Deferred)
 

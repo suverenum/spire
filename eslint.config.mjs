@@ -7,7 +7,14 @@ const eslintConfig = [
   ...nextCoreWebVitals,
   ...nextTypescript,
   {
-    ignores: [".next/", "node_modules/", "e2e/", "drizzle/"],
+    ignores: [
+      ".next/",
+      "node_modules/",
+      "e2e/",
+      "drizzle/",
+      "public/sw.js",
+      "coverage/",
+    ],
   },
 ];
 

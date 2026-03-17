@@ -4,3 +4,5 @@ bun.lock
 drizzle
 guidelines
 specs
+public/sw.js
+coverage
