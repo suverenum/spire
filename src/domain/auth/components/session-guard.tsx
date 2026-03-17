@@ -22,7 +22,9 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
   const lastRefreshRef = useRef(authenticatedAt);
 
   useEffect(() => {
-    lastActivityRef.current = Date.now();
+    const serverElapsed = Date.now() - authenticatedAt;
+    lastActivityRef.current =
+      serverElapsed > SESSION_MAX_AGE_MS ? authenticatedAt : Date.now();
 
     let throttleTimer: ReturnType<typeof setTimeout> | null = null;
     const handleActivity = () => {

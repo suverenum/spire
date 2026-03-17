@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CACHE_KEYS } from "@/lib/constants";
+import { CACHE_KEYS, SUPPORTED_TOKENS } from "@/lib/constants";
 import type { Payment } from "@/lib/tempo/types";
 import { sendPaymentAction } from "../actions/send-payment-action";
 import { toast } from "@/components/ui/toast";
@@ -51,7 +51,11 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
         txHash: `0x${"0".repeat(64)}` as `0x${string}`,
         from: addr,
         to: params.to,
-        amount: parseTokenAmount(params.amount, 6),
+        amount: parseTokenAmount(
+          params.amount,
+          SUPPORTED_TOKENS[params.token as keyof typeof SUPPORTED_TOKENS]
+            ?.decimals ?? 6,
+        ),
         token: params.token,
         memo: params.memo,
         status: "pending",

@@ -60,8 +60,4 @@ describe("CACHE_KEYS", () => {
   it("generates transactions key", () => {
     expect(CACHE_KEYS.transactions("0x123")).toEqual(["transactions", "0x123"]);
   });
-
-  it("generates treasury key", () => {
-    expect(CACHE_KEYS.treasury()).toEqual(["treasury"]);
-  });
 });

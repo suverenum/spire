@@ -56,24 +56,24 @@ describe("SessionGuard", () => {
     expect(screen.getByText("Still valid")).toBeInTheDocument();
   });
 
-  it("does not logout based on auth time alone when user is active", () => {
+  it("logs out when session has already expired on mount", () => {
     vi.useFakeTimers();
     // authenticatedAt from 20 minutes ago (max is 15 min)
     const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
 
     render(
       <SessionGuard authenticatedAt={twentyMinutesAgo}>
-        <p>Should stay</p>
+        <p>Should logout</p>
       </SessionGuard>,
     );
 
-    // The check runs after 60 seconds timeout, but user just rendered (activity is recent)
+    // The check runs after 60 seconds timeout
     act(() => {
       vi.advanceTimersByTime(60_000);
     });
 
-    // Should NOT logout because the guard checks inactivity, not auth time
-    expect(mockLogoutAction).not.toHaveBeenCalled();
+    // Should logout because the session expired before the page was loaded
+    expect(mockLogoutAction).toHaveBeenCalled();
   });
 
   it("redirects when inactivity exceeds SESSION_MAX_AGE_MS", () => {

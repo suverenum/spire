@@ -28,11 +28,15 @@ describe("tip20Abi", () => {
       (item) => item.type === "event" && item.name === "Transfer",
     );
     expect(event).toBeDefined();
-    if (event && "inputs" in event) {
-      const fromInput = event.inputs.find((i) => i.name === "from");
-      const toInput = event.inputs.find((i) => i.name === "to");
-      expect(fromInput?.indexed).toBe(true);
-      expect(toInput?.indexed).toBe(true);
-    }
+    expect(event).toHaveProperty("inputs");
+    const inputs = (
+      event as unknown as {
+        inputs: readonly { name: string; indexed: boolean }[];
+      }
+    ).inputs;
+    const fromInput = inputs.find((i) => i.name === "from");
+    const toInput = inputs.find((i) => i.name === "to");
+    expect(fromInput?.indexed).toBe(true);
+    expect(toInput?.indexed).toBe(true);
   });
 });

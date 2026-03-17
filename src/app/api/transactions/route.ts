@@ -19,12 +19,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const transactions = await fetchTransactions(parsed.data as `0x${string}`);
-  return NextResponse.json({
-    transactions: transactions.map((t) => ({
-      ...t,
-      amount: t.amount.toString(),
-      timestamp: t.timestamp.toISOString(),
-    })),
-  });
+  try {
+    const transactions = await fetchTransactions(parsed.data as `0x${string}`);
+    return NextResponse.json({
+      transactions: transactions.map((t) => ({
+        ...t,
+        amount: t.amount.toString(),
+        timestamp: t.timestamp.toISOString(),
+      })),
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to fetch transactions" },
+      { status: 502 },
+    );
+  }
 }

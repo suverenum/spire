@@ -16,10 +16,3 @@ export interface Payment {
   status: "pending" | "confirmed" | "failed";
   timestamp: Date;
 }
-
-export interface Treasury {
-  id: string;
-  name: string;
-  tempoAddress: `0x${string}`;
-  createdAt: Date;
-}

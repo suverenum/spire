@@ -17,6 +17,3 @@ export const sendPaymentSchema = z.object({
 export const createTreasurySchema = z.object({
   name: z.string().min(1).max(100),
 });
-
-export type SendPaymentInput = z.infer<typeof sendPaymentSchema>;
-export type CreateTreasuryInput = z.infer<typeof createTreasurySchema>;

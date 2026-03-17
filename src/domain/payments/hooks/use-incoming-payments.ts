@@ -89,7 +89,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
                 topics: [
                   TRANSFER_TOPIC,
                   null,
-                  `0x000000000000000000000000${address.slice(2)}`,
+                  `0x000000000000000000000000${address.slice(2).toLowerCase()}`,
                 ],
               },
             ],

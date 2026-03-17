@@ -19,11 +19,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const balances = await fetchBalances(parsed.data as `0x${string}`);
-  return NextResponse.json({
-    balances: balances.map((b) => ({
-      ...b,
-      balance: b.balance.toString(),
-    })),
-  });
+  try {
+    const balances = await fetchBalances(parsed.data as `0x${string}`);
+    return NextResponse.json({
+      balances: balances.map((b) => ({
+        ...b,
+        balance: b.balance.toString(),
+      })),
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to fetch balances" },
+      { status: 502 },
+    );
+  }
 }

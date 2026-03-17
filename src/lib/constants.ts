@@ -37,5 +37,4 @@ export const SESSION_COOKIE_NAME = "spire-session";
 export const CACHE_KEYS = {
   balances: (address: string) => ["balances", address] as const,
   transactions: (address: string) => ["transactions", address] as const,
-  treasury: () => ["treasury"] as const,
 } as const;
