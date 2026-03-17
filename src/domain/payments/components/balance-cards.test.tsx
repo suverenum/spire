@@ -25,20 +25,23 @@ const addr = "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`;
 describe("BalanceCards", () => {
   beforeEach(() => {
     mockUseBalances.mockReturnValue({
-      data: [
-        {
-          token: "AlphaUSD",
-          tokenAddress: "0x1111111111111111111111111111111111111111",
-          balance: 10000000n,
-          decimals: 6,
-        },
-        {
-          token: "BetaUSD",
-          tokenAddress: "0x2222222222222222222222222222222222222222",
-          balance: 5000000n,
-          decimals: 6,
-        },
-      ],
+      data: {
+        balances: [
+          {
+            token: "AlphaUSD",
+            tokenAddress: "0x1111111111111111111111111111111111111111",
+            balance: 10000000n,
+            decimals: 6,
+          },
+          {
+            token: "BetaUSD",
+            tokenAddress: "0x2222222222222222222222222222222222222222",
+            balance: 5000000n,
+            decimals: 6,
+          },
+        ],
+        partial: false,
+      },
       isLoading: false,
     });
   });
@@ -67,14 +70,17 @@ describe("BalanceCards", () => {
 
   it("shows data when loading but data exists (background refresh)", () => {
     mockUseBalances.mockReturnValue({
-      data: [
-        {
-          token: "AlphaUSD",
-          tokenAddress: "0x1111111111111111111111111111111111111111",
-          balance: 10000000n,
-          decimals: 6,
-        },
-      ],
+      data: {
+        balances: [
+          {
+            token: "AlphaUSD",
+            tokenAddress: "0x1111111111111111111111111111111111111111",
+            balance: 10000000n,
+            decimals: 6,
+          },
+        ],
+        partial: false,
+      },
       isLoading: true,
     });
     renderWithQuery(<BalanceCards address={addr} />);
@@ -83,7 +89,7 @@ describe("BalanceCards", () => {
 
   it("shows zero total when no balances", () => {
     mockUseBalances.mockReturnValue({
-      data: [],
+      data: { balances: [], partial: false },
       isLoading: false,
     });
     renderWithQuery(<BalanceCards address={addr} />);
@@ -97,5 +103,37 @@ describe("BalanceCards", () => {
     });
     renderWithQuery(<BalanceCards address={addr} />);
     expect(screen.getByText("$0.00")).toBeInTheDocument();
+  });
+
+  it("shows partial warning when some tokens failed to load", () => {
+    mockUseBalances.mockReturnValue({
+      data: {
+        balances: [
+          {
+            token: "AlphaUSD",
+            tokenAddress: "0x1111111111111111111111111111111111111111",
+            balance: 10000000n,
+            decimals: 6,
+          },
+        ],
+        partial: true,
+      },
+      isLoading: false,
+    });
+    renderWithQuery(<BalanceCards address={addr} />);
+    expect(
+      screen.getByText(
+        "Some token balances could not be loaded. Totals may be incomplete.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("does not show partial warning when all tokens loaded", () => {
+    renderWithQuery(<BalanceCards address={addr} />);
+    expect(
+      screen.queryByText(
+        "Some token balances could not be loaded. Totals may be incomplete.",
+      ),
+    ).not.toBeInTheDocument();
   });
 });

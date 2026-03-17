@@ -91,10 +91,12 @@ export async function fetchTransactions(
 
   // Collect matching logs and unique block numbers
   const addrLower = address.toLowerCase();
+  type FulfilledTokenResult = Extract<
+    (typeof tokenResults)[number],
+    { status: "fulfilled" }
+  >;
   const matchedLogs: Array<{
-    log: (typeof tokenResults)[number] extends PromiseFulfilledResult<infer T>
-      ? T["logs"][number]
-      : never;
+    log: FulfilledTokenResult["value"]["logs"][number];
     token: string;
   }> = [];
   const blockNumbers = new Set<bigint>();

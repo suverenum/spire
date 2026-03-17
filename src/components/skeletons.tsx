@@ -19,6 +19,29 @@ export function BalanceSkeleton() {
   );
 }
 
+export function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="border-b border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-8 rounded-full" />
+        </div>
+      </header>
+      <main className="mx-auto max-w-4xl px-4 py-6">
+        <div className="mb-6 flex flex-col gap-4">
+          <BalanceSkeleton />
+          <div className="flex gap-3">
+            <Skeleton className="h-12 flex-1 rounded-lg" />
+            <Skeleton className="h-12 flex-1 rounded-lg" />
+          </div>
+        </div>
+        <TransactionSkeleton />
+      </main>
+    </div>
+  );
+}
+
 export function TransactionSkeleton() {
   return (
     <div className="space-y-3">

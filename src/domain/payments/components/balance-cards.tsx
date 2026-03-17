@@ -10,17 +10,35 @@ interface BalanceCardsProps {
 }
 
 export function BalanceCards({ address }: BalanceCardsProps) {
-  const { data: balances, isLoading } = useBalances(address);
+  const { data, isLoading, isError } = useBalances(address);
 
-  if (isLoading && !balances) {
+  if (isLoading && !data) {
     return <BalanceSkeleton />;
   }
 
-  const items = balances ?? [];
+  if (isError && !data) {
+    return (
+      <Card className="mb-4">
+        <p className="text-sm text-red-600">
+          Unable to load balances. Please try again later.
+        </p>
+      </Card>
+    );
+  }
+
+  const items = data?.balances ?? [];
+  const partial = data?.partial ?? false;
   const totalBalance = items.reduce((sum, b) => sum + b.balance, 0n);
 
   return (
     <div>
+      {partial && (
+        <Card className="mb-4">
+          <p className="text-sm text-yellow-700">
+            Some token balances could not be loaded. Totals may be incomplete.
+          </p>
+        </Card>
+      )}
       <Card className="mb-4">
         <p className="text-sm text-gray-500">Total Balance</p>
         <p className="text-3xl font-semibold">

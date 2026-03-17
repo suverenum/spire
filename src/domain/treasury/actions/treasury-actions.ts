@@ -1,5 +1,7 @@
 "use server";
 
+import { randomBytes } from "crypto";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
@@ -7,8 +9,27 @@ import { createSession, getSession } from "@/lib/session";
 import { createTreasurySchema } from "@/lib/validations";
 import { TEMPO_RPC_URL } from "@/lib/constants";
 import { eq, sql } from "drizzle-orm";
+import { getTempoClient } from "@/lib/tempo/client";
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+const SIGNATURE_RE = /^0x[a-fA-F0-9]+$/;
+
+const CREATE_CHALLENGE_COOKIE = "spire-create-challenge";
+const CREATE_CHALLENGE_MAX_AGE = 120; // 2 minutes
+
+export async function getCreateChallengeAction(): Promise<string> {
+  const nonce = randomBytes(32).toString("hex");
+  const challenge = `Create Spire treasury: ${nonce}`;
+  const cookieStore = await cookies();
+  cookieStore.set(CREATE_CHALLENGE_COOKIE, challenge, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: CREATE_CHALLENGE_MAX_AGE,
+    path: "/",
+  });
+  return challenge;
+}
 
 export async function createTreasuryAction(
   formData: FormData,
@@ -23,6 +44,33 @@ export async function createTreasuryAction(
   const tempoAddress = formData.get("tempoAddress") as string;
   if (!tempoAddress || !ADDRESS_RE.test(tempoAddress)) {
     return { error: "Invalid Tempo address from passkey." };
+  }
+
+  // Verify the challenge signature to prove key ownership
+  const signature = formData.get("signature") as string;
+  if (!signature || !SIGNATURE_RE.test(signature)) {
+    return { error: "Missing passkey signature." };
+  }
+
+  const cookieStore = await cookies();
+  const challengeCookie = cookieStore.get(CREATE_CHALLENGE_COOKIE);
+  if (!challengeCookie?.value) {
+    return { error: "Challenge expired. Please try again." };
+  }
+  cookieStore.delete(CREATE_CHALLENGE_COOKIE);
+
+  const client = getTempoClient();
+  try {
+    const valid = await client.verifyMessage({
+      address: tempoAddress as `0x${string}`,
+      message: challengeCookie.value,
+      signature: signature as `0x${string}`,
+    });
+    if (!valid) {
+      return { error: "Passkey verification failed." };
+    }
+  } catch {
+    return { error: "Passkey verification failed." };
   }
 
   // Atomic check-and-insert with DB-level singleton guard.

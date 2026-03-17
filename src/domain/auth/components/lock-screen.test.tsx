@@ -12,11 +12,14 @@ import { wagmiConfig } from "@/lib/wagmi";
 import { LockScreen } from "./lock-screen";
 
 const mockLoginAction = vi.fn();
+const mockGetLoginChallengeAction = vi.fn();
 const mockConnectAsync = vi.fn();
+const mockSignMessageAsync = vi.fn();
 const mockPush = vi.fn();
 
 vi.mock("../actions/auth-actions", () => ({
   loginAction: (...args: unknown[]) => mockLoginAction(...args),
+  getLoginChallengeAction: () => mockGetLoginChallengeAction(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -34,6 +37,9 @@ vi.mock("wagmi", async (importOriginal) => {
     useConnect: () => ({
       connectAsync: mockConnectAsync,
       connectors: [{ id: "webAuthn", name: "WebAuthn" }],
+    }),
+    useSignMessage: () => ({
+      signMessageAsync: mockSignMessageAsync,
     }),
   };
 });
@@ -58,10 +64,14 @@ describe("LockScreen", () => {
     mockLoginAction.mockResolvedValue({
       tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
     });
+    mockGetLoginChallengeAction.mockReset();
+    mockGetLoginChallengeAction.mockResolvedValue("Sign in to Spire: abc123");
     mockConnectAsync.mockReset();
     mockConnectAsync.mockResolvedValue({
       accounts: ["0x1234567890abcdef1234567890abcdef12345678"],
     });
+    mockSignMessageAsync.mockReset();
+    mockSignMessageAsync.mockResolvedValue("0xmocksignature");
     mockPush.mockReset();
   });
 
@@ -101,9 +111,14 @@ describe("LockScreen", () => {
     });
 
     expect(mockConnectAsync).toHaveBeenCalled();
+    expect(mockGetLoginChallengeAction).toHaveBeenCalled();
+    expect(mockSignMessageAsync).toHaveBeenCalledWith({
+      message: "Sign in to Spire: abc123",
+    });
     expect(mockLoginAction).toHaveBeenCalledWith(
       "123",
       "0x1234567890abcdef1234567890abcdef12345678",
+      "0xmocksignature",
     );
     expect(mockPush).toHaveBeenCalledWith("/dashboard");
   });

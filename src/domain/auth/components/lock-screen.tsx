@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useConnect } from "wagmi";
+import { useConnect, useSignMessage } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Fingerprint } from "lucide-react";
-import { loginAction } from "../actions/auth-actions";
+import { loginAction, getLoginChallengeAction } from "../actions/auth-actions";
 import { CACHE_KEYS } from "@/lib/constants";
 import { fetchBalancesClient } from "@/domain/payments/hooks/use-balances";
 import { fetchTransactionsClient } from "@/domain/payments/hooks/use-transactions";
@@ -20,6 +20,7 @@ export function LockScreen({ treasuryId, treasuryName }: LockScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { connectAsync, connectors } = useConnect();
+  const { signMessageAsync } = useSignMessage();
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -38,7 +39,11 @@ export function LockScreen({ treasuryId, treasuryName }: LockScreenProps) {
           return;
         }
 
-        const loginResult = await loginAction(treasuryId, address);
+        // Sign a server-generated challenge to prove key ownership
+        const challenge = await getLoginChallengeAction();
+        const signature = await signMessageAsync({ message: challenge });
+
+        const loginResult = await loginAction(treasuryId, address, signature);
         if (loginResult?.error) {
           setError(loginResult.error);
           return;

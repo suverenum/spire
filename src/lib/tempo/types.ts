@@ -5,6 +5,11 @@ export interface AccountBalance {
   decimals: number;
 }
 
+export interface BalancesResult {
+  balances: AccountBalance[];
+  partial: boolean;
+}
+
 export interface Payment {
   id: string;
   txHash: `0x${string}`;

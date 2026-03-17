@@ -20,12 +20,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const balances = await fetchBalances(parsed.data as `0x${string}`);
+    const result = await fetchBalances(parsed.data as `0x${string}`);
     return NextResponse.json({
-      balances: balances.map((b) => ({
+      balances: result.balances.map((b) => ({
         ...b,
         balance: b.balance.toString(),
       })),
+      partial: result.partial,
     });
   } catch {
     return NextResponse.json(

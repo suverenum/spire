@@ -2,11 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useConnect } from "wagmi";
+import { useConnect, useSignMessage } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Fingerprint } from "lucide-react";
-import { createTreasuryAction } from "@/domain/treasury/actions/treasury-actions";
+import {
+  createTreasuryAction,
+  getCreateChallengeAction,
+} from "@/domain/treasury/actions/treasury-actions";
 import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
 export default function CreateTreasuryPage() {
@@ -14,6 +17,7 @@ export default function CreateTreasuryPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { connectAsync, connectors } = useConnect();
+  const { signMessageAsync } = useSignMessage();
 
   function handleSubmit(formData: FormData) {
     setError(null);
@@ -30,7 +34,12 @@ export default function CreateTreasuryPage() {
           return;
         }
 
+        // Sign a server-generated challenge to prove key ownership
+        const challenge = await getCreateChallengeAction();
+        const signature = await signMessageAsync({ message: challenge });
+
         formData.set("tempoAddress", address);
+        formData.set("signature", signature);
         const actionResult = await createTreasuryAction(formData);
         if (actionResult?.error) {
           setError(actionResult.error);
