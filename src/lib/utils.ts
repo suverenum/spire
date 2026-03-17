@@ -16,11 +16,16 @@ export function formatBalance(balance: bigint, decimals: number): string {
   const divisor = 10n ** BigInt(decimals);
   const whole = abs / divisor;
   const fractional = abs % divisor;
-  const fractionalStr = fractional
-    .toString()
-    .padStart(decimals, "0")
-    .slice(0, 2);
-  return `${negative ? "-" : ""}${whole.toString()}.${fractionalStr}`;
+  const fullFractionalStr = fractional.toString().padStart(decimals, "0");
+  const twoDecimal = fullFractionalStr.slice(0, 2);
+
+  // Show full precision for non-zero sub-cent amounts to avoid misleading "$0.00"
+  if (abs > 0n && whole === 0n && twoDecimal === "00") {
+    const trimmed = fullFractionalStr.replace(/0+$/, "");
+    return `${negative ? "-" : ""}0.${trimmed}`;
+  }
+
+  return `${negative ? "-" : ""}${whole.toString()}.${twoDecimal}`;
 }
 
 export function formatDate(date: Date): string {

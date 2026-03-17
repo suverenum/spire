@@ -62,7 +62,6 @@ export async function getSession(): Promise<SessionData | null> {
 
   const elapsed = Date.now() - session.authenticatedAt;
   if (elapsed > SESSION_MAX_AGE_MS) {
-    cookieStore.delete(SESSION_COOKIE_NAME);
     return null;
   }
 

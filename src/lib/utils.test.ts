@@ -51,8 +51,12 @@ describe("formatBalance", () => {
     expect(formatBalance(123456789n, 6)).toBe("123.45");
   });
 
-  it("formats small balance", () => {
-    expect(formatBalance(1234n, 6)).toBe("0.00");
+  it("formats small balance with full precision", () => {
+    expect(formatBalance(1234n, 6)).toBe("0.001234");
+  });
+
+  it("formats sub-cent balance", () => {
+    expect(formatBalance(5000n, 6)).toBe("0.005");
   });
 });
 
