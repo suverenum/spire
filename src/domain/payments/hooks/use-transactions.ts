@@ -5,7 +5,9 @@ import { CACHE_KEYS } from "@/lib/constants";
 import type { Payment } from "@/lib/tempo/types";
 
 async function fetchTransactionsClient(address: string): Promise<Payment[]> {
-  const res = await fetch(`/api/transactions?address=${address}`);
+  const res = await fetch(
+    `/api/transactions?address=${encodeURIComponent(address)}`,
+  );
   if (!res.ok) throw new Error("Failed to fetch transactions");
   const data = await res.json();
   return data.transactions.map(

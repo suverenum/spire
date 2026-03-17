@@ -5,7 +5,9 @@ import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountBalance } from "@/lib/tempo/types";
 
 async function fetchBalancesClient(address: string): Promise<AccountBalance[]> {
-  const res = await fetch(`/api/balances?address=${address}`);
+  const res = await fetch(
+    `/api/balances?address=${encodeURIComponent(address)}`,
+  );
   if (!res.ok) throw new Error("Failed to fetch balances");
   const data = await res.json();
   return data.balances.map(

@@ -28,13 +28,18 @@ export async function createTreasuryAction(
 
   const tempoAddress = generateMockAddress();
 
-  const [treasury] = await db
+  const rows = await db
     .insert(treasuries)
     .values({
       name: parsed.data.name,
       tempoAddress,
     })
     .returning();
+
+  const treasury = rows[0];
+  if (!treasury) {
+    return { error: "Failed to create treasury. Please try again." };
+  }
 
   await createSession({
     treasuryId: treasury.id,

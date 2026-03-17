@@ -27,7 +27,7 @@ function getSnapshot() {
 }
 
 function getServerSnapshot() {
-  return true;
+  return false;
 }
 
 function setConnected(value: boolean) {
