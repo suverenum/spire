@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useConnect, useSignMessage } from "wagmi";
+import { useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Fingerprint } from "lucide-react";
@@ -17,6 +17,7 @@ export default function CreateTreasuryPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { connectAsync, connectors } = useConnect();
+  const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
 
   function handleSubmit(formData: FormData) {
@@ -27,6 +28,8 @@ export default function CreateTreasuryPage() {
           setError("Passkey authentication is not available in this browser");
           return;
         }
+        // Disconnect any stale session so connectAsync doesn't throw
+        await disconnectAsync().catch(() => {});
         const result = await connectAsync({
           connector: connectors[0],
           capabilities: { type: "sign-up" },
