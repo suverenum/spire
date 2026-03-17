@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createIDBPersister } from "@/lib/idb-persister";
 import { Toaster } from "@/components/ui/toast";
+import { initPostHog } from "@/lib/posthog";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -32,6 +33,10 @@ function getPersister() {
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(makeQueryClient);
   const persister = getPersister();
+
+  useEffect(() => {
+    initPostHog();
+  }, []);
 
   if (persister) {
     return (

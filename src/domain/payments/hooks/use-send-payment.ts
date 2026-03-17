@@ -5,6 +5,7 @@ import { CACHE_KEYS } from "@/lib/constants";
 import type { Payment } from "@/lib/tempo/types";
 import { sendPaymentAction } from "../actions/send-payment-action";
 import { toast } from "@/components/ui/toast";
+import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
 interface SendPaymentParams {
   to: `0x${string}`;
@@ -63,9 +64,13 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
       }
       toast("Payment failed. Please try again.", "error");
     },
-    onSuccess: (result) => {
+    onSuccess: (result, vars) => {
       if (result.success) {
         toast("Payment sent successfully!", "success");
+        trackEvent(AnalyticsEvents.PAYMENT_SENT, {
+          token: vars.token,
+          amount: vars.amount,
+        });
       } else {
         toast(result.error ?? "Payment failed", "error");
       }

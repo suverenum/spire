@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import withSerwist from "@serwist/next";
 
 const nextConfig = {
@@ -33,7 +34,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "font-src 'self'",
-              "connect-src 'self' https://rpc.moderato.tempo.xyz wss://rpc.moderato.tempo.xyz https://sponsor.moderato.tempo.xyz",
+              "connect-src 'self' https://rpc.moderato.tempo.xyz wss://rpc.moderato.tempo.xyz https://sponsor.moderato.tempo.xyz https://*.ingest.sentry.io https://us.i.posthog.com",
               "frame-ancestors 'none'",
             ].join("; "),
           },
@@ -43,8 +44,19 @@ const nextConfig = {
   },
 };
 
-export default withSerwist({
+const withSW = withSerwist({
   swSrc: "src/sw.ts",
   swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "development",
-})(nextConfig);
+});
+
+export default withSentryConfig(withSW(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  disableLogger: true,
+  autoInstrumentServerFunctions: true,
+  autoInstrumentMiddleware: true,
+  autoInstrumentAppDirectory: true,
+  tunnelRoute: "/monitoring",
+});

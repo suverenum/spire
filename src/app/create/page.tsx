@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Fingerprint } from "lucide-react";
 import { createTreasuryAction } from "@/domain/treasury/actions/treasury-actions";
+import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
 export default function CreateTreasuryPage() {
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +17,8 @@ export default function CreateTreasuryPage() {
       const result = await createTreasuryAction(formData);
       if (result?.error) {
         setError(result.error);
+      } else {
+        trackEvent(AnalyticsEvents.TREASURY_CREATED);
       }
     });
   }

@@ -7,6 +7,7 @@ import { truncateAddress } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { Copy, LogOut, Settings } from "lucide-react";
 import { logoutAction } from "@/domain/auth/actions/auth-actions";
+import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
 interface TreasuryHeaderProps {
   name: string;
@@ -28,6 +29,7 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
 
   async function handleLogout() {
     setIsLoggingOut(true);
+    trackEvent(AnalyticsEvents.LOGOUT);
     try {
       await logoutAction();
     } catch {

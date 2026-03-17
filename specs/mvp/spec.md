@@ -1012,8 +1012,8 @@ Pre-commit hooks (Husky + lint-staged) run `lint` and `format` on staged files t
 - [x] "View all →" link on dashboard navigates to full transaction history
 - [x] App is usable on flaky connections (cached balances + transaction history render offline)
 - [x] Security headers present on all responses (HSTS, X-Content-Type-Options, X-Frame-Options, CSP)
-- [ ] (MVP+) Sentry captures errors with source maps and breadcrumbs in preview + production
-- [ ] (MVP+) PostHog tracks core events (treasury created, payment sent, payment received, logout)
+- [x] (MVP+) Sentry captures errors with source maps and breadcrumbs in preview + production
+- [x] (MVP+) PostHog tracks core events (treasury created, payment sent, payment received, logout)
 - [x] PPR enabled: dashboard serves static shell from CDN, dynamic content streams via Suspense
 - [x] React Compiler enabled (`reactCompiler: true`) — no manual useMemo/useCallback needed
 - [x] View Transitions enabled — route changes animate smoothly (Chromium), degrade gracefully (Firefox/Safari)

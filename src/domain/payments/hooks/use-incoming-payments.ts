@@ -4,6 +4,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CACHE_KEYS } from "@/lib/constants";
 import { toast } from "@/components/ui/toast";
+import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
 const POLLING_INTERVAL = 15_000;
 
@@ -97,6 +98,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
           if (data.method === "eth_subscription") {
             invalidateData();
             toast("Payment received!", "success");
+            trackEvent(AnalyticsEvents.PAYMENT_RECEIVED);
           }
         } catch {
           // Ignore malformed messages
