@@ -70,12 +70,9 @@ export async function fetchTransactions(
   const client = getTempoClient();
   const tokens = Object.values(SUPPORTED_TOKENS);
 
-  const allPayments: Payment[] = [];
-  const blockTimestamps = new Map<bigint, Date>();
-
-  let failures = 0;
-  for (const token of tokens) {
-    try {
+  // Fetch events for all tokens in parallel
+  const tokenResults = await Promise.allSettled(
+    tokens.map(async (token) => {
       const logs = await client.getContractEvents({
         address: token.address,
         abi: tip20Abi,
@@ -83,62 +80,90 @@ export async function fetchTransactions(
         fromBlock: "earliest",
         toBlock: "latest",
       });
+      return { token, logs };
+    }),
+  );
 
-      for (const log of logs) {
-        const args = log.args as {
-          from?: `0x${string}`;
-          to?: `0x${string}`;
-          value?: bigint;
-        };
-        const from = args.from;
-        const to = args.to;
-
-        const addrLower = address.toLowerCase();
-        if (
-          from?.toLowerCase() === addrLower ||
-          to?.toLowerCase() === addrLower
-        ) {
-          const blockNumber = log.blockNumber;
-          if (blockNumber != null && !blockTimestamps.has(blockNumber)) {
-            try {
-              const block = await client.getBlock({ blockNumber });
-              blockTimestamps.set(
-                blockNumber,
-                new Date(Number(block.timestamp) * 1000),
-              );
-            } catch {
-              blockTimestamps.set(blockNumber, new Date());
-            }
-          }
-
-          allPayments.push({
-            id: `${log.transactionHash}-${log.logIndex ?? 0}`,
-            txHash: log.transactionHash as `0x${string}`,
-            from:
-              from ??
-              ("0x0000000000000000000000000000000000000000" as `0x${string}`),
-            to:
-              to ??
-              ("0x0000000000000000000000000000000000000000" as `0x${string}`),
-            amount: args.value ?? 0n,
-            token: token.name,
-            status: "confirmed",
-            timestamp:
-              blockNumber != null
-                ? (blockTimestamps.get(blockNumber) ?? new Date())
-                : new Date(),
-          });
-        }
-      }
-    } catch (err) {
-      failures++;
-      console.error(`Failed to fetch ${token.name} transactions:`, err);
-    }
-  }
-
+  const failures = tokenResults.filter((r) => r.status === "rejected").length;
   if (failures === tokens.length) {
     throw new Error("Failed to fetch transactions: all RPC calls failed");
   }
+
+  // Collect matching logs and unique block numbers
+  const addrLower = address.toLowerCase();
+  const matchedLogs: Array<{
+    log: (typeof tokenResults)[number] extends PromiseFulfilledResult<infer T>
+      ? T["logs"][number]
+      : never;
+    token: string;
+  }> = [];
+  const blockNumbers = new Set<bigint>();
+
+  for (const result of tokenResults) {
+    if (result.status !== "fulfilled") continue;
+    const { token, logs } = result.value;
+    for (const log of logs) {
+      const args = log.args as {
+        from?: `0x${string}`;
+        to?: `0x${string}`;
+        value?: bigint;
+      };
+      if (
+        args.from?.toLowerCase() === addrLower ||
+        args.to?.toLowerCase() === addrLower
+      ) {
+        matchedLogs.push({ log, token: token.name });
+        if (log.blockNumber != null) {
+          blockNumbers.add(log.blockNumber);
+        }
+      }
+    }
+  }
+
+  // Fetch all block timestamps in parallel
+  const blockTimestamps = new Map<bigint, Date>();
+  const blockEntries = await Promise.allSettled(
+    [...blockNumbers].map(async (blockNumber) => {
+      const block = await client.getBlock({ blockNumber });
+      return {
+        blockNumber,
+        timestamp: new Date(Number(block.timestamp) * 1000),
+      };
+    }),
+  );
+
+  for (const entry of blockEntries) {
+    if (entry.status === "fulfilled") {
+      blockTimestamps.set(entry.value.blockNumber, entry.value.timestamp);
+    }
+  }
+
+  // Build payment objects
+  const allPayments: Payment[] = matchedLogs.map(({ log, token }) => {
+    const args = log.args as {
+      from?: `0x${string}`;
+      to?: `0x${string}`;
+      value?: bigint;
+    };
+    const blockNumber = log.blockNumber;
+    return {
+      id: `${log.transactionHash}-${log.logIndex ?? 0}`,
+      txHash: log.transactionHash as `0x${string}`,
+      from:
+        args.from ??
+        ("0x0000000000000000000000000000000000000000" as `0x${string}`),
+      to:
+        args.to ??
+        ("0x0000000000000000000000000000000000000000" as `0x${string}`),
+      amount: args.value ?? 0n,
+      token,
+      status: "confirmed",
+      timestamp:
+        blockNumber != null
+          ? (blockTimestamps.get(blockNumber) ?? new Date())
+          : new Date(),
+    };
+  });
 
   return allPayments.sort(
     (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),

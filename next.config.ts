@@ -3,6 +3,8 @@ import withSerwist from "@serwist/next";
 
 const nextConfig = {
   reactCompiler: true,
+  cacheComponents: true,
+  viewTransition: true,
   turbopack: {},
   experimental: {
     optimizePackageImports: ["lucide-react", "@tanstack/react-query", "viem"],

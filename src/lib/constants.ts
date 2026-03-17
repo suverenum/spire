@@ -8,25 +8,25 @@ export const SUPPORTED_TOKENS = {
     name: "AlphaUSD",
     symbol: "AUSD",
     decimals: 6,
-    address: "0x1111111111111111111111111111111111111111" as `0x${string}`,
+    address: "0x20c0000000000000000000000000000000000001" as `0x${string}`,
   },
   BetaUSD: {
     name: "BetaUSD",
     symbol: "BUSD",
     decimals: 6,
-    address: "0x2222222222222222222222222222222222222222" as `0x${string}`,
+    address: "0x20c0000000000000000000000000000000000002" as `0x${string}`,
   },
   pathUSD: {
     name: "pathUSD",
     symbol: "pUSD",
     decimals: 6,
-    address: "0x3333333333333333333333333333333333333333" as `0x${string}`,
+    address: "0x20c0000000000000000000000000000000000000" as `0x${string}`,
   },
   ThetaUSD: {
     name: "ThetaUSD",
     symbol: "TUSD",
     decimals: 6,
-    address: "0x4444444444444444444444444444444444444444" as `0x${string}`,
+    address: "0x20c0000000000000000000000000000000000003" as `0x${string}`,
   },
 } as const;
 

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { asc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
@@ -11,8 +12,12 @@ export default async function Home() {
     redirect("/dashboard");
   }
 
-  // Check if a treasury exists to show lock screen
-  const existing = await db.select().from(treasuries).limit(1);
+  // Check if a treasury exists to show lock screen (deterministic: oldest first)
+  const existing = await db
+    .select()
+    .from(treasuries)
+    .orderBy(asc(treasuries.createdAt))
+    .limit(1);
   const treasury = existing[0];
 
   if (treasury) {

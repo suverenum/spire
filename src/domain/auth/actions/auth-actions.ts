@@ -9,11 +9,18 @@ import { eq } from "drizzle-orm";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+
 export async function loginAction(
   treasuryId: string,
-): Promise<{ error?: string }> {
+  connectedAddress: string,
+): Promise<{ error?: string; tempoAddress?: string }> {
   if (!UUID_RE.test(treasuryId)) {
     return { error: "Invalid treasury ID" };
+  }
+
+  if (!ADDRESS_RE.test(connectedAddress)) {
+    return { error: "Invalid wallet address" };
   }
 
   const result = await db
@@ -26,13 +33,17 @@ export async function loginAction(
     return { error: "Treasury not found" };
   }
 
+  if (treasury.tempoAddress.toLowerCase() !== connectedAddress.toLowerCase()) {
+    return { error: "Passkey does not match this treasury" };
+  }
+
   await createSession({
     treasuryId: treasury.id,
     tempoAddress: treasury.tempoAddress as `0x${string}`,
     treasuryName: treasury.name,
   });
 
-  redirect("/dashboard");
+  return { tempoAddress: treasury.tempoAddress };
 }
 
 export async function touchSessionAction(): Promise<void> {
