@@ -37,6 +37,7 @@ const nextConfig = {
               "img-src 'self' data: blob:",
               "font-src 'self'",
               "connect-src 'self' https://rpc.moderato.tempo.xyz wss://rpc.moderato.tempo.xyz https://sponsor.moderato.tempo.xyz https://*.ingest.sentry.io https://us.i.posthog.com",
+              "frame-src https://vercel.live",
               "frame-ancestors 'none'",
             ].join("; "),
           },
