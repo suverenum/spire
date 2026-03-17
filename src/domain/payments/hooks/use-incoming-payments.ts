@@ -12,7 +12,7 @@ const TRANSFER_TOPIC =
 
 const POLLING_INTERVAL = 15_000;
 
-let wsConnected = true;
+let wsConnected = false;
 const listeners = new Set<() => void>();
 
 function subscribe(listener: () => void) {

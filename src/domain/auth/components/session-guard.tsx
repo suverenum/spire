@@ -24,7 +24,12 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
   useEffect(() => {
     lastActivityRef.current = Date.now();
 
+    let throttleTimer: ReturnType<typeof setTimeout> | null = null;
     const handleActivity = () => {
+      if (throttleTimer) return;
+      throttleTimer = setTimeout(() => {
+        throttleTimer = null;
+      }, 2000);
       lastActivityRef.current = Date.now();
       const now = Date.now();
       if (now - lastRefreshRef.current > SESSION_REFRESH_MS) {
@@ -63,6 +68,7 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
       window.removeEventListener("click", handleActivity);
       window.removeEventListener("touchstart", handleActivity);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (throttleTimer) clearTimeout(throttleTimer);
     };
   }, [authenticatedAt, router]);
 

@@ -69,6 +69,7 @@ export async function fetchTransactions(
   const tokens = Object.values(SUPPORTED_TOKENS);
 
   const allPayments: Payment[] = [];
+  const blockTimestamps = new Map<bigint, Date>();
 
   for (const token of tokens) {
     try {
@@ -90,8 +91,21 @@ export async function fetchTransactions(
         const to = args.to;
 
         if (from === address || to === address) {
+          const blockNumber = log.blockNumber;
+          if (blockNumber != null && !blockTimestamps.has(blockNumber)) {
+            try {
+              const block = await client.getBlock({ blockNumber });
+              blockTimestamps.set(
+                blockNumber,
+                new Date(Number(block.timestamp) * 1000),
+              );
+            } catch {
+              blockTimestamps.set(blockNumber, new Date());
+            }
+          }
+
           allPayments.push({
-            id: `${log.transactionHash}-${log.logIndex}`,
+            id: `${log.transactionHash}-${log.logIndex ?? 0}`,
             txHash: log.transactionHash as `0x${string}`,
             from:
               from ??
@@ -102,7 +116,10 @@ export async function fetchTransactions(
             amount: args.value ?? 0n,
             token: token.name,
             status: "confirmed",
-            timestamp: new Date(),
+            timestamp:
+              blockNumber != null
+                ? (blockTimestamps.get(blockNumber) ?? new Date())
+                : new Date(),
           });
         }
       }
