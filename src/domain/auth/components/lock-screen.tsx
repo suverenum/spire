@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useConnect, useSignMessage } from "wagmi";
+import { useConnect, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Fingerprint } from "lucide-react";
-import { loginAction, getLoginChallengeAction } from "../actions/auth-actions";
+import { loginAction } from "../actions/auth-actions";
 import { CACHE_KEYS } from "@/lib/constants";
 import { fetchBalancesClient } from "@/domain/payments/hooks/use-balances";
 import { fetchTransactionsClient } from "@/domain/payments/hooks/use-transactions";
@@ -20,7 +20,7 @@ export function LockScreen({ treasuryId, treasuryName }: LockScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { connectAsync, connectors } = useConnect();
-  const { signMessageAsync } = useSignMessage();
+  const { disconnectAsync } = useDisconnect();
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -32,6 +32,7 @@ export function LockScreen({ treasuryId, treasuryName }: LockScreenProps) {
           setError("Passkey authentication is not available in this browser");
           return;
         }
+        await disconnectAsync().catch(() => {});
         const result = await connectAsync({ connector: connectors[0] });
         const address = result.accounts[0];
         if (!address) {
@@ -39,11 +40,7 @@ export function LockScreen({ treasuryId, treasuryName }: LockScreenProps) {
           return;
         }
 
-        // Sign a server-generated challenge to prove key ownership
-        const challenge = await getLoginChallengeAction();
-        const signature = await signMessageAsync({ message: challenge });
-
-        const loginResult = await loginAction(treasuryId, address, signature);
+        const loginResult = await loginAction(treasuryId, address);
         if (loginResult?.error) {
           setError(loginResult.error);
           return;

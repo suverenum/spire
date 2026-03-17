@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useConnect, useDisconnect } from "wagmi";
+import { useConfig, useConnect, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Fingerprint } from "lucide-react";
@@ -13,6 +13,7 @@ export default function CreateTreasuryPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const config = useConfig();
   const { connectAsync, connectors } = useConnect();
   const { disconnectAsync } = useDisconnect();
 
@@ -24,8 +25,10 @@ export default function CreateTreasuryPage() {
           setError("Passkey authentication is not available in this browser");
           return;
         }
-        // Disconnect any stale session so connectAsync doesn't throw
+        // Clear all stale wagmi state so sign-up creates a fresh credential
         await disconnectAsync().catch(() => {});
+        await config.storage?.removeItem("webAuthn.lastActiveCredential");
+        await config.storage?.removeItem("webAuthn.activeCredential");
         const result = await connectAsync({
           connector: connectors[0],
           capabilities: { type: "sign-up" },
