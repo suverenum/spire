@@ -18,9 +18,11 @@ vi.mock("next/navigation", () => ({
 }));
 
 const mockLogoutAction = vi.fn().mockRejectedValue(new Error("NEXT_REDIRECT"));
+const mockTouchSessionAction = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@/domain/auth/actions/auth-actions", () => ({
   logoutAction: (...args: unknown[]) => mockLogoutAction(...args),
+  touchSessionAction: (...args: unknown[]) => mockTouchSessionAction(...args),
 }));
 
 afterEach(() => {
@@ -54,23 +56,24 @@ describe("SessionGuard", () => {
     expect(screen.getByText("Still valid")).toBeInTheDocument();
   });
 
-  it("redirects to expired page when authenticatedAt is beyond SESSION_MAX_AGE_MS", () => {
+  it("does not logout based on auth time alone when user is active", () => {
     vi.useFakeTimers();
     // authenticatedAt from 20 minutes ago (max is 15 min)
     const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
 
     render(
       <SessionGuard authenticatedAt={twentyMinutesAgo}>
-        <p>Should expire</p>
+        <p>Should stay</p>
       </SessionGuard>,
     );
 
-    // The check runs after 60 seconds timeout
+    // The check runs after 60 seconds timeout, but user just rendered (activity is recent)
     act(() => {
       vi.advanceTimersByTime(60_000);
     });
 
-    expect(mockLogoutAction).toHaveBeenCalled();
+    // Should NOT logout because the guard checks inactivity, not auth time
+    expect(mockLogoutAction).not.toHaveBeenCalled();
   });
 
   it("redirects when inactivity exceeds SESSION_MAX_AGE_MS", () => {
@@ -218,12 +221,12 @@ describe("SessionGuard", () => {
       fireEvent.keyDown(window, { key: "a" });
     });
 
-    // Advance another 14 minutes (total 28 min from auth - beyond max age)
+    // Advance another 14 minutes (only 14 min since last activity - under 15 min threshold)
     act(() => {
       vi.advanceTimersByTime(14 * 60 * 1000);
     });
 
-    // Should redirect because timeSinceAuth > SESSION_MAX_AGE_MS (15 min)
-    expect(mockLogoutAction).toHaveBeenCalled();
+    // Should NOT logout because only 14 min of inactivity (< 15 min threshold)
+    expect(mockLogoutAction).not.toHaveBeenCalled();
   });
 });

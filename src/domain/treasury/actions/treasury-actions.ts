@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
 import { createSession, getSession } from "@/lib/session";
@@ -18,7 +18,7 @@ function generateMockAddress(): `0x${string}` {
 
 export async function createTreasuryAction(
   formData: FormData,
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; success?: boolean }> {
   const raw = { name: formData.get("name") };
   const parsed = createTreasurySchema.safeParse(raw);
 
@@ -42,7 +42,7 @@ export async function createTreasuryAction(
     treasuryName: treasury.name,
   });
 
-  redirect("/dashboard");
+  return { success: true };
 }
 
 export async function updateTreasuryNameAction(
@@ -68,6 +68,9 @@ export async function updateTreasuryNameAction(
     tempoAddress: session.tempoAddress,
     treasuryName: name,
   });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
 
   return {};
 }

@@ -57,10 +57,10 @@ export function Providers({ children }: { children: ReactNode }) {
           persister,
           maxAge: 1000 * 60 * 60 * 24,
           dehydrateOptions: {
-            shouldDehydrateQuery: (query) =>
-              ["balances", "transactions"].some((key) =>
-                (query.queryKey as string[]).includes(key),
-              ),
+            shouldDehydrateQuery: (query) => {
+              const prefix = query.queryKey[0];
+              return prefix === "balances" || prefix === "transactions";
+            },
           },
         }}
       >

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createSession, destroySession } from "@/lib/session";
+import { createSession, destroySession, getSession } from "@/lib/session";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -26,6 +26,16 @@ export async function loginAction(
   });
 
   redirect("/dashboard");
+}
+
+export async function touchSessionAction(): Promise<void> {
+  const session = await getSession();
+  if (!session) return;
+  await createSession({
+    treasuryId: session.treasuryId,
+    tempoAddress: session.tempoAddress,
+    treasuryName: session.treasuryName,
+  });
 }
 
 export async function logoutAction(): Promise<void> {

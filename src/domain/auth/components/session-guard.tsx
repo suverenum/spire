@@ -3,7 +3,12 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SESSION_MAX_AGE_MS } from "@/lib/constants";
-import { logoutAction } from "@/domain/auth/actions/auth-actions";
+import {
+  logoutAction,
+  touchSessionAction,
+} from "@/domain/auth/actions/auth-actions";
+
+const SESSION_REFRESH_MS = 5 * 60 * 1000; // Refresh session every 5 min of activity
 
 interface SessionGuardProps {
   children: React.ReactNode;
@@ -14,23 +19,27 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
   const router = useRouter();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityRef = useRef(0);
+  const lastRefreshRef = useRef(authenticatedAt);
 
   useEffect(() => {
     lastActivityRef.current = Date.now();
 
     const handleActivity = () => {
       lastActivityRef.current = Date.now();
+      const now = Date.now();
+      if (now - lastRefreshRef.current > SESSION_REFRESH_MS) {
+        lastRefreshRef.current = now;
+        touchSessionAction().catch(() => {
+          // Session may have expired server-side
+        });
+      }
     };
 
     const checkExpiry = () => {
       const now = Date.now();
-      const timeSinceAuth = now - authenticatedAt;
       const timeSinceActivity = now - lastActivityRef.current;
 
-      if (
-        timeSinceAuth > SESSION_MAX_AGE_MS ||
-        timeSinceActivity > SESSION_MAX_AGE_MS
-      ) {
+      if (timeSinceActivity > SESSION_MAX_AGE_MS) {
         logoutAction().catch(() => {
           // redirect throws in server actions
         });

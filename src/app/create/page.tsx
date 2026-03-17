@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Fingerprint } from "lucide-react";
@@ -8,6 +9,7 @@ import { createTreasuryAction } from "@/domain/treasury/actions/treasury-actions
 import { trackEvent, AnalyticsEvents } from "@/lib/posthog";
 
 export default function CreateTreasuryPage() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -19,6 +21,7 @@ export default function CreateTreasuryPage() {
         setError(result.error);
       } else {
         trackEvent(AnalyticsEvents.TREASURY_CREATED);
+        router.push("/dashboard");
       }
     });
   }
