@@ -66,7 +66,11 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
             ...previousBalances,
             balances: previousBalances.balances.map((b) =>
               b.tokenAddress.toLowerCase() === tokenStr
-                ? { ...b, balance: b.balance - vars.amount }
+                ? {
+                    ...b,
+                    balance:
+                      b.balance > vars.amount ? b.balance - vars.amount : 0n,
+                  }
                 : b,
             ),
           });
@@ -117,8 +121,12 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
     },
   });
 
+  // Destructure mutateAsync out so it's not exposed - callers must use the wrapped mutate
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { mutate: rawMutate, mutateAsync, ...rest } = transfer;
+
   return {
-    ...transfer,
+    ...rest,
     mutate: (
       params: SendPaymentParams,
       options?: { onSuccess?: () => void },
@@ -129,7 +137,7 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
         return;
       }
 
-      transfer.mutate(
+      rawMutate(
         {
           to: params.to,
           token: tokenConfig.address,

@@ -19,6 +19,11 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+const mockQueryClientClear = vi.fn();
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ clear: mockQueryClientClear }),
+}));
+
 const mockLogoutAction = vi.fn().mockRejectedValue(new Error("NEXT_REDIRECT"));
 const mockTouchSessionAction = vi.fn().mockResolvedValue(undefined);
 
@@ -47,6 +52,7 @@ describe("SessionGuard", () => {
     mockLogoutAction.mockRejectedValue(new Error("NEXT_REDIRECT"));
     mockClearPersistedCache.mockReset();
     mockClearPersistedCache.mockResolvedValue(undefined);
+    mockQueryClientClear.mockReset();
   });
 
   it("renders children", () => {

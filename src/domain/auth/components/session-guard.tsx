@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { SESSION_MAX_AGE_MS } from "@/lib/constants";
 import {
   logoutAction,
@@ -18,6 +19,7 @@ interface SessionGuardProps {
 
 export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityRef = useRef(0);
   const lastRefreshRef = useRef(authenticatedAt);
@@ -50,6 +52,7 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
       const timeSinceActivity = now - lastActivityRef.current;
 
       if (timeSinceActivity > SESSION_MAX_AGE_MS) {
+        queryClient.clear();
         clearPersistedCache().finally(() => {
           logoutAction().catch(() => {
             // logoutAction calls redirect("/") which throws in server actions.
@@ -80,7 +83,7 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (throttleTimer) clearTimeout(throttleTimer);
     };
-  }, [authenticatedAt, router]);
+  }, [authenticatedAt, queryClient, router]);
 
   return <>{children}</>;
 }
