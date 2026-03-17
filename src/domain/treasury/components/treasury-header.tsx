@@ -49,7 +49,7 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
           <h1 className="text-xl font-semibold">{name}</h1>
           <button
             onClick={handleCopyAddress}
-            className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            className="flex cursor-pointer items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
           >
             {truncateAddress(address)}
             <Copy className="h-3 w-3" />

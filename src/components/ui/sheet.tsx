@@ -53,7 +53,7 @@ export function Sheet({ open, onClose, children, title }: SheetProps) {
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
           <button
             onClick={onClose}
-            className="ml-auto rounded-md p-1 hover:bg-gray-100"
+            className="ml-auto cursor-pointer rounded-md p-1 hover:bg-gray-100"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
