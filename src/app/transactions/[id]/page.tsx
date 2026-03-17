@@ -4,31 +4,31 @@ import { getSession } from "@/lib/session";
 import { TransactionDetailContent } from "./transaction-detail-content";
 
 interface Props {
-  params: Promise<{ id: string }>;
+	params: Promise<{ id: string }>;
 }
 
 export default function TransactionDetailPage({ params }: Props) {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
-      <TransactionDetailLoader params={params} />
-    </Suspense>
-  );
+	return (
+		<Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+			<TransactionDetailLoader params={params} />
+		</Suspense>
+	);
 }
 
 async function TransactionDetailLoader({ params }: Props) {
-  const session = await getSession();
-  if (!session) {
-    redirect("/");
-  }
+	const session = await getSession();
+	if (!session) {
+		redirect("/");
+	}
 
-  const { id } = await params;
+	const { id } = await params;
 
-  return (
-    <TransactionDetailContent
-      transactionId={id}
-      tempoAddress={session.tempoAddress}
-      treasuryName={session.treasuryName}
-      authenticatedAt={session.authenticatedAt}
-    />
-  );
+	return (
+		<TransactionDetailContent
+			transactionId={id}
+			tempoAddress={session.tempoAddress}
+			treasuryName={session.treasuryName}
+			authenticatedAt={session.authenticatedAt}
+		/>
+	);
 }

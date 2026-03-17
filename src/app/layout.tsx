@@ -5,29 +5,29 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 
 const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-  weight: ["400", "500", "600"],
+	subsets: ["latin"],
+	display: "swap",
+	variable: "--font-inter",
+	weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Spire",
-  description: "Treasury management on Tempo blockchain",
+	title: "Spire",
+	description: "Treasury management on Tempo blockchain",
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased">
-        <Providers>
-          <ViewTransition name="main-content">{children}</ViewTransition>
-        </Providers>
-      </body>
-    </html>
-  );
+	return (
+		<html lang="en" className={inter.variable}>
+			<body className="font-sans antialiased">
+				<Providers>
+					<ViewTransition name="main-content">{children}</ViewTransition>
+				</Providers>
+			</body>
+		</html>
+	);
 }

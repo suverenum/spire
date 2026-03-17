@@ -6,24 +6,24 @@ import { DashboardSkeleton } from "@/components/skeletons";
 
 // Static shell rendered at build time via PPR; dynamic content streams in.
 export default function DashboardPage() {
-  return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardLoader />
-    </Suspense>
-  );
+	return (
+		<Suspense fallback={<DashboardSkeleton />}>
+			<DashboardLoader />
+		</Suspense>
+	);
 }
 
 async function DashboardLoader() {
-  const session = await getSession();
-  if (!session) {
-    redirect("/");
-  }
+	const session = await getSession();
+	if (!session) {
+		redirect("/");
+	}
 
-  return (
-    <DashboardContent
-      treasuryName={session.treasuryName}
-      tempoAddress={session.tempoAddress}
-      authenticatedAt={session.authenticatedAt}
-    />
-  );
+	return (
+		<DashboardContent
+			treasuryName={session.treasuryName}
+			tempoAddress={session.tempoAddress}
+			authenticatedAt={session.authenticatedAt}
+		/>
+	);
 }

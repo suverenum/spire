@@ -5,21 +5,21 @@ import * as schema from "./schema";
 let dbInstance: NeonHttpDatabase<typeof schema> | null = null;
 
 export function getDb(): NeonHttpDatabase<typeof schema> {
-  if (!dbInstance) {
-    if (!process.env.DATABASE_URL) {
-      throw new Error("DATABASE_URL environment variable is required");
-    }
-    const sql = neon(process.env.DATABASE_URL);
-    dbInstance = drizzle(sql, { schema });
-  }
-  return dbInstance;
+	if (!dbInstance) {
+		if (!process.env.DATABASE_URL) {
+			throw new Error("DATABASE_URL environment variable is required");
+		}
+		const sql = neon(process.env.DATABASE_URL);
+		dbInstance = drizzle(sql, { schema });
+	}
+	return dbInstance;
 }
 
 // Lazy proxy that defers connection until first access (allows builds without DATABASE_URL)
 export const db = new Proxy({} as NeonHttpDatabase<typeof schema>, {
-  get(_, prop) {
-    const target = getDb();
-    const value = Reflect.get(target, prop);
-    return typeof value === "function" ? value.bind(target) : value;
-  },
+	get(_, prop) {
+		const target = getDb();
+		const value = Reflect.get(target, prop);
+		return typeof value === "function" ? value.bind(target) : value;
+	},
 });

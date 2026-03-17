@@ -9,42 +9,42 @@ import { eq } from "drizzle-orm";
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export async function loginAction(
-  connectedAddress: string,
+	connectedAddress: string,
 ): Promise<{ error?: string; tempoAddress?: string; treasuryName?: string }> {
-  if (!ADDRESS_RE.test(connectedAddress)) {
-    return { error: "Invalid wallet address" };
-  }
+	if (!ADDRESS_RE.test(connectedAddress)) {
+		return { error: "Invalid wallet address" };
+	}
 
-  const result = await db
-    .select()
-    .from(treasuries)
-    .where(eq(treasuries.tempoAddress, connectedAddress.toLowerCase()));
-  const treasury = result[0];
+	const result = await db
+		.select()
+		.from(treasuries)
+		.where(eq(treasuries.tempoAddress, connectedAddress.toLowerCase()));
+	const treasury = result[0];
 
-  if (!treasury) {
-    return { error: "No treasury found for this passkey" };
-  }
+	if (!treasury) {
+		return { error: "No treasury found for this passkey" };
+	}
 
-  await createSession({
-    treasuryId: treasury.id,
-    tempoAddress: treasury.tempoAddress as `0x${string}`,
-    treasuryName: treasury.name,
-  });
+	await createSession({
+		treasuryId: treasury.id,
+		tempoAddress: treasury.tempoAddress as `0x${string}`,
+		treasuryName: treasury.name,
+	});
 
-  return { tempoAddress: treasury.tempoAddress, treasuryName: treasury.name };
+	return { tempoAddress: treasury.tempoAddress, treasuryName: treasury.name };
 }
 
 export async function touchSessionAction(): Promise<void> {
-  const session = await getSession();
-  if (!session) return;
-  await createSession({
-    treasuryId: session.treasuryId,
-    tempoAddress: session.tempoAddress,
-    treasuryName: session.treasuryName,
-  });
+	const session = await getSession();
+	if (!session) return;
+	await createSession({
+		treasuryId: session.treasuryId,
+		tempoAddress: session.tempoAddress,
+		treasuryName: session.treasuryName,
+	});
 }
 
 export async function logoutAction(): Promise<void> {
-  await destroySession();
-  redirect("/");
+	await destroySession();
+	redirect("/");
 }
