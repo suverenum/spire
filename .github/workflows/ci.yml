@@ -4,9 +4,13 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
   ci:
-    name: Lint, Type Check, Test
+    name: Lint, Type Check, Test, Build
     runs-on: ubuntu-latest
 
     steps:
@@ -22,16 +26,16 @@ jobs:
       - name: Lint
         run: bun run lint
 
-      - name: Format check
+      - name: Format check (Tailwind class order)
         run: bun run format:check
 
       - name: Type check
-        run: bun run typecheck
+        run: turbo typecheck
 
-      - name: Tests with coverage
-        run: bun run test:coverage
+      - name: Tests
+        run: turbo test
 
       - name: Build
-        run: bun run build
+        run: turbo build
         env:
           DATABASE_URL: postgresql://fake:fake@localhost:5432/fake
