@@ -102,4 +102,16 @@ describe("CACHE_KEYS", () => {
 	it("generates transactions key", () => {
 		expect(CACHE_KEYS.transactions("0x123")).toEqual(["transactions", "0x123"]);
 	});
+
+	it("generates accounts key", () => {
+		expect(CACHE_KEYS.accounts("t-1")).toEqual(["accounts", "t-1"]);
+	});
+
+	it("generates accountBalance key", () => {
+		expect(CACHE_KEYS.accountBalance("0xwallet", "0xtoken")).toEqual([
+			"accountBalance",
+			"0xwallet",
+			"0xtoken",
+		]);
+	});
 });

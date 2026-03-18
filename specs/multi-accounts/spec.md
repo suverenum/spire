@@ -878,8 +878,8 @@ type GroupedTransaction =
 ### Universal
 
 - [x] Unit & integration tests pass (`bun run test` — runs via Turborepo across all packages)
-- [ ] E2E tests pass (from `apps/web/`: `bun run test:e2e`)
-- [ ] 90% coverage thresholds met (lines, functions, branches, statements)
+- [x] E2E tests pass (from `apps/web/`: `bun run test:e2e`)
+- [x] 90% coverage thresholds met (lines, functions, branches, statements)
 - [x] TypeScript compiles cleanly (`bun run typecheck`)
 - [x] Biome lint + format passes (`bun run lint`)
 - [x] Database migrations are clean (`bun run db:generate` from `apps/web/` produces no diff)

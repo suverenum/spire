@@ -147,4 +147,54 @@ describe("groupTransactions", () => {
 		const result = groupTransactions(txs, [ACCOUNT_A, ACCOUNT_B]);
 		expect(result[0].visibleAccountIds).toEqual([ACCOUNT_A.id, ACCOUNT_B.id]);
 	});
+
+	it("skips transactions where neither from nor to match treasury wallets", () => {
+		const txs = [
+			makeTx({
+				from: "0x0000000000000000000000000000000000000099" as `0x${string}`,
+				to: "0x0000000000000000000000000000000000000088" as `0x${string}`,
+			}),
+		];
+
+		const result = groupTransactions(txs, [ACCOUNT_A, ACCOUNT_B]);
+		expect(result).toHaveLength(0);
+	});
+
+	it("deduplicates payment entries with same tx hash and account", () => {
+		const hash =
+			"0x5555555555555555555555555555555555555555555555555555555555555555" as `0x${string}`;
+		const txs: TaggedPayment[] = [
+			makeTx({ id: "tx-1", txHash: hash, accountId: ACCOUNT_A.id }),
+			makeTx({ id: "tx-1-dup", txHash: hash, accountId: ACCOUNT_A.id }),
+		];
+
+		const result = groupTransactions(txs, [ACCOUNT_A]);
+		expect(result).toHaveLength(1);
+	});
+
+	it("deduplicates internal transfer entries with same tx hash", () => {
+		const hash =
+			"0x6666666666666666666666666666666666666666666666666666666666666666" as `0x${string}`;
+		const txs: TaggedPayment[] = [
+			makeTx({
+				id: "tx-a-view",
+				txHash: hash,
+				from: ACCOUNT_A.walletAddress as `0x${string}`,
+				to: ACCOUNT_B.walletAddress as `0x${string}`,
+				accountId: ACCOUNT_A.id,
+			}),
+			makeTx({
+				id: "tx-b-view",
+				txHash: hash,
+				from: ACCOUNT_A.walletAddress as `0x${string}`,
+				to: ACCOUNT_B.walletAddress as `0x${string}`,
+				accountId: ACCOUNT_B.id,
+			}),
+		];
+
+		const result = groupTransactions(txs, [ACCOUNT_A, ACCOUNT_B]);
+		// Should produce only one internal transfer entry, not two
+		expect(result).toHaveLength(1);
+		expect(result[0].kind).toBe("internalTransfer");
+	});
 });
