@@ -22,7 +22,9 @@ See [prd.md](./prd.md) for full scope, user stories, flows, and mockups.
 
 ## 4. Current State
 
-MVP provides a single-wallet treasury with passkey auth, send/receive, and transaction history. This feature extends it with:
+MVP provides multi-treasury support with passkey auth, send/receive, and transaction history. The singleton guard has been removed — each passkey creates its own treasury. Login looks up treasury by wallet address. The landing page shows both "Unlock with Passkey" and "Create Treasury" buttons.
+
+This feature extends it with:
 
 - Multiple wallets per treasury (accounts table in DB)
 - Account CRUD (create, rename, delete)
@@ -30,6 +32,42 @@ MVP provides a single-wallet treasury with passkey auth, send/receive, and trans
 - Internal transfers (same token, different wallets)
 - Swaps (different tokens via Tempo DEX)
 - Dashboard with multi-account cards and unified transaction feed
+
+### 4.1. Current Architecture
+
+The project is a **bun monorepo** with Turborepo orchestration:
+
+```
+goldhord/
+├── apps/web/              # Next.js 16 app (App Router, Turbopack)
+│   ├── src/
+│   │   ├── app/           # Routes (thin orchestration)
+│   │   ├── domain/        # Business logic (auth, payments, treasury)
+│   │   ├── components/    # Cross-domain UI + shadcn components
+│   │   ├── db/            # Drizzle schema + queries
+│   │   └── lib/           # Tempo client, session, constants, wagmi
+│   ├── drizzle/           # SQL migrations
+│   └── e2e/               # Playwright tests
+├── packages/
+│   ├── ui/                # @goldhord/ui — shared UI components
+│   ├── utils/             # @goldhord/utils — shared utilities
+│   └── tsconfig/          # @goldhord/tsconfig — shared TS configs
+├── biome.json             # Linting + formatting (replaces ESLint + Prettier)
+└── turbo.json             # Task orchestration + remote caching
+```
+
+### 4.2. Tech Stack
+
+- **Runtime:** Bun 1.3+
+- **Framework:** Next.js 16.1 (App Router, Turbopack, PPR, React Compiler)
+- **Database:** Neon serverless Postgres + Drizzle ORM
+- **Auth:** WebAuthn passkeys via Wagmi/Viem Tempo integration
+- **State:** TanStack Query (server state) + React useState (local UI)
+- **Linting:** Biome (single tool for lint + format)
+- **Testing:** Vitest + React Testing Library (colocated tests)
+- **CI:** GitHub Actions (lint, typecheck, test, build) + Claude code review
+- **Deploy:** Vercel with Turborepo remote caching
+- **Observability:** Sentry (tracing, replay, logs) + PostHog (analytics)
 
 ## 5. Tempo Primitives Used
 
@@ -103,15 +141,21 @@ Wagmi has first-class Tempo support (v2.x+, viem >= 2.43.3):
 ```typescript
 import { createConfig, http } from 'wagmi';
 import { tempoModerato } from 'viem/chains';
+import { withFeePayer } from 'viem/tempo';
 import { KeyManager, webAuthn } from 'wagmi/tempo';
 
-export const config = createConfig({
+export const wagmiConfig = createConfig({
   chains: [tempoModerato],
   connectors: [
     webAuthn({ keyManager: KeyManager.localStorage() }),
   ],
   multiInjectedProviderDiscovery: false,
-  transports: { [tempoModerato.id]: http() },
+  transports: {
+    [tempoModerato.id]: withFeePayer(
+      http(),
+      http("https://sponsor.moderato.tempo.xyz"),
+    ),
+  },
 });
 ```
 
@@ -167,19 +211,21 @@ MVP:                          Multi-Account:
 - New flows: internal transfer, swap, account CRUD
 
 **What doesn't change:**
-- Auth model (passkey, session, logout)
+- Auth model (passkey, session, logout, multi-treasury support)
 - Performance patterns (PPR, persisted cache, optimistic updates, WebSocket)
 - Security (headers, CSRF, Zod validation)
-- Tech stack (Next.js, Drizzle, Neon, TanStack Query, shadcn)
+- Monorepo structure (apps/web, packages/ui, packages/utils)
+- Tooling (Biome, Turborepo, Vitest, Playwright)
 
 **Treasury identity anchor:**
 - `treasuries.tempoAddress` remains the canonical on-chain identity for login, session restore, and treasury ownership checks
+- Multiple treasuries are supported — each passkey maps to one treasury
 - Account wallets are spend/receive wallets only; they do not replace the treasury-level auth principal
 
 ### 6.2. Database Schema
 
 ```typescript
-// Existing (from MVP)
+// Existing (from MVP — singleton guard removed, multi-treasury supported)
 export const treasuries = pgTable('treasuries', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
@@ -214,8 +260,8 @@ export const accounts = pgTable('accounts', {
 Centralized token config — swap this file for mainnet:
 
 ```typescript
-// src/config/tokens.ts
-export const SUPPORTED_TOKENS = [
+// apps/web/src/lib/constants.ts (updated)
+export const ACCOUNT_TOKENS = [
   {
     symbol: 'AlphaUSD',
     name: 'AlphaUSD',
@@ -346,10 +392,10 @@ const useMultiAccountPayments = (accounts: Account[]) => {
         args: { to: account.walletAddress },
         onLogs: () => {
           // Surgical invalidation — only this account's data
-          queryClient.invalidateQueries({
+          void queryClient.invalidateQueries({
             queryKey: ['balance', account.walletAddress],
           });
-          queryClient.invalidateQueries({
+          void queryClient.invalidateQueries({
             queryKey: ['transactions', account.walletAddress],
           });
         },
@@ -500,7 +546,7 @@ async function internalTransfer({
 ## 7. Component Structure
 
 ```
-src/
+apps/web/src/
 ├── domain/
 │   ├── accounts/
 │   │   ├── actions/
@@ -513,6 +559,7 @@ src/
 │   │   │   └── get-balances.ts        # Fetch on-chain balances (parallel)
 │   │   ├── components/
 │   │   │   ├── account-card.tsx       # Dashboard card (name, token, balance, address)
+│   │   │   ├── account-card.test.tsx
 │   │   │   ├── account-selector.tsx   # Dropdown for send/transfer/swap forms
 │   │   │   ├── account-grid.tsx       # Dashboard grid of account cards
 │   │   │   ├── create-account-form.tsx
@@ -544,8 +591,8 @@ src/
 │   │       └── page.tsx               # Account detail page
 │   └── swap/
 │       └── page.tsx                   # Swap page
-└── config/
-    └── tokens.ts                      # Token addresses, DEX address, keychain address
+└── lib/
+    └── constants.ts                   # Token addresses, DEX address, keychain address (updated)
 ```
 
 ## 8. Key Types
@@ -603,7 +650,7 @@ interface AccountTransaction {
 
 ## 9. Testing Strategy
 
-### 9.1. Unit Tests (Vitest)
+### 9.1. Unit Tests (Vitest — colocated with source files)
 
 - **Account CRUD:** Name uniqueness validation, duplicate-index error mapping, default account protection, delete blocked on any detected balance
 - **Token config:** Supported token lookup, address resolution
@@ -621,7 +668,7 @@ interface AccountTransaction {
 - **Delete account safety:** Wallet with unsupported/detected token balance cannot be deleted
 - **DB operations:** Account CRUD with Neon branching and unique index enforcement
 
-### 9.3. E2E Tests (Playwright)
+### 9.3. E2E Tests (Playwright — apps/web/e2e/)
 
 - **Treasury creation:** Verify two default accounts created with funded balances
 - **Create account:** Token selection → name → create → verify new card on dashboard with $0
@@ -640,17 +687,17 @@ interface AccountTransaction {
 
 ## 10. Definition of Done
 
-### Universal (from MVP, still applies)
+### Universal
 
 - [ ] Unit & integration tests pass (`bun run test`)
-- [ ] E2E tests pass (`bun run test:e2e`)
-- [ ] 95% line coverage on new/changed code
+- [ ] E2E tests pass (from `apps/web/`: `bun run test:e2e`)
+- [ ] 90% coverage thresholds met (`bun run test:coverage` from `apps/web/`)
 - [ ] TypeScript compiles cleanly (`bun run typecheck`)
-- [ ] Linter passes (`bun run lint`)
-- [ ] Formatting passes (`bun run format:check`)
-- [ ] Database migrations are clean (`bun run db:generate` produces no diff)
+- [ ] Biome passes (`bun run lint`)
+- [ ] Database migrations are clean (`bun run db:generate` produces no diff from `apps/web/`)
 - [ ] Spec updated to reflect implementation
-- [ ] App deployed and accessible on `*.vercel.app`
+- [ ] CI passes (lint, typecheck, test, build)
+- [ ] App deployed and accessible on Vercel
 
 ### Feature-Specific
 
@@ -701,3 +748,4 @@ interface AccountTransaction {
 - [MVP Spec](../mvp/spec.md)
 - [MVP PRD](../mvp/prd.md)
 - [Authentication Architecture](../mvp/authentication.md)
+- [Monorepo Migration Spec](../monorepo-migration/spec.md)
