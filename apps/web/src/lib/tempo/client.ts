@@ -27,7 +27,9 @@ export function getTempoClient(): PublicClient {
 	return clientInstance;
 }
 
-export async function fetchBalances(address: `0x${string}`): Promise<BalancesResult> {
+export async function fetchBalances(
+	address: `0x${string}`,
+): Promise<BalancesResult> {
 	const client = getTempoClient();
 	const tokens = Object.values(SUPPORTED_TOKENS);
 
@@ -62,9 +64,17 @@ export async function fetchBalances(address: `0x${string}`): Promise<BalancesRes
 	return { balances, partial: failures.length > 0 };
 }
 
-export async function fetchTransactions(address: `0x${string}`): Promise<Payment[]> {
+const MAX_BLOCK_RANGE = 99_000n;
+
+export async function fetchTransactions(
+	address: `0x${string}`,
+): Promise<Payment[]> {
 	const client = getTempoClient();
 	const tokens = Object.values(SUPPORTED_TOKENS);
+
+	const latestBlock = await client.getBlockNumber();
+	const fromBlock =
+		latestBlock > MAX_BLOCK_RANGE ? latestBlock - MAX_BLOCK_RANGE : 0n;
 
 	// Fetch sent and received events per token using indexed topic filters
 	// so the RPC node filters by address instead of returning all chain events
@@ -76,16 +86,16 @@ export async function fetchTransactions(address: `0x${string}`): Promise<Payment
 					abi: tip20Abi,
 					eventName: "Transfer",
 					args: { from: address },
-					fromBlock: "earliest",
-					toBlock: "latest",
+					fromBlock,
+					toBlock: latestBlock,
 				}),
 				client.getContractEvents({
 					address: token.address,
 					abi: tip20Abi,
 					eventName: "Transfer",
 					args: { to: address },
-					fromBlock: "earliest",
-					toBlock: "latest",
+					fromBlock,
+					toBlock: latestBlock,
 				}),
 			]);
 			// Deduplicate self-transfers that appear in both queries
@@ -100,14 +110,22 @@ export async function fetchTransactions(address: `0x${string}`): Promise<Payment
 		}),
 	);
 
-	const failures = tokenResults.filter((r) => r.status === "rejected").length;
-	if (failures === tokens.length) {
+	const rejections = tokenResults.filter((r) => r.status === "rejected");
+	if (rejections.length > 0) {
+		for (const r of rejections) {
+			console.error("RPC call failed:", (r as PromiseRejectedResult).reason);
+		}
+	}
+	if (rejections.length === tokens.length) {
 		throw new Error("Failed to fetch transactions: all RPC calls failed");
 	}
 
 	// Collect matching logs and unique block numbers
 	const addrLower = address.toLowerCase();
-	type FulfilledTokenResult = Extract<(typeof tokenResults)[number], { status: "fulfilled" }>;
+	type FulfilledTokenResult = Extract<
+		(typeof tokenResults)[number],
+		{ status: "fulfilled" }
+	>;
 	const matchedLogs: Array<{
 		log: FulfilledTokenResult["value"]["logs"][number];
 		token: string;
@@ -123,7 +141,10 @@ export async function fetchTransactions(address: `0x${string}`): Promise<Payment
 				to?: `0x${string}`;
 				value?: bigint;
 			};
-			if (args.from?.toLowerCase() === addrLower || args.to?.toLowerCase() === addrLower) {
+			if (
+				args.from?.toLowerCase() === addrLower ||
+				args.to?.toLowerCase() === addrLower
+			) {
 				matchedLogs.push({ log, token: token.name });
 				if (log.blockNumber != null) {
 					blockNumbers.add(log.blockNumber);
@@ -161,15 +182,23 @@ export async function fetchTransactions(address: `0x${string}`): Promise<Payment
 		return {
 			id: `${log.transactionHash}-${log.logIndex ?? 0}`,
 			txHash: log.transactionHash,
-			from: args.from ?? ("0x0000000000000000000000000000000000000000" as `0x${string}`),
-			to: args.to ?? ("0x0000000000000000000000000000000000000000" as `0x${string}`),
+			from:
+				args.from ??
+				("0x0000000000000000000000000000000000000000" as `0x${string}`),
+			to:
+				args.to ??
+				("0x0000000000000000000000000000000000000000" as `0x${string}`),
 			amount: args.value ?? 0n,
 			token,
 			status: "confirmed",
 			timestamp:
-				blockNumber != null ? (blockTimestamps.get(blockNumber) ?? new Date()) : new Date(),
+				blockNumber != null
+					? (blockTimestamps.get(blockNumber) ?? new Date())
+					: new Date(),
 		};
 	});
 
-	return allPayments.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+	return allPayments.sort(
+		(a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+	);
 }

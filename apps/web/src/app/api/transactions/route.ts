@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
 			where: eq(accounts.treasuryId, session.treasuryId),
 			columns: { walletAddress: true },
 		});
-		const ownedAddresses = new Set(ownedAccounts.map((a) => a.walletAddress.toLowerCase()));
+		const ownedAddresses = new Set(
+			ownedAccounts.map((a) => a.walletAddress.toLowerCase()),
+		);
 		if (!ownedAddresses.has(lowerAddress)) {
 			return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 		}
@@ -41,7 +43,11 @@ export async function GET(request: NextRequest) {
 				timestamp: t.timestamp.toISOString(),
 			})),
 		});
-	} catch {
-		return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 502 });
+	} catch (error) {
+		console.error("Failed to fetch transactions:", error);
+		return NextResponse.json(
+			{ error: "Failed to fetch transactions" },
+			{ status: 502 },
+		);
 	}
 }
