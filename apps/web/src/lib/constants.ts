@@ -49,4 +49,7 @@ export const SESSION_COOKIE_NAME = "goldhord-session";
 export const CACHE_KEYS = {
 	balances: (address: string) => ["balances", address] as const,
 	transactions: (address: string) => ["transactions", address] as const,
+	accounts: (treasuryId: string) => ["accounts", treasuryId] as const,
+	accountBalance: (walletAddress: string, tokenAddress: string) =>
+		["accountBalance", walletAddress, tokenAddress] as const,
 } as const;

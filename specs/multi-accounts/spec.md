@@ -889,44 +889,44 @@ type GroupedTransaction =
 
 ### Feature-Specific
 
-- [ ] Treasury creation creates two default account wallets (Main AlphaUSD, Main BetaUSD) with root passkey on each keychain
-- [ ] Treasury auth/session remains anchored to `treasuries.tempoAddress` as the controller/root account
-- [ ] Default accounts funded via faucet on creation
-- [ ] Treasury setup uses `createTreasuryAction` + client default-account provisioning; partial setup exposes retry for only the missing default slot
-- [ ] User can create additional accounts (new on-chain wallet per account)
-- [ ] Multiple accounts with same token supported (each with unique wallet address)
-- [ ] Account names unique per treasury (enforced by app validation and DB unique index)
-- [ ] Default accounts tracked by immutable DB metadata, so they remain protected after rename
-- [ ] Default accounts renamable but not deletable
-- [ ] Non-default accounts deletable when assigned-token balance is zero
-- [ ] Detectable unassigned assets trigger a delete warning but do not block deletion
-- [ ] Delete uses preflight + confirm so warning state is shown before the final delete
-- [ ] Delete "Transfer Balance" opens transfer form (if same-token accounts exist) or send form (if not)
-- [ ] Account creation error shows "Try Again" with no partial DB state
-- [ ] Sidebar navigation with treasury name, Dashboard/Transactions/Accounts/Settings links, logout
-- [ ] Sidebar always visible on desktop, collapsed hamburger on mobile
-- [ ] Dashboard shows top 4 account cards (sorted by balance, highest first)
-- [ ] "View all accounts →" link shown on dashboard when more than 4 accounts exist
-- [ ] Total balance shown in USD (all tokens 1:1)
-- [ ] Dashboard "Recent Transactions" shows merged feed from all accounts (no filters)
-- [ ] Transactions page (`/transactions`) has account, sender/recipient address, date, amount, and sent/received filters
-- [ ] Grouped internal transfers and swaps carry both participating account IDs so they appear in both account histories without duplication
-- [ ] Dashboard send/receive defaults to the highest-balance account; ties break by creation order
-- [ ] Account detail page shows balance, address, QR, scoped transactions
-- [ ] Send form has account selector (pre-selects when opened from account detail)
-- [ ] Internal transfer works between same-token accounts
-- [ ] Internal transfer and swap preflight validate that both referenced accounts belong to the active treasury
-- [ ] Transfer button on account detail page only, hidden when <2 accounts of same token
-- [ ] Internal transfers render as one grouped row in merged feeds
-- [ ] Swap executes via Tempo DEX with quote preview, then transfers output into the destination account wallet
-- [ ] Swap form enforces different token types for From/To
-- [ ] If the swap transfer step fails, output funds remain recoverable in the source wallet and the UI surfaces that state
-- [ ] Swap appears in both accounts' transaction histories
-- [ ] Transaction detail page shows grouped transfer/swap summaries and underlying tx hashes
-- [ ] Accounts management page lists all accounts sorted by balance (highest first) with CRUD actions
-- [ ] WebSocket subscriptions run per-wallet
-- [ ] Receive sheet has account selector (pre-selects when opened from account detail, default highest-balance account from dashboard)
-- [ ] Changing account in receive sheet updates QR code, address, and helper text
+- [x] Treasury creation creates two default account wallets (Main AlphaUSD, Main BetaUSD) with root passkey on each keychain
+- [x] Treasury auth/session remains anchored to `treasuries.tempoAddress` as the controller/root account
+- [x] Default accounts funded via faucet on creation
+- [x] Treasury setup uses `createTreasuryAction` + client default-account provisioning; partial setup exposes retry for only the missing default slot
+- [x] User can create additional accounts (new on-chain wallet per account)
+- [x] Multiple accounts with same token supported (each with unique wallet address)
+- [x] Account names unique per treasury (enforced by app validation and DB unique index)
+- [x] Default accounts tracked by immutable DB metadata, so they remain protected after rename
+- [x] Default accounts renamable but not deletable
+- [x] Non-default accounts deletable when assigned-token balance is zero
+- [x] Detectable unassigned assets trigger a delete warning but do not block deletion
+- [x] Delete uses preflight + confirm so warning state is shown before the final delete
+- [x] Delete "Transfer Balance" opens transfer form (if same-token accounts exist) or send form (if not)
+- [x] Account creation error shows "Try Again" with no partial DB state
+- [x] Sidebar navigation with treasury name, Dashboard/Transactions/Accounts/Settings links, logout
+- [x] Sidebar always visible on desktop, collapsed hamburger on mobile
+- [x] Dashboard shows top 4 account cards (sorted by balance, highest first)
+- [x] "View all accounts →" link shown on dashboard when more than 4 accounts exist
+- [x] Total balance shown in USD (all tokens 1:1)
+- [x] Dashboard "Recent Transactions" shows merged feed from all accounts (no filters)
+- [x] Transactions page (`/transactions`) has account, sender/recipient address, date, amount, and sent/received filters
+- [x] Grouped internal transfers and swaps carry both participating account IDs so they appear in both account histories without duplication
+- [x] Dashboard send/receive defaults to the highest-balance account; ties break by creation order
+- [x] Account detail page shows balance, address, QR, scoped transactions
+- [x] Send form has account selector (pre-selects when opened from account detail)
+- [x] Internal transfer works between same-token accounts
+- [x] Internal transfer and swap preflight validate that both referenced accounts belong to the active treasury
+- [x] Transfer button on account detail page only, hidden when <2 accounts of same token
+- [x] Internal transfers render as one grouped row in merged feeds
+- [x] Swap executes via Tempo DEX with quote preview, then transfers output into the destination account wallet
+- [x] Swap form enforces different token types for From/To
+- [x] If the swap transfer step fails, output funds remain recoverable in the source wallet and the UI surfaces that state
+- [x] Swap appears in both accounts' transaction histories
+- [x] Transaction detail page shows grouped transfer/swap summaries and underlying tx hashes
+- [x] Accounts management page lists all accounts sorted by balance (highest first) with CRUD actions
+- [x] WebSocket subscriptions run per-wallet
+- [x] Receive sheet has account selector (pre-selects when opened from account detail, default highest-balance account from dashboard)
+- [x] Changing account in receive sheet updates QR code, address, and helper text
 
 ## 11. References
 

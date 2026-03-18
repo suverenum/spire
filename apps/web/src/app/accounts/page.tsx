@@ -2,24 +2,24 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { TransactionSkeleton } from "@/components/skeletons";
 import { getSession } from "@/lib/session";
-import { TransactionsContent } from "./transactions-content";
+import { AccountsContent } from "./accounts-content";
 
-export default function TransactionsPage() {
+export default function AccountsPage() {
 	return (
 		<Suspense fallback={<TransactionSkeleton />}>
-			<TransactionsLoader />
+			<AccountsLoader />
 		</Suspense>
 	);
 }
 
-async function TransactionsLoader() {
+async function AccountsLoader() {
 	const session = await getSession();
 	if (!session) {
 		redirect("/");
 	}
 
 	return (
-		<TransactionsContent
+		<AccountsContent
 			treasuryName={session.treasuryName}
 			authenticatedAt={session.authenticatedAt}
 			treasuryId={session.treasuryId}
