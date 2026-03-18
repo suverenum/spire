@@ -33,7 +33,7 @@ export const SUPPORTED_TOKENS = {
 export type TokenName = keyof typeof SUPPORTED_TOKENS;
 
 export const SESSION_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes
-export const SESSION_COOKIE_NAME = "spire-session";
+export const SESSION_COOKIE_NAME = "goldhord-session";
 
 export const CACHE_KEYS = {
 	balances: (address: string) => ["balances", address] as const,

@@ -8,7 +8,7 @@
 
 ## 2. Context
 
-Spire is currently a single-package Next.js app. As we add a shared UI kit, shared utilities, and potentially other apps (admin dashboard, marketing site), a monorepo structure becomes necessary. This spec defines the target structure and migration path.
+Goldhord is currently a single-package Next.js app. As we add a shared UI kit, shared utilities, and potentially other apps (admin dashboard, marketing site), a monorepo structure becomes necessary. This spec defines the target structure and migration path.
 
 ## 3. Key Decisions
 
@@ -25,7 +25,7 @@ Bun handles package management but not build orchestration. Turborepo adds:
 
 ### Internal Packages Use TypeScript Source (No Build Step)
 
-Shared packages (`@spire/ui`, `@spire/utils`) export raw TypeScript. Consuming apps transpile them via `transpilePackages` in `next.config.ts`. This avoids maintaining separate build pipelines for internal packages.
+Shared packages (`@goldhord/ui`, `@goldhord/utils`) export raw TypeScript. Consuming apps transpile them via `transpilePackages` in `next.config.ts`. This avoids maintaining separate build pipelines for internal packages.
 
 ### Test Colocation
 
@@ -43,7 +43,7 @@ ESLint, TypeScript, and Tailwind configs are shared internal packages. Each app/
 ## 4. Target Structure
 
 ```
-spire/
+goldhord/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml
@@ -77,7 +77,7 @@ spire/
 │       ├── sentry.client.config.ts
 │       ├── sentry.server.config.ts
 │       ├── sentry.edge.config.ts
-│       ├── tsconfig.json                 # extends @spire/tsconfig/next
+│       ├── tsconfig.json                 # extends @goldhord/tsconfig/next
 │       └── package.json
 │
 ├── packages/
@@ -95,7 +95,7 @@ spire/
 │   │   │   │   └── toast/
 │   │   │   ├── hooks/                    # UI-specific hooks
 │   │   │   └── index.ts                  # Main barrel export
-│   │   ├── tsconfig.json                 # extends @spire/tsconfig/react
+│   │   ├── tsconfig.json                 # extends @goldhord/tsconfig/react
 │   │   ├── vitest.config.ts
 │   │   └── package.json
 │   │
@@ -146,7 +146,7 @@ spire/
 
 ```json
 {
-  "name": "spire",
+  "name": "goldhord",
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
@@ -199,7 +199,7 @@ spire/
 
 ```json
 {
-  "name": "@spire/ui",
+  "name": "@goldhord/ui",
   "version": "0.0.0",
   "private": true,
   "exports": {
@@ -222,8 +222,8 @@ spire/
     "react-dom": "^19"
   },
   "devDependencies": {
-    "@spire/tsconfig": "workspace:*",
-    "@spire/eslint-config": "workspace:*",
+    "@goldhord/tsconfig": "workspace:*",
+    "@goldhord/eslint-config": "workspace:*",
     "typescript": "^5",
     "vitest": "^4",
     "@testing-library/react": "^16"
@@ -235,7 +235,7 @@ spire/
 
 ```json
 {
-  "name": "@spire/utils",
+  "name": "@goldhord/utils",
   "version": "0.0.0",
   "private": true,
   "exports": {
@@ -247,8 +247,8 @@ spire/
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@spire/tsconfig": "workspace:*",
-    "@spire/eslint-config": "workspace:*",
+    "@goldhord/tsconfig": "workspace:*",
+    "@goldhord/eslint-config": "workspace:*",
     "typescript": "^5",
     "vitest": "^4"
   }
@@ -259,7 +259,7 @@ spire/
 
 ```json
 {
-  "name": "@spire/web",
+  "name": "@goldhord/web",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -274,16 +274,16 @@ spire/
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
-    "@spire/ui": "workspace:*",
-    "@spire/utils": "workspace:*",
+    "@goldhord/ui": "workspace:*",
+    "@goldhord/utils": "workspace:*",
     "next": "^16",
     "react": "^19",
     "react-dom": "^19"
   },
   "devDependencies": {
-    "@spire/tsconfig": "workspace:*",
-    "@spire/eslint-config": "workspace:*",
-    "@spire/tailwind-config": "workspace:*"
+    "@goldhord/tsconfig": "workspace:*",
+    "@goldhord/eslint-config": "workspace:*",
+    "@goldhord/tailwind-config": "workspace:*"
   }
 }
 ```
@@ -292,7 +292,7 @@ spire/
 
 ```typescript
 const nextConfig = {
-  transpilePackages: ["@spire/ui", "@spire/utils"],
+  transpilePackages: ["@goldhord/ui", "@goldhord/utils"],
   // ... rest of config
 };
 ```
@@ -337,12 +337,12 @@ export default async function DashboardPage() {
 
 | Current Location | Target Package | Why |
 |---|---|---|
-| `src/components/ui/*` (Button, Card, Input, Sheet, Tabs, Toast) | `@spire/ui` | Reusable across apps |
-| `src/lib/utils.ts` (cn, truncateAddress, formatBalance, formatDate) | `@spire/utils` | Reusable across apps |
-| `src/components/skeletons.tsx` | `@spire/ui` | UI primitives |
-| `eslint.config.mjs` rules | `@spire/eslint-config` | Shared across packages |
-| `tsconfig.json` base config | `@spire/tsconfig` | Shared across packages |
-| `tailwind.config` theme/tokens | `@spire/tailwind-config` | Shared across packages |
+| `src/components/ui/*` (Button, Card, Input, Sheet, Tabs, Toast) | `@goldhord/ui` | Reusable across apps |
+| `src/lib/utils.ts` (cn, truncateAddress, formatBalance, formatDate) | `@goldhord/utils` | Reusable across apps |
+| `src/components/skeletons.tsx` | `@goldhord/ui` | UI primitives |
+| `eslint.config.mjs` rules | `@goldhord/eslint-config` | Shared across packages |
+| `tsconfig.json` base config | `@goldhord/tsconfig` | Shared across packages |
+| `tailwind.config` theme/tokens | `@goldhord/tailwind-config` | Shared across packages |
 
 ### What Stays in the App
 
@@ -363,7 +363,7 @@ export default async function DashboardPage() {
 ### Configuration
 
 - **Root Directory:** `apps/web`
-- **Build Command:** `cd ../.. && turbo build --filter=@spire/web`
+- **Build Command:** `cd ../.. && turbo build --filter=@goldhord/web`
 - **Install Command:** `bun install`
 - **Framework:** Next.js (auto-detected)
 
@@ -447,7 +447,7 @@ turbo test
 5. **Create `packages/tsconfig/`** — extract base/react/next configs
 6. **Create `packages/eslint-config/`** — extract shared rules
 7. **Create `packages/tailwind-config/`** — extract theme/tokens
-8. **Update imports** — change `@/components/ui/button` → `@spire/ui`
+8. **Update imports** — change `@/components/ui/button` → `@goldhord/ui`
 9. **Update `next.config.ts`** — add `transpilePackages`
 10. **Update root `package.json`** — add `workspaces`, workspace scripts
 11. **Update CI** — use `turbo` commands

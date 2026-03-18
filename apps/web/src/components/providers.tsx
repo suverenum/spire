@@ -27,7 +27,7 @@ let browserPersister: ReturnType<typeof createIDBPersister> | null = null;
 function getPersister() {
 	if (typeof window === "undefined") return null;
 	if (!browserPersister) {
-		browserPersister = createIDBPersister("spire-cache");
+		browserPersister = createIDBPersister("goldhord-cache");
 	}
 	return browserPersister;
 }

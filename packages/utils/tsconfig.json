@@ -1,5 +1,5 @@
 {
-	"extends": "@spire/tsconfig/base.json",
+	"extends": "@goldhord/tsconfig/base.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {}

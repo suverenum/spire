@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-	title: "Spire",
+	title: "Goldhord",
 	description: "Treasury management on Tempo blockchain",
 };
 

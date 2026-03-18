@@ -69,7 +69,7 @@ export function WelcomeScreen() {
 					<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-900">
 						<Fingerprint className="h-10 w-10 text-white" />
 					</div>
-					<h1 className="text-2xl font-semibold">Spire</h1>
+					<h1 className="text-2xl font-semibold">Goldhord</h1>
 					<p className="mt-1 text-sm text-gray-500">
 						Treasury management on Tempo blockchain
 					</p>

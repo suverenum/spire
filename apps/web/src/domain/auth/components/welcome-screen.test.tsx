@@ -66,9 +66,9 @@ describe("WelcomeScreen", () => {
 		mockPush.mockReset();
 	});
 
-	it("renders Spire branding", () => {
+	it("renders Goldhord branding", () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		expect(screen.getByText("Spire")).toBeInTheDocument();
+		expect(screen.getByText("Goldhord")).toBeInTheDocument();
 	});
 
 	it("renders unlock button", () => {

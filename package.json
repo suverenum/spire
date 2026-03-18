@@ -1,5 +1,5 @@
 {
-	"name": "spire",
+	"name": "goldhord",
 	"private": true,
 	"packageManager": "bun@1.3.3",
 	"workspaces": [

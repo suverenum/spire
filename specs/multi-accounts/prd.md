@@ -8,7 +8,7 @@
 
 ## 2. What
 
-Extend Spire from a single-wallet treasury to a multi-account model. Each account is a **separate Tempo wallet on-chain**, holding exactly one token type. A single root passkey controls all account wallets via Tempo's Account Keychain Precompile — one fingerprint scan signs for any account. Users can create, rename, and delete accounts. Default accounts ("Main AlphaUSD" and "Main BetaUSD") are created automatically. Includes swaps between accounts via Tempo's native stablecoin DEX.
+Extend Goldhord from a single-wallet treasury to a multi-account model. Each account is a **separate Tempo wallet on-chain**, holding exactly one token type. A single root passkey controls all account wallets via Tempo's Account Keychain Precompile — one fingerprint scan signs for any account. Users can create, rename, and delete accounts. Default accounts ("Main AlphaUSD" and "Main BetaUSD") are created automatically. Includes swaps between accounts via Tempo's native stablecoin DEX.
 
 ## 3. Motivation
 
@@ -155,7 +155,7 @@ User creates treasury (MVP flow)
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund         ⏻  │
+│ ◆ Goldhord · Ops Fund         ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -189,7 +189,7 @@ User creates treasury (MVP flow)
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund         ⏻  │
+│ ◆ Goldhord · Ops Fund         ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -315,7 +315,7 @@ User navigates to Accounts page
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund         ⏻  │
+│ ◆ Goldhord · Ops Fund         ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -648,7 +648,7 @@ User taps "Swap" on dashboard
 │  │   250 AlphaUSD →        │    │
 │  │   249.75 BetaUSD        │    │
 │  └─────────────────────────┘    │
-│ ◆ Spire · Ops Fund         ⏻  │
+│ ◆ Goldhord · Ops Fund         ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -950,7 +950,7 @@ export const accounts = pgTable('accounts', {
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                    Spire App                      │
+│                    Goldhord App                      │
 │                                                   │
 │  ┌─────────────┐ ┌─────────────┐ ┌────────────┐ │
 │  │ Ops Alpha   │ │Savings Alpha│ │ Main Beta  │ │

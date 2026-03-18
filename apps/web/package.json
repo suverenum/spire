@@ -1,5 +1,5 @@
 {
-	"name": "@spire/web",
+	"name": "@goldhord/web",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -17,8 +17,8 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"dependencies": {
-		"@spire/ui": "workspace:*",
-		"@spire/utils": "workspace:*",
+		"@goldhord/ui": "workspace:*",
+		"@goldhord/utils": "workspace:*",
 		"@neondatabase/serverless": "^1.0.2",
 		"@sentry/nextjs": "^10.43.0",
 		"@serwist/next": "^9.5.7",
@@ -41,7 +41,7 @@
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
-		"@spire/tsconfig": "workspace:*",
+		"@goldhord/tsconfig": "workspace:*",
 		"@lhci/cli": "^0.15.1",
 		"@playwright/test": "^1.58.2",
 		"@tailwindcss/postcss": "^4.2.1",

@@ -9,7 +9,7 @@
 
 ## 2. Context
 
-Extend Spire from a single-wallet treasury to a multi-account model. Each account is a separate Tempo wallet on-chain, holding one token type. A single root passkey controls all account wallets via Tempo's Account Keychain Precompile. Users can create, rename, delete accounts, transfer between them, and swap tokens via Tempo's native DEX.
+Extend Goldhord from a single-wallet treasury to a multi-account model. Each account is a separate Tempo wallet on-chain, holding one token type. A single root passkey controls all account wallets via Tempo's Account Keychain Precompile. Users can create, rename, delete accounts, transfer between them, and swap tokens via Tempo's native DEX.
 
 See [prd.md](./prd.md) for full scope, user stories, flows, and mockups.
 

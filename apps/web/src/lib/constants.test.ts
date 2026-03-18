@@ -27,7 +27,7 @@ describe("constants", () => {
 	});
 
 	it("has session cookie name", () => {
-		expect(SESSION_COOKIE_NAME).toBe("spire-session");
+		expect(SESSION_COOKIE_NAME).toBe("goldhord-session");
 	});
 
 	it("has all four supported tokens", () => {

@@ -1,5 +1,5 @@
 {
-	"name": "@spire/tsconfig",
+	"name": "@goldhord/tsconfig",
 	"version": "0.0.0",
 	"private": true,
 	"files": [

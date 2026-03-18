@@ -1,5 +1,5 @@
 {
-	"extends": "@spire/tsconfig/react.json",
+	"extends": "@goldhord/tsconfig/react.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {}

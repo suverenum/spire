@@ -1,5 +1,5 @@
 {
-	"name": "@spire/utils",
+	"name": "@goldhord/utils",
 	"version": "0.0.0",
 	"private": true,
 	"exports": {
@@ -15,7 +15,7 @@
 		"tailwind-merge": "^3"
 	},
 	"devDependencies": {
-		"@spire/tsconfig": "workspace:*",
+		"@goldhord/tsconfig": "workspace:*",
 		"typescript": "^5",
 		"vitest": "^4"
 	}

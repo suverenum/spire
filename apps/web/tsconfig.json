@@ -1,5 +1,5 @@
 {
-	"extends": "@spire/tsconfig/next.json",
+	"extends": "@goldhord/tsconfig/next.json",
 	"compilerOptions": {
 		"paths": {
 			"@/*": ["./src/*"]
