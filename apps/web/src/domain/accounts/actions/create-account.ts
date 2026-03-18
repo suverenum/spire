@@ -1,5 +1,6 @@
 "use server";
 
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
@@ -32,8 +33,20 @@ export async function assertCanCreateAccount({
 		return { error: "Invalid token for account creation" };
 	}
 
-	if (!name.trim() || name.length > 100) {
+	const trimmedName = name.trim();
+	if (!trimmedName || trimmedName.length > 100) {
 		return { error: "Account name must be 1-100 characters" };
+	}
+
+	// Check name uniqueness before any on-chain provisioning to avoid wasting gas
+	const existing = await db.query.accounts.findFirst({
+		where: and(
+			eq(accounts.treasuryId, treasuryId),
+			eq(accounts.name, trimmedName),
+		),
+	});
+	if (existing) {
+		return { error: "Name already taken" };
 	}
 
 	return {};

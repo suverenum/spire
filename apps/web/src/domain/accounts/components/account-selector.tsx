@@ -9,6 +9,7 @@ interface AccountSelectorProps {
 	onSelect: (accountId: string) => void;
 	label?: string;
 	filterToken?: string;
+	excludeToken?: string;
 	excludeAccountId?: string;
 }
 
@@ -18,10 +19,12 @@ export function AccountSelector({
 	onSelect,
 	label = "Account",
 	filterToken,
+	excludeToken,
 	excludeAccountId,
 }: AccountSelectorProps) {
 	const filtered = accounts.filter((a) => {
 		if (filterToken && a.tokenSymbol !== filterToken) return false;
+		if (excludeToken && a.tokenSymbol === excludeToken) return false;
 		if (excludeAccountId && a.id === excludeAccountId) return false;
 		return true;
 	});

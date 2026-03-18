@@ -136,10 +136,7 @@ export function DashboardContent({
 					/>
 				</div>
 
-				<DashboardRecentTransactions
-					transactions={transactions}
-					accounts={accounts}
-				/>
+				<DashboardRecentTransactions transactions={transactions} />
 
 				<SendPaymentForm
 					open={sendOpen}

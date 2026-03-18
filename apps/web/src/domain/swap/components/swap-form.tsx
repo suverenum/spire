@@ -110,6 +110,7 @@ export function SwapForm({ accounts, treasuryId }: SwapFormProps) {
 				onSelect={setToAccountId}
 				label="To"
 				excludeAccountId={fromAccountId}
+				excludeToken={fromAccount?.tokenSymbol}
 			/>
 
 			<div>

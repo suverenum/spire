@@ -160,10 +160,7 @@ export function AccountDetailContent({
 					</div>
 				)}
 
-				<DashboardRecentTransactions
-					transactions={scopedTransactions}
-					accounts={accounts}
-				/>
+				<DashboardRecentTransactions transactions={scopedTransactions} />
 
 				<Sheet
 					open={transferOpen}

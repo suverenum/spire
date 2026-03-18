@@ -2,19 +2,25 @@
 
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import type { AccountRecord, GroupedTransaction } from "@/lib/tempo/types";
+import type { GroupedTransaction } from "@/lib/tempo/types";
 import { cn, formatBalance, formatDate, truncateAddress } from "@/lib/utils";
 
 interface DashboardRecentTransactionsProps {
 	transactions: GroupedTransaction[];
-	accounts: AccountRecord[];
+}
+
+function getLinkId(tx: GroupedTransaction): string {
+	return tx.txHashes[0];
 }
 
 function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 	if (tx.kind === "payment") {
 		const isSent = tx.direction === "sent";
 		return (
-			<div className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+			<Link
+				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
+				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			>
 				<div
 					className={cn(
 						"flex h-10 w-10 items-center justify-center rounded-full",
@@ -49,13 +55,16 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 						{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
 					</p>
 				</div>
-			</div>
+			</Link>
 		);
 	}
 
 	if (tx.kind === "internalTransfer") {
 		return (
-			<div className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+			<Link
+				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
+				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			>
 				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
 					<ArrowLeftRight className="h-5 w-5 text-blue-600" />
 				</div>
@@ -71,13 +80,16 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 					</p>
 					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 				</div>
-			</div>
+			</Link>
 		);
 	}
 
 	// Swap
 	return (
-		<div className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
+		<Link
+			href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
+			className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+		>
 			<div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
 				<ArrowLeftRight className="h-5 w-5 text-purple-600" />
 			</div>
@@ -94,7 +106,7 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 				</p>
 				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 			</div>
-		</div>
+		</Link>
 	);
 }
 

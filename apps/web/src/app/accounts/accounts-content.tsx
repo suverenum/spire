@@ -88,6 +88,9 @@ export function AccountsContent({
 							queryKey: CACHE_KEYS.accounts(treasuryId),
 						});
 					}}
+					onTransferBalance={() => {
+						setDeleteAccount(null);
+					}}
 				/>
 			</SidebarLayout>
 		</SessionGuard>

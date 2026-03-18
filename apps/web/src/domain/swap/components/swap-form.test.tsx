@@ -109,28 +109,17 @@ describe("SwapForm", () => {
 		);
 	});
 
-	it("shows error for same token type when quote exists", async () => {
+	it("filters out same-token accounts from To selector", async () => {
 		const sameTokenAccounts = [
 			makeAccount("1", "Alpha 1", "AlphaUSD"),
 			makeAccount("2", "Alpha 2", "AlphaUSD"),
 		];
-		mockSwapQuote.mockReturnValue({
-			data: {
-				amountOut: 999000n,
-				minAmountOut: 994000n,
-				rate: 0.999,
-				slippage: 0.005,
-			},
-			isLoading: false,
-		});
 		render(<SwapForm accounts={sameTokenAccounts} treasuryId="t-1" />);
 		await userEvent.selectOptions(screen.getByLabelText("From"), "1");
-		await userEvent.selectOptions(screen.getByLabelText("To"), "2");
-		await userEvent.type(screen.getByLabelText("Amount"), "1");
-		await userEvent.click(screen.getByRole("button", { name: "Swap" }));
-		expect(
-			screen.getByText("Swap requires different token types"),
-		).toBeInTheDocument();
+		// To selector should have no selectable options (both accounts are AlphaUSD)
+		const toSelect = screen.getByLabelText("To") as HTMLSelectElement;
+		const options = Array.from(toSelect.options).filter((o) => !o.disabled);
+		expect(options).toHaveLength(0);
 	});
 
 	it("shows error when amount exceeds balance", async () => {

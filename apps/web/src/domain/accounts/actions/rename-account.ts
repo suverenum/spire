@@ -30,7 +30,15 @@ export async function renameAccountAction(
 	if (!account) return { error: "Account not found" };
 
 	try {
-		await db.update(accounts).set({ name }).where(eq(accounts.id, accountId));
+		await db
+			.update(accounts)
+			.set({ name })
+			.where(
+				and(
+					eq(accounts.id, accountId),
+					eq(accounts.treasuryId, session.treasuryId),
+				),
+			);
 	} catch (err: unknown) {
 		const pgCode =
 			err != null && typeof err === "object" && "code" in err
