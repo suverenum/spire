@@ -1,8 +1,7 @@
 import pg from "pg";
 
 const TEST_DB_URL =
-	process.env.TEST_DATABASE_URL ||
-	"postgresql://postgres:testpass@localhost:5432/goldhord_test";
+	process.env.TEST_DATABASE_URL || "postgresql://postgres:testpass@localhost:5432/goldhord_test";
 
 // Known test data IDs (deterministic for test assertions)
 export const TEST_TREASURY_ID = "00000000-0000-0000-0000-000000000001";
@@ -15,8 +14,7 @@ export const TEST_EOA_WALLET = "0x1111111111111111111111111111111111111111";
 export const TEST_EOA_WALLET2 = "0x4444444444444444444444444444444444444444";
 
 export const TEST_MULTISIG_ACCOUNT_ID = "00000000-0000-0000-0000-000000000020";
-export const TEST_MULTISIG_WALLET =
-	"0x2222222222222222222222222222222222222222";
+export const TEST_MULTISIG_WALLET = "0x2222222222222222222222222222222222222222";
 export const TEST_GUARD_ADDRESS = "0x3333333333333333333333333333333333333333";
 
 export const TEST_SIGNER_1 = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -38,10 +36,11 @@ export async function seedTestData(): Promise<void> {
 		await client.query("DELETE FROM treasuries");
 
 		// Insert treasury
-		await client.query(
-			`INSERT INTO treasuries (id, name, tempo_address) VALUES ($1, $2, $3)`,
-			[TEST_TREASURY_ID, TEST_TREASURY_NAME, TEST_TEMPO_ADDRESS],
-		);
+		await client.query(`INSERT INTO treasuries (id, name, tempo_address) VALUES ($1, $2, $3)`, [
+			TEST_TREASURY_ID,
+			TEST_TREASURY_NAME,
+			TEST_TEMPO_ADDRESS,
+		]);
 
 		// Insert EOA account
 		await client.query(

@@ -18,9 +18,7 @@ export interface MultisigConfigData {
  * Get multisig config for an account.
  * Returns null for EOA accounts.
  */
-export async function getMultisigConfig(
-	accountId: string,
-): Promise<MultisigConfigData | null> {
+export async function getMultisigConfig(accountId: string): Promise<MultisigConfigData | null> {
 	const config = await db.query.multisigConfigs.findFirst({
 		where: eq(multisigConfigs.accountId, accountId),
 	});

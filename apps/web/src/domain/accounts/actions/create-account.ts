@@ -42,10 +42,7 @@ export async function assertCanCreateAccount({
 
 	// Check name uniqueness before any on-chain provisioning to avoid wasting gas
 	const existing = await db.query.accounts.findFirst({
-		where: and(
-			eq(accounts.treasuryId, treasuryId),
-			eq(accounts.name, trimmedName),
-		),
+		where: and(eq(accounts.treasuryId, treasuryId), eq(accounts.name, trimmedName)),
 	});
 	if (existing) {
 		return { error: "Name already taken" };

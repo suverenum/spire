@@ -80,10 +80,7 @@ export const multisigTransactions = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(table) => [
-		uniqueIndex("multisig_tx_account_chain_id").on(
-			table.accountId,
-			table.onChainTxId,
-		),
+		uniqueIndex("multisig_tx_account_chain_id").on(table.accountId, table.onChainTxId),
 		index("multisig_tx_pending").on(table.accountId, table.executed),
 	],
 );
@@ -99,9 +96,6 @@ export const multisigConfirmations = pgTable(
 		confirmedAt: timestamp("confirmed_at").defaultNow().notNull(),
 	},
 	(table) => [
-		uniqueIndex("multisig_confirm_unique").on(
-			table.multisigTransactionId,
-			table.signerAddress,
-		),
+		uniqueIndex("multisig_confirm_unique").on(table.multisigTransactionId, table.signerAddress),
 	],
 );

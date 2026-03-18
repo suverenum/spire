@@ -24,8 +24,7 @@ import {
 
 // ─── Contract addresses (Tempo Testnet v2 deployment) ───────────────
 const FACTORY_ADDRESS = "0xf6888688CAAed87352E975964400493429930342" as Address;
-const GUARD_FACTORY_ADDRESS =
-	"0x53AbdcC50268bd4283187Bef5a48942E9e1aa161" as Address;
+const GUARD_FACTORY_ADDRESS = "0x53AbdcC50268bd4283187Bef5a48942E9e1aa161" as Address;
 
 // ─── Minimal ABIs (inlined to avoid SDK import dependency) ──────────
 const MultisigFactoryAbi = [
@@ -236,8 +235,7 @@ async function setGuardOnWallet(
 		logs: submitReceipt.logs,
 		eventName: "TransactionSubmitted",
 	});
-	if (submitLogs.length === 0)
-		throw new Error("TransactionSubmitted event not found");
+	if (submitLogs.length === 0) throw new Error("TransactionSubmitted event not found");
 	const txId = submitLogs[0].args.txId;
 
 	// Execute immediately (threshold=1, already confirmed)
@@ -274,9 +272,7 @@ export function useCreateMultisig() {
 			setStep("validating");
 
 			// 1. Server-side validation
-			const validation = await assertCanCreateMultisigAccount(
-				params as MultisigAccountParams,
-			);
+			const validation = await assertCanCreateMultisigAccount(params as MultisigAccountParams);
 			if (validation.error) {
 				throw new Error(validation.error);
 			}
@@ -319,12 +315,7 @@ export function useCreateMultisig() {
 
 			// 4. Set guard on wallet via self-call (threshold=1, auto-executes)
 			setStep("setting-guard");
-			await setGuardOnWallet(
-				publicClient,
-				walletClient,
-				walletAddress,
-				guardAddress,
-			);
+			await setGuardOnWallet(publicClient, walletClient, walletAddress, guardAddress);
 
 			// 5. Persist to DB
 			setStep("finalizing");

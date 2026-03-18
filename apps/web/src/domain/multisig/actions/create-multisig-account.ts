@@ -30,8 +30,7 @@ export async function assertCanCreateMultisigAccount(
 ): Promise<{ error?: string }> {
 	const session = await getSession();
 	if (!session) return { error: "Not authenticated" };
-	if (session.treasuryId !== params.treasuryId)
-		return { error: "Treasury mismatch" };
+	if (session.treasuryId !== params.treasuryId) return { error: "Treasury mismatch" };
 
 	if (!VALID_TOKEN_SYMBOLS.has(params.tokenSymbol))
 		return { error: "Invalid token for account creation" };
@@ -42,29 +41,22 @@ export async function assertCanCreateMultisigAccount(
 
 	// Name uniqueness
 	const existing = await db.query.accounts.findFirst({
-		where: and(
-			eq(accounts.treasuryId, params.treasuryId),
-			eq(accounts.name, trimmedName),
-		),
+		where: and(eq(accounts.treasuryId, params.treasuryId), eq(accounts.name, trimmedName)),
 	});
 	if (existing) return { error: "Name already taken" };
 
 	// Owners validation
-	if (params.owners.length === 0)
-		return { error: "At least one owner required" };
+	if (params.owners.length === 0) return { error: "At least one owner required" };
 	if (params.owners.length > 50) return { error: "Maximum 50 owners" };
 	for (const owner of params.owners) {
-		if (!ADDRESS_RE.test(owner))
-			return { error: `Invalid owner address: ${owner}` };
+		if (!ADDRESS_RE.test(owner)) return { error: `Invalid owner address: ${owner}` };
 	}
 	const uniqueOwners = new Set(params.owners.map((o) => o.toLowerCase()));
-	if (uniqueOwners.size !== params.owners.length)
-		return { error: "Duplicate owner addresses" };
+	if (uniqueOwners.size !== params.owners.length) return { error: "Duplicate owner addresses" };
 
 	// Tier validation
 	if (params.tiers.length > 10) return { error: "Maximum 10 tiers" };
-	if (params.defaultConfirmations < 1)
-		return { error: "Default confirmations must be at least 1" };
+	if (params.defaultConfirmations < 1) return { error: "Default confirmations must be at least 1" };
 	for (let i = 0; i < params.tiers.length; i++) {
 		if (params.tiers[i].requiredConfirmations < 1)
 			return { error: "Required confirmations must be at least 1" };
@@ -72,10 +64,7 @@ export async function assertCanCreateMultisigAccount(
 			return { error: `Invalid tier value: ${params.tiers[i].maxValue}` };
 		if (i > 0) {
 			try {
-				if (
-					BigInt(params.tiers[i].maxValue) <=
-					BigInt(params.tiers[i - 1].maxValue)
-				)
+				if (BigInt(params.tiers[i].maxValue) <= BigInt(params.tiers[i - 1].maxValue))
 					return { error: "Tiers must be sorted ascending by maxValue" };
 			} catch {
 				return { error: `Invalid tier value: ${params.tiers[i].maxValue}` };
@@ -85,8 +74,7 @@ export async function assertCanCreateMultisigAccount(
 
 	// Allowlist validation
 	for (const addr of params.initialAllowlist) {
-		if (!ADDRESS_RE.test(addr))
-			return { error: `Invalid allowlist address: ${addr}` };
+		if (!ADDRESS_RE.test(addr)) return { error: `Invalid allowlist address: ${addr}` };
 	}
 
 	return {};
@@ -124,8 +112,7 @@ export async function finalizeMultisigAccountCreate({
 	const token = ACCOUNT_TOKENS.find((t) => t.name === tokenSymbol);
 	if (!token) return { error: "Invalid token" };
 
-	if (!ADDRESS_RE.test(walletAddress))
-		return { error: "Invalid wallet address" };
+	if (!ADDRESS_RE.test(walletAddress)) return { error: "Invalid wallet address" };
 	if (!ADDRESS_RE.test(guardAddress)) return { error: "Invalid guard address" };
 
 	try {

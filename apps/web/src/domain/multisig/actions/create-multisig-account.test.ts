@@ -120,10 +120,7 @@ describe("assertCanCreateMultisigAccount", () => {
 	});
 
 	it("rejects more than 50 owners", async () => {
-		const owners = Array.from(
-			{ length: 51 },
-			(_, i) => `0x${i.toString(16).padStart(40, "0")}`,
-		);
+		const owners = Array.from({ length: 51 }, (_, i) => `0x${i.toString(16).padStart(40, "0")}`);
 		const result = await assertCanCreateMultisigAccount({
 			...validParams,
 			owners,

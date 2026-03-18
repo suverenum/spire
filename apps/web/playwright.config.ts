@@ -1,8 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const TEST_DB_URL =
-	process.env.TEST_DATABASE_URL ||
-	"postgresql://postgres:testpass@localhost:5432/goldhord_test";
+	process.env.TEST_DATABASE_URL || "postgresql://postgres:testpass@localhost:5432/goldhord_test";
 
 export default defineConfig({
 	testDir: "./e2e",

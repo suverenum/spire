@@ -52,23 +52,13 @@ describe("decodeTransactionDescription", () => {
 	});
 
 	it("decodes self-call with unknown selector", () => {
-		const result = decodeTransactionDescription(
-			WALLET,
-			"0xdeadbeef",
-			"0",
-			WALLET,
-		);
+		const result = decodeTransactionDescription(WALLET, "0xdeadbeef", "0", WALLET);
 		expect(result).toBe("Wallet configuration change");
 	});
 
 	it("shows raw address for unknown contract call", () => {
 		const unknownContract = "0x3333333333333333333333333333333333333333";
-		const result = decodeTransactionDescription(
-			unknownContract,
-			"0xdeadbeef1234",
-			"0",
-			WALLET,
-		);
+		const result = decodeTransactionDescription(unknownContract, "0xdeadbeef1234", "0", WALLET);
 		expect(result).toContain("Contract call to");
 		expect(result).toContain("3333...3333");
 	});

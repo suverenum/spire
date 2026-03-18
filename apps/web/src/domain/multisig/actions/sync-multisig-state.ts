@@ -40,8 +40,7 @@ export async function upsertMultisigTransaction({
 			.set({
 				currentConfirmations,
 				executed,
-				executedAt:
-					executed && !existing.executed ? new Date() : existing.executedAt,
+				executedAt: executed && !existing.executed ? new Date() : existing.executedAt,
 			})
 			.where(eq(multisigTransactions.id, existing.id));
 		return { id: existing.id };

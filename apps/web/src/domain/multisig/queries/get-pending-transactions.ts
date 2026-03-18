@@ -26,9 +26,7 @@ export interface PendingTransactionData {
  * Get pending (non-executed) multisig transactions for an account.
  * Fetches confirmations in a single batched query (no N+1).
  */
-export async function getPendingTransactions(
-	accountId: string,
-): Promise<PendingTransactionData[]> {
+export async function getPendingTransactions(accountId: string): Promise<PendingTransactionData[]> {
 	const txs = await db.query.multisigTransactions.findMany({
 		where: and(
 			eq(multisigTransactions.accountId, accountId),
@@ -46,10 +44,7 @@ export async function getPendingTransactions(
 	});
 
 	// Group confirmations by transaction ID
-	const confsByTxId = new Map<
-		string,
-		Array<{ signerAddress: string; confirmedAt: Date }>
-	>();
+	const confsByTxId = new Map<string, Array<{ signerAddress: string; confirmedAt: Date }>>();
 	for (const c of allConfs) {
 		const list = confsByTxId.get(c.multisigTransactionId) ?? [];
 		list.push({ signerAddress: c.signerAddress, confirmedAt: c.confirmedAt });

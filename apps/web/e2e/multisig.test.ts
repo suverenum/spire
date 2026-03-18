@@ -1,10 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { authenticateContext } from "./helpers/auth";
-import {
-	TEST_TEMPO_ADDRESS,
-	TEST_TREASURY_ID,
-	TEST_TREASURY_NAME,
-} from "./helpers/seed";
+import { TEST_TEMPO_ADDRESS, TEST_TREASURY_ID, TEST_TREASURY_NAME } from "./helpers/seed";
 
 test.beforeEach(async ({ context, page }) => {
 	await authenticateContext(context, {
@@ -25,8 +21,7 @@ test.beforeEach(async ({ context, page }) => {
 				body: JSON.stringify({
 					jsonrpc: "2.0",
 					id: body.id,
-					result:
-						"0x0000000000000000000000000000000000000000000000000000000000000000",
+					result: "0x0000000000000000000000000000000000000000000000000000000000000000",
 				}),
 			});
 		} else if (body?.method === "eth_getTransactionCount") {
@@ -57,19 +52,13 @@ test.describe("Multisig E2E", () => {
 			});
 		});
 
-		test("shows dashboard page structure with send/receive buttons", async ({
-			page,
-		}) => {
+		test("shows dashboard page structure with send/receive buttons", async ({ page }) => {
 			await page.goto("/dashboard");
 			// Dashboard renders with action buttons even while accounts load
-			await expect(
-				page.getByRole("button", { name: /Send/ }).first(),
-			).toBeVisible({
+			await expect(page.getByRole("button", { name: /Send/ }).first()).toBeVisible({
 				timeout: 15000,
 			});
-			await expect(
-				page.getByRole("button", { name: /Receive/ }).first(),
-			).toBeVisible({
+			await expect(page.getByRole("button", { name: /Receive/ }).first()).toBeVisible({
 				timeout: 15000,
 			});
 		});
@@ -88,21 +77,15 @@ test.describe("Multisig E2E", () => {
 	test.describe("Accounts Page", () => {
 		test("lists accounts page with create button", async ({ page }) => {
 			await page.goto("/accounts");
-			await expect(page.getByRole("heading", { name: "Accounts" })).toBeVisible(
-				{ timeout: 15000 },
-			);
-			await expect(
-				page.getByRole("button", { name: /Create Account/ }),
-			).toBeVisible({
+			await expect(page.getByRole("heading", { name: "Accounts" })).toBeVisible({ timeout: 15000 });
+			await expect(page.getByRole("button", { name: /Create Account/ })).toBeVisible({
 				timeout: 15000,
 			});
 		});
 
 		test("shows create account button", async ({ page }) => {
 			await page.goto("/accounts");
-			await expect(
-				page.getByRole("button", { name: /Create Account/ }),
-			).toBeVisible();
+			await expect(page.getByRole("button", { name: /Create Account/ })).toBeVisible();
 		});
 	});
 
@@ -110,9 +93,7 @@ test.describe("Multisig E2E", () => {
 		test("desktop sidebar shows all navigation links", async ({ page }) => {
 			await page.goto("/dashboard");
 			await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
-			await expect(
-				page.getByRole("link", { name: "Transactions" }),
-			).toBeVisible();
+			await expect(page.getByRole("link", { name: "Transactions" })).toBeVisible();
 			await expect(page.getByRole("link", { name: "Accounts" })).toBeVisible();
 			await expect(page.getByRole("link", { name: "Swap" })).toBeVisible();
 			await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
@@ -125,9 +106,7 @@ test.describe("Multisig E2E", () => {
 	});
 
 	test.describe("Send Payment Form", () => {
-		test("send form shows Submit for Approval for multisig accounts", async ({
-			page,
-		}) => {
+		test("send form shows Submit for Approval for multisig accounts", async ({ page }) => {
 			await page.goto("/dashboard");
 			// Click send button to open payment form
 			const sendButton = page.getByRole("button", { name: /Send/ }).first();
@@ -137,9 +116,7 @@ test.describe("Multisig E2E", () => {
 				const fromSelect = page.locator("#send-account");
 				if (await fromSelect.isVisible()) {
 					await fromSelect.selectOption({ label: "Treasury Multisig" });
-					await expect(
-						page.getByRole("button", { name: /Submit for Approval/ }),
-					).toBeVisible();
+					await expect(page.getByRole("button", { name: /Submit for Approval/ })).toBeVisible();
 				}
 			}
 		});
@@ -158,9 +135,7 @@ test.describe("Multisig E2E", () => {
 		test("shows treasury settings page", async ({ page }) => {
 			await page.goto("/settings");
 			// Settings page has a form with treasury name input
-			await expect(
-				page.locator("main").getByText("Settings").first(),
-			).toBeVisible({
+			await expect(page.locator("main").getByText("Settings").first()).toBeVisible({
 				timeout: 15000,
 			});
 		});

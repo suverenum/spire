@@ -13,9 +13,7 @@ interface SessionData {
 
 function forgeSessionCookie(data: SessionData): string {
 	const payload = Buffer.from(JSON.stringify(data)).toString("base64");
-	const signature = createHmac("sha256", DEV_SECRET)
-		.update(payload)
-		.digest("hex");
+	const signature = createHmac("sha256", DEV_SECRET).update(payload).digest("hex");
 	return `${payload}.${signature}`;
 }
 
