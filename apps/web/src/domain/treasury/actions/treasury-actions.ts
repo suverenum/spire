@@ -12,7 +12,7 @@ const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export async function createTreasuryAction(
 	formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; treasuryId?: string }> {
 	const raw = { name: formData.get("name") };
 	const parsed = createTreasurySchema.safeParse(raw);
 
@@ -73,10 +73,12 @@ export async function createTreasuryAction(
 		treasuryName: row.name,
 	});
 
-	return { success: true };
+	return { success: true, treasuryId: row.id };
 }
 
-export async function updateTreasuryNameAction(formData: FormData): Promise<{ error?: string }> {
+export async function updateTreasuryNameAction(
+	formData: FormData,
+): Promise<{ error?: string }> {
 	const session = await getSession();
 	if (!session) return { error: "Not authenticated" };
 
@@ -87,7 +89,10 @@ export async function updateTreasuryNameAction(formData: FormData): Promise<{ er
 	}
 	const name = parsed.data.name;
 
-	await db.update(treasuries).set({ name }).where(eq(treasuries.id, session.treasuryId));
+	await db
+		.update(treasuries)
+		.set({ name })
+		.where(eq(treasuries.id, session.treasuryId));
 
 	await createSession({
 		treasuryId: session.treasuryId,

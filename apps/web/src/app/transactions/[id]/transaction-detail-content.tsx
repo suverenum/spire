@@ -207,11 +207,11 @@ export function TransactionDetailContent({
 
 	const { transactions, isLoading } = useAllTransactions(accounts);
 
-	// Find the grouped transaction by matching any tx hash
+	// Find the grouped transaction by matching any tx hash or exact group ID
 	const tx = transactions.find(
 		(t) =>
 			t.txHashes.some((h) => h === transactionId) ||
-			t.groupId.includes(transactionId),
+			t.groupId === transactionId,
 	);
 
 	return (

@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { SessionGuard } from "@/domain/auth/components/session-guard";
 import { ReceiveSheet } from "@/domain/payments/components/receive-sheet";
 import { SendPaymentForm } from "@/domain/payments/components/send-payment-form";
 import { WebSocketBanner } from "@/domain/payments/components/websocket-banner";
+import { useRetryDefaultAccountSetup } from "@/domain/treasury/hooks/use-setup-default-accounts";
 import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord, AccountWithBalance } from "@/lib/tempo/types";
 import { formatBalance } from "@/lib/utils";
@@ -37,6 +39,7 @@ export function DashboardContent({
 	treasuryId,
 }: DashboardContentProps) {
 	const queryClient = useQueryClient();
+	const dashboardRouter = useRouter();
 	const [sendOpen, setSendOpen] = useState(false);
 	const [receiveOpen, setReceiveOpen] = useState(false);
 	const [createOpen, setCreateOpen] = useState(false);
@@ -66,6 +69,10 @@ export function DashboardContent({
 
 	const { transactions } = useAllTransactions(accounts);
 	const { isConnected } = useMultiAccountWs(accounts);
+	const retryDefaults = useRetryDefaultAccountSetup();
+
+	const defaultAccountCount = accounts.filter((a) => a.isDefault).length;
+	const hasAllDefaults = defaultAccountCount >= 2;
 
 	// Default to highest-balance account for send/receive; ties break by creation order
 	const sorted = [...accountsWithBalances].sort((a, b) => {
@@ -94,6 +101,31 @@ export function DashboardContent({
 		<SessionGuard authenticatedAt={authenticatedAt}>
 			<SidebarLayout treasuryName={treasuryName}>
 				<WebSocketBanner isConnected={isConnected} />
+
+				{!hasAllDefaults && (
+					<Card className="mb-4 border-amber-200 bg-amber-50">
+						<p className="text-sm text-amber-800">
+							Some default accounts failed to set up.
+						</p>
+						<Button
+							variant="outline"
+							size="sm"
+							className="mt-2"
+							disabled={retryDefaults.isPending}
+							onClick={() =>
+								retryDefaults.mutate({
+									treasuryId,
+									existingAccounts: accounts.map((a) => ({
+										tokenSymbol: a.tokenSymbol,
+										isDefault: a.isDefault,
+									})),
+								})
+							}
+						>
+							{retryDefaults.isPending ? "Retrying..." : "Retry Setup"}
+						</Button>
+					</Card>
+				)}
 
 				<Card className="mb-6">
 					<p className="text-sm text-gray-500">Total Balance</p>
@@ -185,8 +217,15 @@ export function DashboardContent({
 						});
 					}}
 					onTransferBalance={(acct) => {
-						setSelectedSendAccount(acct);
-						setSendOpen(true);
+						const sameTokenAccounts = accountsWithBalances.filter(
+							(a) => a.tokenSymbol === acct.tokenSymbol && a.id !== acct.id,
+						);
+						if (sameTokenAccounts.length > 0) {
+							dashboardRouter.push(`/accounts/${acct.id}`);
+						} else {
+							setSelectedSendAccount(acct);
+							setSendOpen(true);
+						}
 					}}
 				/>
 			</SidebarLayout>

@@ -8,7 +8,8 @@ import {
 	Search,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 import { parseUnits } from "viem";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Input } from "@/components/ui/input";
@@ -164,13 +165,37 @@ export function TransactionsContent({
 	authenticatedAt,
 	treasuryId,
 }: TransactionsContentProps) {
-	const [accountFilter, setAccountFilter] = useState("all");
-	const [addressFilter, setAddressFilter] = useState("");
-	const [dateFrom, setDateFrom] = useState("");
-	const [dateTo, setDateTo] = useState("");
-	const [minAmount, setMinAmount] = useState("");
-	const [maxAmount, setMaxAmount] = useState("");
-	const [tab, setTab] = useState("all");
+	const searchParams = useSearchParams();
+	const router = useRouter();
+
+	const accountFilter = searchParams.get("account") || "all";
+	const addressFilter = searchParams.get("address") || "";
+	const dateFrom = searchParams.get("dateFrom") || "";
+	const dateTo = searchParams.get("dateTo") || "";
+	const minAmount = searchParams.get("minAmount") || "";
+	const maxAmount = searchParams.get("maxAmount") || "";
+	const tab = searchParams.get("tab") || "all";
+
+	const setFilter = useCallback(
+		(key: string, value: string) => {
+			const params = new URLSearchParams(searchParams.toString());
+			if (value && value !== "all") {
+				params.set(key, value);
+			} else {
+				params.delete(key);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		},
+		[searchParams, router],
+	);
+
+	const setAccountFilter = (v: string) => setFilter("account", v);
+	const setAddressFilter = (v: string) => setFilter("address", v);
+	const setDateFrom = (v: string) => setFilter("dateFrom", v);
+	const setDateTo = (v: string) => setFilter("dateTo", v);
+	const setMinAmount = (v: string) => setFilter("minAmount", v);
+	const setMaxAmount = (v: string) => setFilter("maxAmount", v);
+	const setTab = (v: string) => setFilter("tab", v);
 
 	const { data: rawAccounts = [] } = useQuery({
 		queryKey: CACHE_KEYS.accounts(treasuryId),
