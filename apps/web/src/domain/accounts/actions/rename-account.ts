@@ -15,7 +15,14 @@ export async function renameAccountAction(
 	const accountId = formData.get("accountId") as string;
 	const name = (formData.get("name") as string)?.trim();
 
-	if (!accountId) return { error: "Account ID required" };
+	if (
+		!accountId ||
+		!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+			accountId,
+		)
+	) {
+		return { error: "Invalid account ID" };
+	}
 	if (!name || name.length > 100) {
 		return { error: "Account name must be 1-100 characters" };
 	}

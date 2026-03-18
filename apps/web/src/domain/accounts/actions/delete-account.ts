@@ -34,9 +34,13 @@ async function fetchDetectableTokenBalances(
 	}));
 }
 
+const UUID_RE =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function prepareDeleteAccount(
 	accountId: string,
 ): Promise<DeleteAccountPreparation> {
+	if (!UUID_RE.test(accountId)) throw new Error("Invalid account ID");
 	const session = await getSession();
 	if (!session) throw new Error("Not authenticated");
 
@@ -85,6 +89,7 @@ export async function confirmDeleteAccount({
 	accountId: string;
 	acknowledgeUnassignedAssets?: boolean;
 }): Promise<{ error?: string }> {
+	if (!UUID_RE.test(accountId)) return { error: "Invalid account ID" };
 	const session = await getSession();
 	if (!session) return { error: "Not authenticated" };
 

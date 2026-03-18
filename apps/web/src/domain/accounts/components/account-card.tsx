@@ -14,7 +14,10 @@ interface AccountCardProps {
 
 export function AccountCard({ account, onRename, onDelete }: AccountCardProps) {
 	return (
-		<div className="relative rounded-xl border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md">
+		<div
+			data-testid="account-card"
+			className="relative rounded-xl border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md"
+		>
 			<div className="mb-3 flex items-start justify-between">
 				<Link
 					href={`/accounts/${account.id}`}

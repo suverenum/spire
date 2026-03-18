@@ -85,7 +85,7 @@ test.describe("Multi-Account Management", () => {
 
 		test("shows account filter", async ({ page }) => {
 			await page.goto("/transactions");
-			await expect(page.getByLabel("Account")).toBeVisible();
+			await expect(page.getByText("All Accounts")).toBeVisible();
 		});
 	});
 

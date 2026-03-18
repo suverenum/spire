@@ -112,7 +112,7 @@ export async function finalizeAccountCreate({
 				err != null && typeof err === "object" && "constraint" in err
 					? (err as { constraint: unknown }).constraint
 					: undefined;
-			if (pgConstraint === "accounts_wallet_address_unique") {
+			if (pgConstraint === "accounts_wallet_address_idx") {
 				return { error: "Wallet address already registered" };
 			}
 			return { error: "Name already taken" };
