@@ -41,3 +41,7 @@ Thumbs.db
 
 # Sentry
 .env.sentry-build-plugin
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db
