@@ -5,7 +5,7 @@
 - **Branch:** feature/multi-accounts
 - **Epic:** Multi-Account Management
 - **PRD:** [prd.md](./prd.md)
-- **Depends on:** [MVP Spec](../mvp/spec.md)
+- **Depends on:** [MVP PRD](../mvp/prd.md), [Authentication Architecture](../mvp/authentication.md)
 
 ## 2. Context
 
@@ -22,16 +22,24 @@ See [prd.md](./prd.md) for full scope, user stories, flows, and mockups.
 
 ## 4. Current State
 
-MVP provides multi-treasury support with passkey auth, send/receive, and transaction history. The singleton guard has been removed — each passkey creates its own treasury. Login looks up treasury by wallet address. The landing page shows both "Unlock with Passkey" and "Create Treasury" buttons.
+MVP provides multi-treasury support with passkey auth, send/receive, and transaction history. Key changes already implemented:
+
+- **Singleton guard removed** — each passkey creates its own treasury, multiple treasuries supported
+- **Login by address** — looks up treasury by `tempoAddress`, not by ID
+- **Welcome screen** — landing page shows both "Unlock with Passkey" and "Create Treasury"
+- **Single wallet per treasury** — the root `tempoAddress` currently holds all tokens and serves as both auth identity and spend wallet
 
 This feature extends it with:
 
-- Multiple wallets per treasury (accounts table in DB)
-- Account CRUD (create, rename, delete)
-- Account selector in send flow
-- Internal transfers (same token, different wallets)
-- Swaps (different tokens via Tempo DEX)
-- Dashboard with multi-account cards and unified transaction feed
+- **Separate account wallets** — each treasury gets N per-account wallets, each holding one token
+- **accounts table in DB** — maps account names to on-chain wallet addresses
+- **Account CRUD** — create, rename, delete
+- **Account selector in send flow** — token determined by selected account
+- **Internal transfers** — same token, different wallets
+- **Swaps** — different tokens via Tempo DEX
+- **Dashboard overhaul** — multi-account cards + merged recent transaction feed
+
+> **Note:** Treasury creation currently only creates a root wallet and funds it via faucet. This feature adds two default account wallets during treasury setup, each provisioned on-chain with the root passkey registered on their keychain. Their protected status is tracked by immutable DB metadata, not by their current display name.
 
 ### 4.1. Current Architecture
 
@@ -211,21 +219,35 @@ MVP:                          Multi-Account:
 - New flows: internal transfer, swap, account CRUD
 
 **What doesn't change:**
-- Auth model (passkey, session, logout, multi-treasury support)
+- Auth model (passkey, session, logout, multi-treasury support via address lookup)
 - Performance patterns (PPR, persisted cache, optimistic updates, WebSocket)
 - Security (headers, CSRF, Zod validation)
-- Monorepo structure (apps/web, packages/ui, packages/utils)
-- Tooling (Biome, Turborepo, Vitest, Playwright)
+- Monorepo structure (apps/web, @goldhord/ui, @goldhord/utils)
+- Tooling (Biome for lint/format, Turborepo with remote caching, Vitest, Playwright)
 
 **Treasury identity anchor:**
 - `treasuries.tempoAddress` remains the canonical on-chain identity for login, session restore, and treasury ownership checks
 - Multiple treasuries are supported — each passkey maps to one treasury
 - Account wallets are spend/receive wallets only; they do not replace the treasury-level auth principal
 
+#### Treasury Setup Orchestration
+
+The existing [`createTreasuryAction`](/Users/ivorobiev/Desktop/repos/spire/apps/web/src/domain/treasury/actions/treasury-actions.ts) remains the server entry point for creating the treasury row and session, but the two default account wallets must be provisioned in a follow-up client mutation because the signing material lives in the browser.
+
+1. `/create` performs passkey sign-up and obtains the controller/root address
+2. `createTreasuryAction` inserts the treasury row, creates the session, and returns the new `treasuryId`
+3. `useSetupDefaultAccounts` provisions the default AlphaUSD and BetaUSD wallets on the client, registers the root passkey on each keychain, calls the faucet for each default wallet, and persists the DB rows with `isDefault: true`
+4. Redirect to `/dashboard` after the setup attempt completes
+5. If one default account slot failed, the dashboard exposes `retryDefaultAccountSetup`, which detects the missing default slot by immutable metadata (`isDefault` + `tokenSymbol`) and provisions only the missing wallet
+
+The root/controller wallet remains the auth anchor. Default account wallets are faucet-funded directly during setup; displayed treasury balances are not first funded on the root wallet and then transferred out.
+
 ### 6.2. Database Schema
 
 ```typescript
-// Existing (from MVP — singleton guard removed, multi-treasury supported)
+// Existing (from MVP — singleton guard column dropped, multi-treasury supported)
+// Multiple treasuries allowed, one per passkey. tempoAddress unique constraint
+// prevents duplicate passkeys but allows N treasury rows.
 export const treasuries = pgTable('treasuries', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
@@ -241,7 +263,7 @@ export const accounts = pgTable('accounts', {
   tokenSymbol: text('token_symbol').notNull(),     // "AlphaUSD" or "BetaUSD"
   tokenAddress: text('token_address').notNull(),   // TIP-20 contract address
   walletAddress: text('wallet_address').notNull(),
-  isDefault: boolean('is_default').default(false).notNull(),
+  isDefault: boolean('is_default').default(false).notNull(), // immutable system-default flag
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => ({
   treasuryNameUnique: uniqueIndex('accounts_treasury_name_idx').on(table.treasuryId, table.name),
@@ -249,38 +271,44 @@ export const accounts = pgTable('accounts', {
 }));
 ```
 
-**Schema rollout from MVP:** There is no live MVP user data yet, so this is a schema reset rather than a balance migration:
+`isDefault` is used together with `tokenSymbol` to identify protected default accounts. Rename updates `name` only; delete protection and missing-default repair never depend on the current label.
+
+#### Server Ownership Validation
+
+Every account-scoped operation must derive the current treasury from the session and verify ownership server-side before any DB write or on-chain side effect.
+
+- **Create account:** `assertCanCreateAccount` verifies the requested `treasuryId` matches the active session treasury
+- **Rename / delete:** the referenced `accountId` must belong to `session.treasuryId`
+- **Internal transfer / swap:** both referenced accounts must belong to `session.treasuryId`
+
+Prefer a shared helper such as `assertTreasuryAccountAccess({ treasuryId, accountIds })` so all mutations use the same ownership gate.
+
+**Rollout assumption:** This is a greenfield launch. No migration path is needed.
 1. Keep `treasuries.tempoAddress` as the treasury's controller/root account for auth
 2. Create `accounts` table with real DB-level unique indexes on `(treasury_id, name)` and `wallet_address`
 3. For fresh treasury creation, create two default account wallets ("Main AlphaUSD", "Main BetaUSD")
-4. Do not auto-convert the legacy single-wallet treasury into a token-scoped account wallet
 
 ### 6.3. Token Configuration
 
-Centralized token config — swap this file for mainnet:
+The codebase currently defines `SUPPORTED_TOKENS` as an object with 4 tokens (AlphaUSD, BetaUSD, pathUSD, ThetaUSD) in `apps/web/src/lib/constants.ts`. Per the PRD, only **AlphaUSD and BetaUSD** are valid for account creation. pathUSD and ThetaUSD may appear as unassigned tokens but are not selectable when creating accounts.
+
+Add to `apps/web/src/lib/constants.ts`:
 
 ```typescript
-// apps/web/src/lib/constants.ts (updated)
+// Tokens available for account creation (subset of SUPPORTED_TOKENS)
 export const ACCOUNT_TOKENS = [
-  {
-    symbol: 'AlphaUSD',
-    name: 'AlphaUSD',
-    address: '0x20c0000000000000000000000000000000000001' as `0x${string}`,
-    decimals: 6,
-    currency: 'USD',
-  },
-  {
-    symbol: 'BetaUSD',
-    name: 'BetaUSD',
-    address: '0x20c0000000000000000000000000000000000002' as `0x${string}`,
-    decimals: 6,
-    currency: 'USD',
-  },
+  SUPPORTED_TOKENS.AlphaUSD,
+  SUPPORTED_TOKENS.BetaUSD,
 ] as const;
 
 export const DEX_ADDRESS = '0xDEc0000000000000000000000000000000000000' as `0x${string}`;
 export const KEYCHAIN_ADDRESS = '0xAAAAAAAA00000000000000000000000000000000' as `0x${string}`;
 ```
+
+- **`SUPPORTED_TOKENS`** (existing) — all tokens the app can display balances for
+- **`ACCOUNT_TOKENS`** (new) — tokens available in the "Create Account" dropdown
+- **`DEX_ADDRESS`** (new) — Tempo stablecoin DEX precompile
+- **`KEYCHAIN_ADDRESS`** (new) — Tempo Account Keychain precompile
 
 ### 6.4. Account Creation Flow (Client Provisioning + Server Finalize)
 
@@ -323,7 +351,9 @@ const useCreateAccount = () => {
 };
 ```
 
-**Server responsibility:** `finalizeAccountCreate` must catch `accounts_treasury_name_idx` violations and return `"Name already taken"` so concurrent requests cannot create duplicate names.
+**Server responsibility:** `assertCanCreateAccount` must validate session ownership before any chain work, and `finalizeAccountCreate` must catch `accounts_treasury_name_idx` violations and return `"Name already taken"` so concurrent requests cannot create duplicate names.
+
+**Error handling:** If on-chain wallet provisioning or keychain registration fails, the mutation throws and no account row is saved to DB. The UI shows an error state with a "Try Again" button that retries the full creation flow. No partial state is possible — the DB insert only happens after on-chain success.
 
 ### 6.5. Multi-Wallet Balance Fetching
 
@@ -371,9 +401,15 @@ const useAllTransactions = (accounts: Account[]) => {
     )
     .sort((a, b) => b.timestamp - a.timestamp);
 
-  return { transactions: merged, isLoading: queries.some((q) => q.isLoading) };
+  const grouped = groupTransactions(merged, accounts);
+
+  return { transactions: grouped, isLoading: queries.some((q) => q.isLoading) };
 };
 ```
+
+Before rendering, collapse any transaction where both `from` and `to` belong to treasury-owned wallets into a single grouped `internalTransfer` entry keyed by tx hash. Swap rows remain grouped separately: the DEX swap and the follow-up transfer render as one `swap` entry with references to both hashes.
+
+Grouped internal transfers and swaps must carry `visibleAccountIds` for both involved accounts so they can appear in both account-detail histories and in account-filtered `/transactions` views without duplication.
 
 ### 6.7. Multi-Wallet WebSocket Subscriptions
 
@@ -417,11 +453,17 @@ const useSwap = () => {
 
   return useMutation({
     mutationFn: async ({
-      fromAccount,
-      toAccount,
+      fromAccountId,
+      toAccountId,
       amountIn,
       minAmountOut,
     }: SwapParams) => {
+      // 0. Server-side ownership + token validation using the active session
+      const { fromAccount, toAccount } = await prepareSwap({
+        fromAccountId,
+        toAccountId,
+      });
+
       // Tx 1: approve DEX + execute swap from the source wallet
       const swapHash = await sendCallsSync({
         calls: [
@@ -486,62 +528,146 @@ const useSwap = () => {
 ### 6.9. Account Delete Flow
 
 ```typescript
-async function deleteAccount(accountId: string) {
+type DeleteAccountPreparation =
+  | { status: 'blocked'; assignedBalance: bigint; tokenSymbol: string }
+  | { status: 'warn'; unassignedBalances: DetectedTokenBalance[] }
+  | { status: 'ready' };
+
+async function prepareDeleteAccount(accountId: string): Promise<DeleteAccountPreparation> {
+  const session = await getSession();
+  if (!session) throw new Error('Not authenticated');
+
   const account = await db.query.accounts.findFirst({
-    where: eq(accounts.id, accountId),
+    where: and(
+      eq(accounts.id, accountId),
+      eq(accounts.treasuryId, session.treasuryId),
+    ),
   });
 
   if (!account) throw new Error('Account not found');
   if (account.isDefault) throw new Error('Cannot delete default account');
 
-  // Check all detectable token balances for this wallet, not just the configured token
   const balances = await fetchDetectableTokenBalances(account.walletAddress);
-  const nonZeroBalances = balances.filter((balance) => balance.amount > 0n);
+  const assignedBalance =
+    balances.find((balance) => balance.tokenAddress === account.tokenAddress)?.amount ?? 0n;
+  const unassignedBalances = balances.filter(
+    (balance) => balance.tokenAddress !== account.tokenAddress && balance.amount > 0n
+  );
 
-  if (nonZeroBalances.length > 0) {
-    throw new Error('Account wallet still holds funds. Transfer all detected assets before deleting.');
+  if (assignedBalance > 0n) {
+    return {
+      status: 'blocked',
+      assignedBalance,
+      tokenSymbol: account.tokenSymbol,
+    };
   }
 
-  // Remove from DB only — wallet still exists on-chain
+  if (unassignedBalances.length > 0) {
+    return {
+      status: 'warn',
+      unassignedBalances,
+    };
+  }
+
+  return { status: 'ready' };
+}
+
+async function confirmDeleteAccount({
+  accountId,
+  acknowledgeUnassignedAssets = false,
+}: {
+  accountId: string;
+  acknowledgeUnassignedAssets?: boolean;
+}) {
+  const preflight = await prepareDeleteAccount(accountId);
+
+  if (preflight.status === 'blocked') {
+    throw new Error('Account wallet still holds assigned-token funds. Transfer them before deleting.');
+  }
+
+  if (preflight.status === 'warn' && !acknowledgeUnassignedAssets) {
+    throw new Error('Deletion requires acknowledging unassigned assets.');
+  }
+
   await db.delete(accounts).where(eq(accounts.id, accountId));
 }
 ```
 
-> **Delete safety note:** Deletion is blocked if the wallet holds any supported or otherwise detectable token balance. We do not allow deleting a tracked wallet while it still contains unassigned assets.
+> **Delete safety note:** The UI must call `prepareDeleteAccount` before opening the dialog. `confirmDeleteAccount` re-checks the state before the final delete so balance changes or concurrent edits cannot bypass the guard.
+> Deletion is blocked only when the configured account token still has funds, because that is the asset the app can move today. Detectable unassigned assets should trigger a warning in the confirmation UI, but they do not block deletion.
 
 ### 6.10. Internal Transfer
 
-Simple TIP-20 transfer between two wallets owned by the same treasury:
+Simple TIP-20 transfer between two wallets owned by the same treasury. The "Transfer" button is only shown on the **account detail page** (not the dashboard), and only when 2+ accounts of the same token exist.
 
 ```typescript
-async function internalTransfer({
-  fromAccountId,
-  toAccountId,
-  amount,
-}: TransferParams) {
-  const fromAccount = await getAccount(fromAccountId);
-  const toAccount = await getAccount(toAccountId);
+const useInternalTransfer = () => {
+  const { sendTransactionSync } = useSendTransactionSync();
 
-  // Validation
-  if (fromAccount.tokenAddress !== toAccount.tokenAddress) {
-    throw new Error('Accounts must hold the same token. Use swap for different tokens.');
-  }
-  if (fromAccount.id === toAccount.id) {
-    throw new Error('Cannot transfer to the same account.');
-  }
+  return useMutation({
+    mutationFn: async ({ fromAccountId, toAccountId, amount }: TransferParams) => {
+      // 0. Server-side ownership + same-token validation using the active session
+      const { fromAccount, toAccount } = await prepareInternalTransfer({
+        fromAccountId,
+        toAccountId,
+      });
 
-  // Execute TIP-20 transfer from fromAccount's wallet to toAccount's wallet
-  const hash = await tempoClient.writeContract({
-    address: fromAccount.tokenAddress as `0x${string}`,
-    abi: tip20Abi,
-    functionName: 'transfer',
-    args: [toAccount.walletAddress, amount],
-    account: fromAccount.walletAddress, // Root passkey signs
+      return await sendTransactionSync({
+        account: fromAccount.walletAddress,
+        to: fromAccount.tokenAddress,
+        data: encodeFunctionData({
+          abi: tip20Abi,
+          functionName: 'transfer',
+          args: [toAccount.walletAddress, amount],
+        }),
+      });
+    },
   });
-
-  return hash;
-}
+};
 ```
+
+`prepareInternalTransfer` must reject requests where either account does not belong to the active treasury, where the token types differ, or where both selectors point to the same account.
+
+### 6.11. Transactions Page
+
+The `/transactions` page shows a merged feed from all account wallets with filtering:
+
+```typescript
+// URL state for filters (shareable, bookmarkable)
+// /transactions?account=all&address=&dateFrom=&dateTo=&minAmount=&maxAmount=&tab=all
+interface TransactionFilters {
+  account: string;   // account ID or "all"
+  address: string;   // sender or recipient address substring
+  dateFrom?: string; // ISO date
+  dateTo?: string;   // ISO date
+  minAmount?: string;
+  maxAmount?: string;
+  tab: 'all' | 'sent' | 'received';
+}
+
+// Reuses useAllTransactions hook from 6.6, then filters client-side
+const filtered = grouped
+  .filter((tx) => filters.account === 'all' || tx.visibleAccountIds.includes(filters.account))
+  .filter((tx) => filters.tab === 'all' || (tx.kind === 'payment' && tx.direction === filters.tab))
+  .filter((tx) => !filters.address || matchesAddressFilter(tx, filters.address))
+  .filter((tx) => !filters.dateFrom || tx.timestamp >= new Date(filters.dateFrom))
+  .filter((tx) => !filters.dateTo || tx.timestamp <= new Date(filters.dateTo))
+  .filter((tx) => !filters.minAmount || getComparableAmount(tx) >= parseUnits(filters.minAmount, 6))
+  .filter((tx) => !filters.maxAmount || getComparableAmount(tx) <= parseUnits(filters.maxAmount, 6));
+```
+
+Account filter chips are derived from the accounts list. Address, date, amount, and direction filters combine. Internal transfers render as one grouped row keyed by tx hash. Tapping any grouped row opens a transaction detail page that shows the grouped summary plus the underlying tx hash list.
+
+`matchesAddressFilter` checks the relevant wallet addresses for each transaction kind. On `/transactions`, the `Sent` and `Received` tabs apply only to external payment rows; grouped internal transfers and swaps stay in the `All` tab because they are treasury-internal movements rather than inbound/outbound counterparties.
+
+### 6.12. Transaction Detail Page
+
+The transaction detail page renders grouped entries, not raw wallet rows:
+
+- **Payment:** direction, counterparty, amount, token, memo, timestamp, tx hash
+- **Internal transfer:** from account, to account, amount, token, timestamp, tx hash
+- **Swap:** source account, destination account, amount in, amount out, swap tx hash, follow-up transfer tx hash
+- **Swap partial failure:** source wallet retains `tokenOut`; the page surfaces a recovery action
 
 ## 7. Component Structure
 
@@ -552,7 +678,8 @@ apps/web/src/
 │   │   ├── actions/
 │   │   │   ├── create-account.ts      # Server action: validate + persist after client wallet provisioning
 │   │   │   ├── rename-account.ts      # Server action: update name in DB
-│   │   │   └── delete-account.ts      # Server action: check all detectable balances + remove
+│   │   │   ├── delete-account.ts      # Server actions: preflight delete state + confirmed delete
+│   │   │   └── prepare-internal-transfer.ts # Server action: ownership + same-token validation
 │   │   ├── queries/
 │   │   │   ├── get-accounts.ts        # Fetch all accounts for a treasury
 │   │   │   ├── get-account.ts         # Fetch single account by ID
@@ -573,18 +700,33 @@ apps/web/src/
 │   │       ├── use-internal-transfer.ts # Client mutation: TIP-20 transfer between wallets
 │   │       └── use-multi-account-ws.ts # Per-wallet WebSocket subscriptions
 │   ├── swap/
+│   │   ├── actions/
+│   │   │   └── prepare-swap.ts        # Server action: ownership + token mismatch validation
 │   │   ├── components/
 │   │   │   ├── swap-form.tsx          # From/To account selectors + amount + quote
 │   │   │   └── swap-quote.tsx         # Live quote display from DEX
 │   │   └── hooks/
 │   │       ├── use-execute-swap.ts    # Client mutation: approve + swap, then transfer output
 │   │       └── use-swap-quote.ts      # Tempo DEX quote hook wrapper
+│   ├── treasury/
+│   │   ├── actions/
+│   │   │   └── treasury-actions.ts    # Create treasury row/session, update name, retry missing default setup
+│   │   └── hooks/
+│   │       └── use-setup-default-accounts.ts # Client mutation: provision/fund default wallets during create flow
 │   └── payments/                       # Extended from MVP
 │       └── components/
 │           └── send-form.tsx          # Updated: account selector added
+├── components/
+│   ├── sidebar.tsx                    # Nav sidebar (treasury name, links, logout)
+│   └── sidebar-layout.tsx            # Layout wrapper: sidebar + content area
 ├── app/
+│   ├── layout.tsx                     # Updated: wraps authenticated pages with sidebar layout
 │   ├── dashboard/
-│   │   └── page.tsx                   # Updated: multi-account cards + filter
+│   │   └── page.tsx                   # Updated: top 4 account cards + recent transactions
+│   ├── transactions/
+│   │   ├── page.tsx                   # Full transaction list with account/address/date/amount filters + tabs
+│   │   └── [id]/
+│   │       └── page.tsx               # Grouped transaction detail page
 │   ├── accounts/
 │   │   ├── page.tsx                   # Accounts management page
 │   │   └── [id]/
@@ -592,7 +734,7 @@ apps/web/src/
 │   └── swap/
 │       └── page.tsx                   # Swap page
 └── lib/
-    └── constants.ts                   # Token addresses, DEX address, keychain address (updated)
+    └── constants.ts                   # ACCOUNT_TOKENS, DEX_ADDRESS, KEYCHAIN_ADDRESS added to existing file
 ```
 
 ## 8. Key Types
@@ -633,70 +775,116 @@ interface SwapQuote {
   minAmountOut: bigint;  // amountOut * (1 - slippage)
 }
 
-// Transaction tagged with source account
-interface AccountTransaction {
-  txHash: `0x${string}`;
+interface BaseGroupedTransaction {
+  groupId: string;
+  kind: 'payment' | 'internalTransfer' | 'swap';
+  status: 'pending' | 'confirmed' | 'failed';
+  timestamp: Date;
+  visibleAccountIds: string[];
+}
+
+interface PaymentTransaction extends BaseGroupedTransaction {
+  kind: 'payment';
+  txHashes: [`0x${string}`];
+  accountId: string;
+  accountName: string;
+  direction: 'sent' | 'received';
   from: `0x${string}`;
   to: `0x${string}`;
   amount: bigint;
   token: string;
   memo?: string;
-  status: 'pending' | 'confirmed' | 'failed';
-  timestamp: Date;
-  accountName: string;  // Which account this tx belongs to
-  accountId: string;
 }
+
+interface InternalTransferTransaction extends BaseGroupedTransaction {
+  kind: 'internalTransfer';
+  txHashes: [`0x${string}`];
+  direction: 'internal';
+  fromAccountId: string;
+  fromAccountName: string;
+  toAccountId: string;
+  toAccountName: string;
+  fromWalletAddress: `0x${string}`;
+  toWalletAddress: `0x${string}`;
+  amount: bigint;
+  token: string;
+}
+
+interface SwapTransaction extends BaseGroupedTransaction {
+  kind: 'swap';
+  txHashes: `0x${string}`[];
+  direction: 'internal';
+  fromAccountId: string;
+  fromAccountName: string;
+  toAccountId: string;
+  toAccountName: string;
+  sourceWalletAddress: `0x${string}`;
+  destinationWalletAddress: `0x${string}`;
+  amountIn: bigint;
+  amountOut?: bigint;
+  tokenIn: string;
+  tokenOut: string;
+  recoveryRequired: boolean;
+}
+
+type GroupedTransaction =
+  | PaymentTransaction
+  | InternalTransferTransaction
+  | SwapTransaction;
 ```
 
 ## 9. Testing Strategy
 
 ### 9.1. Unit Tests (Vitest — colocated with source files)
 
-- **Account CRUD:** Name uniqueness validation, duplicate-index error mapping, default account protection, delete blocked on any detected balance
+- **Account CRUD:** Name uniqueness validation, duplicate-index error mapping, default account protection, delete preflight vs confirm behavior, ownership validation on every account-scoped action
 - **Token config:** Supported token lookup, address resolution
 - **Balance aggregation:** Total balance calculation (1:1 USD), parallel query merging
-- **Transaction merging:** Multi-wallet feed merge, timestamp sorting, account tagging
+- **Transaction merging:** Multi-wallet feed merge, timestamp sorting, account tagging, internal-transfer grouping by tx hash, grouped visibility across both participating accounts
 - **Swap quote:** Rate calculation, slippage tolerance, min amount out
 - **Swap execution:** Receipt parsing for `amountOut`, second-step transfer payload, partial-failure recovery state
-- **Transfer validation:** Same-token check, same-account rejection, amount validation
+- **Transfer validation:** Same-token check, same-account rejection, treasury ownership validation, amount validation
 
 ### 9.2. Integration Tests (Vitest)
 
+- **Treasury setup:** Create treasury row, provision two default wallets, fund them directly via faucet, persist default account rows, retry only the missing default slot on partial failure
 - **Account creation on-chain:** Create wallet, register passkey on keychain, persist account row, verify key is authorized
 - **DEX swap:** Quote → approve + swap → parse receipt → transfer output to destination wallet → verify both balances
 - **Internal transfer:** TIP-20 transfer between two wallets, verify both balances
-- **Delete account safety:** Wallet with unsupported/detected token balance cannot be deleted
+- **Delete account safety:** Preflight returns blocked/warn/ready states; confirm re-checks state; assigned-token balance blocks delete; unassigned assets trigger a warning only
 - **DB operations:** Account CRUD with Neon branching and unique index enforcement
 
 ### 9.3. E2E Tests (Playwright — apps/web/e2e/)
 
 - **Treasury creation:** Verify two default accounts created with funded balances
+- **Treasury setup retry:** Force one default account setup failure → verify dashboard exposes retry and only the missing default slot is provisioned
 - **Create account:** Token selection → name → create → verify new card on dashboard with $0
 - **Duplicate name:** Enter existing name → verify "Name already taken" error
 - **Rename account:** ⋯ menu → Rename → enter new name → verify updated everywhere
 - **Delete account (zero balance):** ⋯ menu → Delete → confirm → verify removed
 - **Delete account (has balance):** ⋯ menu → Delete → verify blocked with transfer prompt
-- **Delete account (unsupported asset):** Send non-configured token to wallet → verify delete is blocked
+- **Delete account (unassigned asset):** Send non-configured token to wallet → verify warning is shown but delete is still allowed
 - **Delete default:** ⋯ menu → verify Delete option not shown
 - **Send with account selector:** Open send → select account → verify token/balance update
 - **Internal transfer:** Transfer form → select From/To → verify To filtered to same token
 - **Swap:** Select From/To → verify quote appears → confirm → verify swap tx then transfer tx complete and both balances update
 - **Swap partial failure:** Force second step failure → verify output remains on source wallet and recovery CTA is shown
-- **Dashboard filter:** Tap account filter chip → verify feed narrows to one account
+- **Transactions page:** Navigate via "View all →" → verify account, address, date, amount, and sent/received filters work; grouped internal transfers/swaps only appear in `All`
+- **Transaction detail:** Tap grouped transfer/swap row → verify grouped summary and tx hashes render correctly
 - **Account detail:** Tap card → verify detail page with correct address and transactions
 
 ## 10. Definition of Done
 
 ### Universal
 
-- [ ] Unit & integration tests pass (`bun run test`)
+- [ ] Unit & integration tests pass (`bun run test` — runs via Turborepo across all packages)
 - [ ] E2E tests pass (from `apps/web/`: `bun run test:e2e`)
-- [ ] 90% coverage thresholds met (`bun run test:coverage` from `apps/web/`)
+- [ ] 90% coverage thresholds met (lines, functions, branches, statements)
 - [ ] TypeScript compiles cleanly (`bun run typecheck`)
-- [ ] Biome passes (`bun run lint`)
-- [ ] Database migrations are clean (`bun run db:generate` produces no diff from `apps/web/`)
+- [ ] Biome lint + format passes (`bun run lint`)
+- [ ] Database migrations are clean (`bun run db:generate` from `apps/web/` produces no diff)
 - [ ] Spec updated to reflect implementation
-- [ ] CI passes (lint, typecheck, test, build)
+- [ ] CI passes on PR (lint, typecheck, test, build via GitHub Actions)
 - [ ] App deployed and accessible on Vercel
 
 ### Feature-Specific
@@ -704,26 +892,41 @@ interface AccountTransaction {
 - [ ] Treasury creation creates two default account wallets (Main AlphaUSD, Main BetaUSD) with root passkey on each keychain
 - [ ] Treasury auth/session remains anchored to `treasuries.tempoAddress` as the controller/root account
 - [ ] Default accounts funded via faucet on creation
+- [ ] Treasury setup uses `createTreasuryAction` + client default-account provisioning; partial setup exposes retry for only the missing default slot
 - [ ] User can create additional accounts (new on-chain wallet per account)
 - [ ] Multiple accounts with same token supported (each with unique wallet address)
 - [ ] Account names unique per treasury (enforced by app validation and DB unique index)
+- [ ] Default accounts tracked by immutable DB metadata, so they remain protected after rename
 - [ ] Default accounts renamable but not deletable
-- [ ] Non-default accounts deletable only when all detectable wallet balances are zero
-- [ ] Dashboard shows all account cards with name, token, balance, address
+- [ ] Non-default accounts deletable when assigned-token balance is zero
+- [ ] Detectable unassigned assets trigger a delete warning but do not block deletion
+- [ ] Delete uses preflight + confirm so warning state is shown before the final delete
+- [ ] Delete "Transfer Balance" opens transfer form (if same-token accounts exist) or send form (if not)
+- [ ] Account creation error shows "Try Again" with no partial DB state
+- [ ] Sidebar navigation with treasury name, Dashboard/Transactions/Accounts/Settings links, logout
+- [ ] Sidebar always visible on desktop, collapsed hamburger on mobile
+- [ ] Dashboard shows top 4 account cards (sorted by balance, highest first)
+- [ ] "View all accounts →" link shown on dashboard when more than 4 accounts exist
 - [ ] Total balance shown in USD (all tokens 1:1)
-- [ ] Unified transaction feed merges all account wallets, sorted by time
-- [ ] Transaction feed filterable by account
+- [ ] Dashboard "Recent Transactions" shows merged feed from all accounts (no filters)
+- [ ] Transactions page (`/transactions`) has account, sender/recipient address, date, amount, and sent/received filters
+- [ ] Grouped internal transfers and swaps carry both participating account IDs so they appear in both account histories without duplication
+- [ ] Dashboard send/receive defaults to the highest-balance account; ties break by creation order
 - [ ] Account detail page shows balance, address, QR, scoped transactions
 - [ ] Send form has account selector (pre-selects when opened from account detail)
 - [ ] Internal transfer works between same-token accounts
-- [ ] Transfer button hidden when <2 accounts of same token
+- [ ] Internal transfer and swap preflight validate that both referenced accounts belong to the active treasury
+- [ ] Transfer button on account detail page only, hidden when <2 accounts of same token
+- [ ] Internal transfers render as one grouped row in merged feeds
 - [ ] Swap executes via Tempo DEX with quote preview, then transfers output into the destination account wallet
 - [ ] Swap form enforces different token types for From/To
 - [ ] If the swap transfer step fails, output funds remain recoverable in the source wallet and the UI surfaces that state
 - [ ] Swap appears in both accounts' transaction histories
-- [ ] Accounts management page lists all accounts with CRUD actions
+- [ ] Transaction detail page shows grouped transfer/swap summaries and underlying tx hashes
+- [ ] Accounts management page lists all accounts sorted by balance (highest first) with CRUD actions
 - [ ] WebSocket subscriptions run per-wallet
-- [ ] Receive sheet shows per-account wallet address and QR
+- [ ] Receive sheet has account selector (pre-selects when opened from account detail, default highest-balance account from dashboard)
+- [ ] Changing account in receive sheet updates QR code, address, and helper text
 
 ## 11. References
 
@@ -745,7 +948,6 @@ interface AccountTransaction {
 
 ### App Stack
 
-- [MVP Spec](../mvp/spec.md)
 - [MVP PRD](../mvp/prd.md)
 - [Authentication Architecture](../mvp/authentication.md)
 - [Monorepo Migration Spec](../monorepo-migration/spec.md)
