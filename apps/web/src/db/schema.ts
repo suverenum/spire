@@ -1,6 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
+	bigint,
 	boolean,
+	index,
+	integer,
+	jsonb,
 	pgTable,
 	text,
 	timestamp,
@@ -26,6 +30,7 @@ export const accounts = pgTable(
 		tokenSymbol: text("token_symbol").notNull(),
 		tokenAddress: text("token_address").notNull(),
 		walletAddress: text("wallet_address").notNull(),
+		walletType: text("wallet_type").notNull().default("eoa"), // "eoa" | "multisig"
 		isDefault: boolean("is_default").default(false).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
@@ -35,5 +40,68 @@ export const accounts = pgTable(
 		uniqueIndex("accounts_default_token_idx")
 			.on(table.treasuryId, table.tokenSymbol)
 			.where(sql`${table.isDefault} = true`),
+	],
+);
+
+// ─── Multisig Tables ────────────────────────────────────────────────
+
+export const multisigConfigs = pgTable("multisig_configs", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	accountId: uuid("account_id")
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.notNull()
+		.unique(),
+	guardAddress: text("guard_address").notNull(),
+	owners: jsonb("owners").notNull().$type<string[]>(),
+	tiersJson: jsonb("tiers_json")
+		.notNull()
+		.$type<Array<{ maxValue: string; requiredConfirmations: number }>>(),
+	defaultConfirmations: integer("default_confirmations").notNull(),
+	allowlistEnabled: boolean("allowlist_enabled").notNull().default(false),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const multisigTransactions = pgTable(
+	"multisig_transactions",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		accountId: uuid("account_id")
+			.references(() => accounts.id, { onDelete: "cascade" })
+			.notNull(),
+		onChainTxId: bigint("on_chain_tx_id", { mode: "bigint" }).notNull(),
+		to: text("to").notNull(),
+		value: text("value").notNull(), // uint256 as string
+		data: text("data").notNull(), // hex string
+		requiredConfirmations: integer("required_confirmations").notNull(),
+		currentConfirmations: integer("current_confirmations").notNull().default(0),
+		executed: boolean("executed").notNull().default(false),
+		executedAt: timestamp("executed_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		uniqueIndex("multisig_tx_account_chain_id").on(
+			table.accountId,
+			table.onChainTxId,
+		),
+		index("multisig_tx_pending").on(table.accountId, table.executed),
+	],
+);
+
+export const multisigConfirmations = pgTable(
+	"multisig_confirmations",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		multisigTransactionId: uuid("multisig_transaction_id")
+			.references(() => multisigTransactions.id, { onDelete: "cascade" })
+			.notNull(),
+		signerAddress: text("signer_address").notNull(),
+		confirmedAt: timestamp("confirmed_at").defaultNow().notNull(),
+	},
+	(table) => [
+		uniqueIndex("multisig_confirm_unique").on(
+			table.multisigTransactionId,
+			table.signerAddress,
+		),
 	],
 );
