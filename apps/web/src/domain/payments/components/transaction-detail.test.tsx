@@ -1,10 +1,4 @@
-import {
-	act,
-	cleanup,
-	fireEvent,
-	render,
-	screen,
-} from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Payment } from "@/lib/tempo/types";
 import { TransactionDetail } from "./transaction-detail";
@@ -41,69 +35,48 @@ const receiverAddress = "0xabcdef1234567890abcdef1234567890abcdef12";
 
 describe("TransactionDetail", () => {
 	it("renders sent transaction", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		expect(screen.getByText(/Sent AlphaUSD/)).toBeInTheDocument();
 	});
 
 	it("renders received transaction", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={receiverAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={receiverAddress} />);
 		expect(screen.getByText(/Received/)).toBeInTheDocument();
 	});
 
 	it("shows negative amount for sent transaction", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		expect(screen.getByText(/-\$5\.00/)).toBeInTheDocument();
 	});
 
 	it("shows positive amount for received transaction", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={receiverAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={receiverAddress} />);
 		expect(screen.getByText(/\+\$5\.00/)).toBeInTheDocument();
 	});
 
 	it("shows amount", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		expect(screen.getByText(/\$5\.00/)).toBeInTheDocument();
 	});
 
 	it("shows memo when present", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		expect(screen.getByText("Invoice #42")).toBeInTheDocument();
 		expect(screen.getByText("Memo")).toBeInTheDocument();
 	});
 
 	it("does not show memo section when memo is absent", () => {
-		render(
-			<TransactionDetail
-				transaction={mockTxNoMemo}
-				userAddress={senderAddress}
-			/>,
-		);
+		render(<TransactionDetail transaction={mockTxNoMemo} userAddress={senderAddress} />);
 		expect(screen.queryByText("Memo")).not.toBeInTheDocument();
 	});
 
 	it("shows status", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		expect(screen.getByText("confirmed")).toBeInTheDocument();
 	});
 
 	it("shows from and to addresses", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		expect(screen.getByText("From")).toBeInTheDocument();
 		expect(screen.getByText("To")).toBeInTheDocument();
 		expect(screen.getByText(mockTx.from)).toBeInTheDocument();
@@ -111,22 +84,15 @@ describe("TransactionDetail", () => {
 	});
 
 	it("shows block explorer link", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		const link = screen.getByText("View on Explorer").closest("a");
-		expect(link).toHaveAttribute(
-			"href",
-			`https://explore.tempo.xyz/tx/${mockTx.txHash}`,
-		);
+		expect(link).toHaveAttribute("href", `https://explore.tempo.xyz/tx/${mockTx.txHash}`);
 		expect(link).toHaveAttribute("target", "_blank");
 		expect(link).toHaveAttribute("rel", "noopener noreferrer");
 	});
 
 	it("shows transaction hash label and value", () => {
-		render(
-			<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-		);
+		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		expect(screen.getByText("Transaction Hash")).toBeInTheDocument();
 		expect(screen.getByText(mockTx.txHash)).toBeInTheDocument();
 	});
@@ -142,9 +108,7 @@ describe("TransactionDetail", () => {
 
 		it("copies From address when copy button is clicked", async () => {
 			const { toast: mockToast } = await import("@/components/ui/toast");
-			render(
-				<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-			);
+			render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 
 			// There are 3 CopyableFields: From, To, Transaction Hash
 			// Each has a button with Copy icon
@@ -160,9 +124,7 @@ describe("TransactionDetail", () => {
 
 		it("copies To address when copy button is clicked", async () => {
 			const { toast: mockToast } = await import("@/components/ui/toast");
-			render(
-				<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-			);
+			render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 
 			const copyButtons = screen.getAllByRole("button");
 			// The second copy button corresponds to "To"
@@ -176,9 +138,7 @@ describe("TransactionDetail", () => {
 
 		it("copies transaction hash when copy button is clicked", async () => {
 			const { toast: mockToast } = await import("@/components/ui/toast");
-			render(
-				<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-			);
+			render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 
 			const copyButtons = screen.getAllByRole("button");
 			// The third copy button corresponds to "Transaction Hash"
@@ -198,9 +158,7 @@ describe("TransactionDetail", () => {
 				},
 			});
 
-			render(
-				<TransactionDetail transaction={mockTx} userAddress={senderAddress} />,
-			);
+			render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 
 			const copyButtons = screen.getAllByRole("button");
 			await act(async () => {

@@ -1,29 +1,19 @@
 import { describe, expect, it } from "vitest";
-import {
-	addressSchema,
-	createTreasurySchema,
-	sendPaymentSchema,
-} from "./validations";
+import { addressSchema, createTreasurySchema, sendPaymentSchema } from "./validations";
 
 describe("addressSchema", () => {
 	it("accepts valid address", () => {
-		const result = addressSchema.safeParse(
-			"0x1234567890abcdef1234567890abcdef12345678",
-		);
+		const result = addressSchema.safeParse("0x1234567890abcdef1234567890abcdef12345678");
 		expect(result.success).toBe(true);
 	});
 
 	it("accepts uppercase hex", () => {
-		const result = addressSchema.safeParse(
-			"0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
-		);
+		const result = addressSchema.safeParse("0xABCDEF1234567890ABCDEF1234567890ABCDEF12");
 		expect(result.success).toBe(true);
 	});
 
 	it("rejects address without 0x prefix", () => {
-		const result = addressSchema.safeParse(
-			"1234567890abcdef1234567890abcdef12345678",
-		);
+		const result = addressSchema.safeParse("1234567890abcdef1234567890abcdef12345678");
 		expect(result.success).toBe(false);
 	});
 
@@ -33,9 +23,7 @@ describe("addressSchema", () => {
 	});
 
 	it("rejects address with invalid characters", () => {
-		const result = addressSchema.safeParse(
-			"0xGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
-		);
+		const result = addressSchema.safeParse("0xGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG");
 		expect(result.success).toBe(false);
 	});
 

@@ -12,10 +12,7 @@ describe("Input", () => {
 
 	it("passes type prop", () => {
 		render(<Input type="email" placeholder="Email" />);
-		expect(screen.getByPlaceholderText("Email")).toHaveAttribute(
-			"type",
-			"email",
-		);
+		expect(screen.getByPlaceholderText("Email")).toHaveAttribute("type", "email");
 	});
 
 	it("applies custom className", () => {

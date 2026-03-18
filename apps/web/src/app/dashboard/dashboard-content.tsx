@@ -38,11 +38,7 @@ export function DashboardContent({
 						<BalanceCards address={tempoAddress} />
 
 						<div className="flex gap-3">
-							<Button
-								onClick={() => setSendOpen(true)}
-								className="flex-1"
-								size="lg"
-							>
+							<Button onClick={() => setSendOpen(true)} className="flex-1" size="lg">
 								<ArrowUpRight className="h-5 w-5" />
 								Send
 							</Button>

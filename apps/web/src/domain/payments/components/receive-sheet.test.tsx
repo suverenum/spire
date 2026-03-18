@@ -1,10 +1,4 @@
-import {
-	act,
-	cleanup,
-	fireEvent,
-	render,
-	screen,
-} from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ReceiveSheet } from "./receive-sheet";
 
@@ -29,9 +23,7 @@ describe("ReceiveSheet", () => {
 	});
 
 	it("renders nothing when closed", () => {
-		const { container } = render(
-			<ReceiveSheet open={false} onClose={() => {}} address={addr} />,
-		);
+		const { container } = render(<ReceiveSheet open={false} onClose={() => {}} address={addr} />);
 		expect(container.querySelector("svg")).toBeNull();
 	});
 
@@ -52,9 +44,7 @@ describe("ReceiveSheet", () => {
 
 	it("shows sharing instructions", () => {
 		render(<ReceiveSheet open={true} onClose={() => {}} address={addr} />);
-		expect(
-			screen.getByText(/Share this address or QR code/),
-		).toBeInTheDocument();
+		expect(screen.getByText(/Share this address or QR code/)).toBeInTheDocument();
 	});
 
 	it("copies address to clipboard on copy button click", async () => {

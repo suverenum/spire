@@ -3,11 +3,7 @@ import posthog from "posthog-js";
 let initialized = false;
 
 export function initPostHog() {
-	if (
-		typeof window === "undefined" ||
-		initialized ||
-		!process.env.NEXT_PUBLIC_POSTHOG_KEY
-	) {
+	if (typeof window === "undefined" || initialized || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 		return;
 	}
 
@@ -22,10 +18,7 @@ export function initPostHog() {
 	initialized = true;
 }
 
-export function trackEvent(
-	event: string,
-	properties?: Record<string, unknown>,
-) {
+export function trackEvent(event: string, properties?: Record<string, unknown>) {
 	if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
 	posthog.capture(event, properties);
 }

@@ -134,10 +134,8 @@ describe("tempo client", () => {
 		});
 
 		it("correctly identifies and includes transactions relevant to the address", async () => {
-			const otherAddr =
-				"0xabcdef1234567890abcdef1234567890abcdef12" as `0x${string}`;
-			const unrelatedAddr =
-				"0x9999999999999999999999999999999999999999" as `0x${string}`;
+			const otherAddr = "0xabcdef1234567890abcdef1234567890abcdef12" as `0x${string}`;
+			const unrelatedAddr = "0x9999999999999999999999999999999999999999" as `0x${string}`;
 
 			mockGetContractEvents
 				.mockResolvedValueOnce([

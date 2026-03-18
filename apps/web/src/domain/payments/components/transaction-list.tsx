@@ -20,9 +20,7 @@ function EmptyState() {
 	return (
 		<div className="py-12 text-center">
 			<p className="text-lg font-medium text-gray-500">No transactions yet</p>
-			<p className="mt-1 text-sm text-gray-400">
-				Send or receive a payment to get started.
-			</p>
+			<p className="mt-1 text-sm text-gray-400">Send or receive a payment to get started.</p>
 			<div className="mt-4 flex justify-center gap-3">
 				<Link
 					href="/dashboard"
@@ -66,12 +64,7 @@ function TxRow({ tx, address }: { tx: Payment; address: string }) {
 				{tx.memo && <p className="truncate text-xs text-gray-400">{tx.memo}</p>}
 			</div>
 			<div className="text-right">
-				<p
-					className={cn(
-						"text-sm font-medium",
-						isSent ? "text-red-600" : "text-green-600",
-					)}
-				>
+				<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
 					{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
 				</p>
 				<p className="text-xs text-gray-400">
@@ -82,13 +75,7 @@ function TxRow({ tx, address }: { tx: Payment; address: string }) {
 	);
 }
 
-function InfiniteList({
-	items,
-	address,
-}: {
-	items: Payment[];
-	address: string;
-}) {
+function InfiniteList({ items, address }: { items: Payment[]; address: string }) {
 	const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 	const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -155,12 +142,8 @@ export function TransactionList({ address }: TransactionListProps) {
 		);
 	});
 
-	const sent = filtered.filter(
-		(tx) => tx.from.toLowerCase() === address.toLowerCase(),
-	);
-	const received = filtered.filter(
-		(tx) => tx.to.toLowerCase() === address.toLowerCase(),
-	);
+	const sent = filtered.filter((tx) => tx.from.toLowerCase() === address.toLowerCase());
+	const received = filtered.filter((tx) => tx.to.toLowerCase() === address.toLowerCase());
 
 	return (
 		<div className="space-y-4">
@@ -178,9 +161,7 @@ export function TransactionList({ address }: TransactionListProps) {
 				<TabsList>
 					<TabsTrigger value="all">All ({filtered.length})</TabsTrigger>
 					<TabsTrigger value="sent">Sent ({sent.length})</TabsTrigger>
-					<TabsTrigger value="received">
-						Received ({received.length})
-					</TabsTrigger>
+					<TabsTrigger value="received">Received ({received.length})</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="all" className="mt-4">

@@ -13,10 +13,7 @@ export const sendPaymentSchema = z.object({
 	token: z.enum(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]),
 	memo: z
 		.string()
-		.refine(
-			(v) => new TextEncoder().encode(v).length <= 32,
-			"Memo must be 32 bytes or less",
-		)
+		.refine((v) => new TextEncoder().encode(v).length <= 32, "Memo must be 32 bytes or less")
 		.optional(),
 });
 

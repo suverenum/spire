@@ -29,9 +29,7 @@ export function ReceiveSheet({ open, onClose, address }: ReceiveSheetProps) {
 					<QRCodeSVG value={address} size={200} level="M" />
 				</div>
 				<div className="w-full">
-					<p className="mb-1 text-center text-sm text-gray-500">
-						Your wallet address
-					</p>
+					<p className="mb-1 text-center text-sm text-gray-500">Your wallet address</p>
 					<div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
 						<code className="min-w-0 flex-1 truncate text-xs">{address}</code>
 						<Button variant="ghost" size="icon" onClick={handleCopy}>

@@ -9,22 +9,13 @@ interface BalancesClientResult {
 	partial: boolean;
 }
 
-export async function fetchBalancesClient(
-	address: string,
-): Promise<BalancesClientResult> {
-	const res = await fetch(
-		`/api/balances?address=${encodeURIComponent(address)}`,
-	);
+export async function fetchBalancesClient(address: string): Promise<BalancesClientResult> {
+	const res = await fetch(`/api/balances?address=${encodeURIComponent(address)}`);
 	if (!res.ok) throw new Error("Failed to fetch balances");
 	const data = await res.json();
 	return {
 		balances: data.balances.map(
-			(b: {
-				token: string;
-				tokenAddress: string;
-				balance: string;
-				decimals: number;
-			}) => ({
+			(b: { token: string; tokenAddress: string; balance: string; decimals: number }) => ({
 				...b,
 				balance: BigInt(b.balance),
 			}),

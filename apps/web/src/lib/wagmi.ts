@@ -12,9 +12,6 @@ export const wagmiConfig = createConfig({
 	],
 	multiInjectedProviderDiscovery: false,
 	transports: {
-		[tempoModerato.id]: withFeePayer(
-			http(),
-			http("https://sponsor.moderato.tempo.xyz"),
-		),
+		[tempoModerato.id]: withFeePayer(http(), http("https://sponsor.moderato.tempo.xyz")),
 	},
 });

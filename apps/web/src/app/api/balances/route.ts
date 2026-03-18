@@ -29,9 +29,6 @@ export async function GET(request: NextRequest) {
 			partial: result.partial,
 		});
 	} catch {
-		return NextResponse.json(
-			{ error: "Failed to fetch balances" },
-			{ status: 502 },
-		);
+		return NextResponse.json({ error: "Failed to fetch balances" }, { status: 502 });
 	}
 }

@@ -55,9 +55,7 @@ export function WelcomeScreen() {
 
 				router.push("/dashboard");
 			} catch (err) {
-				setError(
-					err instanceof Error ? err.message : "Passkey authentication failed",
-				);
+				setError(err instanceof Error ? err.message : "Passkey authentication failed");
 			}
 		});
 	}
@@ -70,9 +68,7 @@ export function WelcomeScreen() {
 						<Fingerprint className="h-10 w-10 text-white" />
 					</div>
 					<h1 className="text-2xl font-semibold">Goldhord</h1>
-					<p className="mt-1 text-sm text-gray-500">
-						Treasury management on Tempo blockchain
-					</p>
+					<p className="mt-1 text-sm text-gray-500">Treasury management on Tempo blockchain</p>
 				</div>
 
 				{error && (
@@ -82,12 +78,7 @@ export function WelcomeScreen() {
 				)}
 
 				<div className="space-y-3">
-					<Button
-						onClick={handleUnlock}
-						disabled={isPending}
-						size="lg"
-						className="w-full"
-					>
+					<Button onClick={handleUnlock} disabled={isPending} size="lg" className="w-full">
 						<Fingerprint className="h-5 w-5" />
 						{isPending ? "Authenticating..." : "Unlock with Passkey"}
 					</Button>

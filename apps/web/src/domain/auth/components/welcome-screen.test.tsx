@@ -1,11 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-	act,
-	cleanup,
-	fireEvent,
-	render,
-	screen,
-} from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WagmiProvider } from "wagmi";
 import { wagmiConfig } from "@/lib/wagmi";
@@ -73,16 +67,12 @@ describe("WelcomeScreen", () => {
 
 	it("renders unlock button", () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		expect(
-			screen.getByRole("button", { name: /Unlock with Passkey/ }),
-		).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /Unlock with Passkey/ })).toBeInTheDocument();
 	});
 
 	it("renders create treasury button", () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		expect(
-			screen.getByRole("button", { name: /Create Treasury/ }),
-		).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /Create Treasury/ })).toBeInTheDocument();
 	});
 
 	it("navigates to /create on create button click", () => {
@@ -100,9 +90,7 @@ describe("WelcomeScreen", () => {
 		});
 
 		expect(mockConnectAsync).toHaveBeenCalled();
-		expect(mockLoginAction).toHaveBeenCalledWith(
-			"0x1234567890abcdef1234567890abcdef12345678",
-		);
+		expect(mockLoginAction).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
 		expect(mockPush).toHaveBeenCalledWith("/dashboard");
 	});
 
@@ -117,9 +105,7 @@ describe("WelcomeScreen", () => {
 			fireEvent.click(button);
 		});
 
-		expect(screen.getByRole("alert")).toHaveTextContent(
-			"No treasury found for this passkey",
-		);
+		expect(screen.getByRole("alert")).toHaveTextContent("No treasury found for this passkey");
 	});
 
 	it("shows error when passkey connection fails", async () => {
@@ -143,17 +129,13 @@ describe("WelcomeScreen", () => {
 			fireEvent.click(button);
 		});
 
-		expect(screen.getByRole("alert")).toHaveTextContent(
-			"No account returned from passkey",
-		);
+		expect(screen.getByRole("alert")).toHaveTextContent("No account returned from passkey");
 	});
 
 	it("clears previous error on new unlock attempt", async () => {
-		mockLoginAction
-			.mockResolvedValueOnce({ error: "First error" })
-			.mockResolvedValueOnce({
-				tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
-			});
+		mockLoginAction.mockResolvedValueOnce({ error: "First error" }).mockResolvedValueOnce({
+			tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		});
 
 		render(<WelcomeScreen />, { wrapper: Wrapper });
 		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });

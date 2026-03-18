@@ -23,12 +23,7 @@ interface TabsProps {
 	className?: string;
 }
 
-export function Tabs({
-	defaultValue,
-	onValueChange,
-	children,
-	className,
-}: TabsProps) {
+export function Tabs({ defaultValue, onValueChange, children, className }: TabsProps) {
 	const [value, setValue] = useState(defaultValue);
 
 	const handleChange = (v: string) => {
@@ -51,10 +46,7 @@ interface TabsListProps {
 export function TabsList({ children, className }: TabsListProps) {
 	return (
 		<div
-			className={cn(
-				"inline-flex items-center gap-1 rounded-lg bg-gray-100 p-1",
-				className,
-			)}
+			className={cn("inline-flex items-center gap-1 rounded-lg bg-gray-100 p-1", className)}
 			role="tablist"
 		>
 			{children}
@@ -80,9 +72,7 @@ export function TabsTrigger({ value, children, className }: TabsTriggerProps) {
 			onClick={() => onValueChange(value)}
 			className={cn(
 				"rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-				isActive
-					? "bg-white text-gray-900 shadow-sm"
-					: "text-gray-500 hover:text-gray-700",
+				isActive ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700",
 				className,
 			)}
 		>

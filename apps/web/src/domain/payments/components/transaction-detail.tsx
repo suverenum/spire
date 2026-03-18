@@ -29,22 +29,14 @@ function CopyableField({ label, value }: { label: string; value: string }) {
 				<p className="text-sm text-gray-500">{label}</p>
 				<p className="truncate font-mono text-sm">{value}</p>
 			</div>
-			<Button
-				variant="ghost"
-				size="icon"
-				onClick={handleCopy}
-				className="shrink-0"
-			>
+			<Button variant="ghost" size="icon" onClick={handleCopy} className="shrink-0">
 				<Copy className="h-4 w-4" />
 			</Button>
 		</div>
 	);
 }
 
-export function TransactionDetail({
-	transaction: tx,
-	userAddress,
-}: TransactionDetailProps) {
+export function TransactionDetail({ transaction: tx, userAddress }: TransactionDetailProps) {
 	const isSent = tx.from.toLowerCase() === userAddress.toLowerCase();
 
 	return (
@@ -66,12 +58,7 @@ export function TransactionDetail({
 					<p className="text-lg font-semibold">
 						{isSent ? "Sent" : "Received"} {tx.token}
 					</p>
-					<p
-						className={cn(
-							"text-2xl font-semibold",
-							isSent ? "text-red-600" : "text-green-600",
-						)}
-					>
+					<p className={cn("text-2xl font-semibold", isSent ? "text-red-600" : "text-green-600")}>
 						{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
 					</p>
 				</div>

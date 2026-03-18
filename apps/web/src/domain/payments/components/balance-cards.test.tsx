@@ -15,9 +15,7 @@ function renderWithQuery(ui: React.ReactElement) {
 	const queryClient = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
-	return render(
-		<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-	);
+	return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
 const addr = "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`;
@@ -122,18 +120,14 @@ describe("BalanceCards", () => {
 		});
 		renderWithQuery(<BalanceCards address={addr} />);
 		expect(
-			screen.getByText(
-				"Some token balances could not be loaded. Totals may be incomplete.",
-			),
+			screen.getByText("Some token balances could not be loaded. Totals may be incomplete."),
 		).toBeInTheDocument();
 	});
 
 	it("does not show partial warning when all tokens loaded", () => {
 		renderWithQuery(<BalanceCards address={addr} />);
 		expect(
-			screen.queryByText(
-				"Some token balances could not be loaded. Totals may be incomplete.",
-			),
+			screen.queryByText("Some token balances could not be loaded. Totals may be incomplete."),
 		).not.toBeInTheDocument();
 	});
 

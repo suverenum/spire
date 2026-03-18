@@ -27,9 +27,7 @@ export function getTempoClient(): PublicClient {
 	return clientInstance;
 }
 
-export async function fetchBalances(
-	address: `0x${string}`,
-): Promise<BalancesResult> {
+export async function fetchBalances(address: `0x${string}`): Promise<BalancesResult> {
 	const client = getTempoClient();
 	const tokens = Object.values(SUPPORTED_TOKENS);
 
@@ -64,9 +62,7 @@ export async function fetchBalances(
 	return { balances, partial: failures.length > 0 };
 }
 
-export async function fetchTransactions(
-	address: `0x${string}`,
-): Promise<Payment[]> {
+export async function fetchTransactions(address: `0x${string}`): Promise<Payment[]> {
 	const client = getTempoClient();
 	const tokens = Object.values(SUPPORTED_TOKENS);
 
@@ -111,10 +107,7 @@ export async function fetchTransactions(
 
 	// Collect matching logs and unique block numbers
 	const addrLower = address.toLowerCase();
-	type FulfilledTokenResult = Extract<
-		(typeof tokenResults)[number],
-		{ status: "fulfilled" }
-	>;
+	type FulfilledTokenResult = Extract<(typeof tokenResults)[number], { status: "fulfilled" }>;
 	const matchedLogs: Array<{
 		log: FulfilledTokenResult["value"]["logs"][number];
 		token: string;
@@ -130,10 +123,7 @@ export async function fetchTransactions(
 				to?: `0x${string}`;
 				value?: bigint;
 			};
-			if (
-				args.from?.toLowerCase() === addrLower ||
-				args.to?.toLowerCase() === addrLower
-			) {
+			if (args.from?.toLowerCase() === addrLower || args.to?.toLowerCase() === addrLower) {
 				matchedLogs.push({ log, token: token.name });
 				if (log.blockNumber != null) {
 					blockNumbers.add(log.blockNumber);
@@ -171,23 +161,15 @@ export async function fetchTransactions(
 		return {
 			id: `${log.transactionHash}-${log.logIndex ?? 0}`,
 			txHash: log.transactionHash,
-			from:
-				args.from ??
-				("0x0000000000000000000000000000000000000000" as `0x${string}`),
-			to:
-				args.to ??
-				("0x0000000000000000000000000000000000000000" as `0x${string}`),
+			from: args.from ?? ("0x0000000000000000000000000000000000000000" as `0x${string}`),
+			to: args.to ?? ("0x0000000000000000000000000000000000000000" as `0x${string}`),
 			amount: args.value ?? 0n,
 			token,
 			status: "confirmed",
 			timestamp:
-				blockNumber != null
-					? (blockTimestamps.get(blockNumber) ?? new Date())
-					: new Date(),
+				blockNumber != null ? (blockTimestamps.get(blockNumber) ?? new Date()) : new Date(),
 		};
 	});
 
-	return allPayments.sort(
-		(a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-	);
+	return allPayments.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 }

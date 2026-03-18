@@ -1,11 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-	act,
-	cleanup,
-	fireEvent,
-	render,
-	screen,
-} from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Payment } from "@/lib/tempo/types";
 import { TransactionList } from "./transaction-list";
@@ -25,9 +19,7 @@ function renderWithQuery(ui: React.ReactElement) {
 	const queryClient = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
-	return render(
-		<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-	);
+	return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
 const addr = "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`;
@@ -36,8 +28,7 @@ const otherAddr = "0xabcdef1234567890abcdef1234567890abcdef12" as `0x${string}`;
 const mockTransactions: Payment[] = [
 	{
 		id: "tx-1",
-		txHash:
-			"0x0000000000000000000000000000000000000000000000000000000000000001",
+		txHash: "0x0000000000000000000000000000000000000000000000000000000000000001",
 		from: addr,
 		to: otherAddr,
 		amount: 5000000n,
@@ -48,8 +39,7 @@ const mockTransactions: Payment[] = [
 	},
 	{
 		id: "tx-2",
-		txHash:
-			"0x0000000000000000000000000000000000000000000000000000000000000002",
+		txHash: "0x0000000000000000000000000000000000000000000000000000000000000002",
 		from: otherAddr,
 		to: addr,
 		amount: 10000000n,
@@ -59,8 +49,7 @@ const mockTransactions: Payment[] = [
 	},
 	{
 		id: "tx-3",
-		txHash:
-			"0x0000000000000000000000000000000000000000000000000000000000000003",
+		txHash: "0x0000000000000000000000000000000000000000000000000000000000000003",
 		from: addr,
 		to: "0x9999999999999999999999999999999999999999" as `0x${string}`,
 		amount: 2000000n,
@@ -85,9 +74,7 @@ describe("TransactionList", () => {
 
 	it("renders search input", () => {
 		renderWithQuery(<TransactionList address={addr} />);
-		expect(
-			screen.getByPlaceholderText("Search by address..."),
-		).toBeInTheDocument();
+		expect(screen.getByPlaceholderText("Search by address...")).toBeInTheDocument();
 	});
 
 	it("renders tab filters with counts", () => {
@@ -120,9 +107,7 @@ describe("TransactionList", () => {
 		renderWithQuery(<TransactionList address={addr} />);
 		// TransactionSkeleton renders skeleton items instead of the main UI
 		expect(screen.queryByText("No transactions yet")).not.toBeInTheDocument();
-		expect(
-			screen.queryByPlaceholderText("Search by address..."),
-		).not.toBeInTheDocument();
+		expect(screen.queryByPlaceholderText("Search by address...")).not.toBeInTheDocument();
 	});
 
 	it("does not show skeleton when isLoading is true but data exists", () => {
@@ -131,9 +116,7 @@ describe("TransactionList", () => {
 			isLoading: true,
 		});
 		renderWithQuery(<TransactionList address={addr} />);
-		expect(
-			screen.getByPlaceholderText("Search by address..."),
-		).toBeInTheDocument();
+		expect(screen.getByPlaceholderText("Search by address...")).toBeInTheDocument();
 	});
 
 	describe("with transaction data", () => {
@@ -256,18 +239,14 @@ describe("TransactionList", () => {
 	});
 
 	describe("infinite scroll", () => {
-		let intersectionCallbacks: Array<
-			(entries: { isIntersecting: boolean }[]) => void
-		>;
+		let intersectionCallbacks: Array<(entries: { isIntersecting: boolean }[]) => void>;
 
 		beforeEach(() => {
 			intersectionCallbacks = [];
 			vi.stubGlobal(
 				"IntersectionObserver",
 				class {
-					constructor(
-						callback: (entries: { isIntersecting: boolean }[]) => void,
-					) {
+					constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
 						intersectionCallbacks.push(callback);
 					}
 					observe() {}
@@ -276,19 +255,16 @@ describe("TransactionList", () => {
 			);
 
 			// Generate 25 transactions (more than PAGE_SIZE of 20)
-			const manyTransactions: Payment[] = Array.from(
-				{ length: 25 },
-				(_, i) => ({
-					id: `tx-${i}`,
-					txHash: `0x${"0".repeat(63)}${i}` as `0x${string}`,
-					from: addr,
-					to: otherAddr,
-					amount: BigInt((i + 1) * 1000000),
-					token: "AlphaUSD",
-					status: "confirmed" as const,
-					timestamp: new Date(2026, 0, 15, 12, 0, 0, 0),
-				}),
-			);
+			const manyTransactions: Payment[] = Array.from({ length: 25 }, (_, i) => ({
+				id: `tx-${i}`,
+				txHash: `0x${"0".repeat(63)}${i}` as `0x${string}`,
+				from: addr,
+				to: otherAddr,
+				amount: BigInt((i + 1) * 1000000),
+				token: "AlphaUSD",
+				status: "confirmed" as const,
+				timestamp: new Date(2026, 0, 15, 12, 0, 0, 0),
+			}));
 
 			mockUseTransactions.mockReturnValue({
 				data: manyTransactions,
@@ -307,8 +283,7 @@ describe("TransactionList", () => {
 			expect(links.length).toBe(20);
 
 			// Trigger the last registered intersection observer callback
-			const lastCallback =
-				intersectionCallbacks[intersectionCallbacks.length - 1];
+			const lastCallback = intersectionCallbacks[intersectionCallbacks.length - 1];
 			act(() => {
 				lastCallback([{ isIntersecting: true }]);
 			});

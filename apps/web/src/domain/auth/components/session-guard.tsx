@@ -4,10 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { clearPersistedCache } from "@/components/providers";
-import {
-	logoutAction,
-	touchSessionAction,
-} from "@/domain/auth/actions/auth-actions";
+import { logoutAction, touchSessionAction } from "@/domain/auth/actions/auth-actions";
 import { SESSION_MAX_AGE_MS } from "@/lib/constants";
 
 const SESSION_REFRESH_MS = 5 * 60 * 1000; // Refresh session every 5 min of activity
@@ -26,8 +23,7 @@ export function SessionGuard({ children, authenticatedAt }: SessionGuardProps) {
 
 	useEffect(() => {
 		const serverElapsed = Date.now() - authenticatedAt;
-		lastActivityRef.current =
-			serverElapsed > SESSION_MAX_AGE_MS ? authenticatedAt : Date.now();
+		lastActivityRef.current = serverElapsed > SESSION_MAX_AGE_MS ? authenticatedAt : Date.now();
 
 		let throttleTimer: ReturnType<typeof setTimeout> | null = null;
 		const handleActivity = () => {

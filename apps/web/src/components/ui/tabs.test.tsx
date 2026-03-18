@@ -70,8 +70,8 @@ describe("Tabs", () => {
 	});
 
 	it("throws when TabsContent is used outside Tabs", () => {
-		expect(() =>
-			render(<TabsContent value="a">Content A</TabsContent>),
-		).toThrow("Tabs components must be used within <Tabs>");
+		expect(() => render(<TabsContent value="a">Content A</TabsContent>)).toThrow(
+			"Tabs components must be used within <Tabs>",
+		);
 	});
 });

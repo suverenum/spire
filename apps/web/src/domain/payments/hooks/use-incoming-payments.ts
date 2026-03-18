@@ -7,8 +7,7 @@ import { CACHE_KEYS, SUPPORTED_TOKENS, TEMPO_WS_URL } from "@/lib/constants";
 import { AnalyticsEvents, trackEvent } from "@/lib/posthog";
 
 // keccak256("Transfer(address,address,uint256)")
-const TRANSFER_TOPIC =
-	"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
 const POLLING_INTERVAL = 15_000;
 
@@ -41,11 +40,7 @@ export function useIncomingPayments(address: `0x${string}` | undefined) {
 	const queryClient = useQueryClient();
 	const wsRef = useRef<WebSocket | null>(null);
 	const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-	const isConnected = useSyncExternalStore(
-		subscribe,
-		getSnapshot,
-		getServerSnapshot,
-	);
+	const isConnected = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
 	useEffect(() => {
 		if (!address) return;

@@ -17,11 +17,7 @@ interface SendPaymentFormProps {
 	fromAddress: `0x${string}`;
 }
 
-export function SendPaymentForm({
-	open,
-	onClose,
-	fromAddress,
-}: SendPaymentFormProps) {
+export function SendPaymentForm({ open, onClose, fromAddress }: SendPaymentFormProps) {
 	const [to, setTo] = useState("");
 	const [amount, setAmount] = useState("");
 	const [token, setToken] = useState<TokenName>("AlphaUSD");
@@ -55,8 +51,7 @@ export function SendPaymentForm({
 			const tokenConfig = SUPPORTED_TOKENS[token];
 			if (tokenConfig && balancesData) {
 				const tokenBalance = balancesData.balances.find(
-					(b) =>
-						b.tokenAddress.toLowerCase() === tokenConfig.address.toLowerCase(),
+					(b) => b.tokenAddress.toLowerCase() === tokenConfig.address.toLowerCase(),
 				);
 				if (tokenBalance) {
 					try {
@@ -110,16 +105,11 @@ export function SendPaymentForm({
 						value={to}
 						onChange={(e) => setTo(e.target.value)}
 					/>
-					{errors.to && (
-						<p className="mt-1 text-xs text-red-600">{errors.to}</p>
-					)}
+					{errors.to && <p className="mt-1 text-xs text-red-600">{errors.to}</p>}
 				</div>
 
 				<div>
-					<label
-						htmlFor="send-amount"
-						className="mb-1 block text-sm font-medium"
-					>
+					<label htmlFor="send-amount" className="mb-1 block text-sm font-medium">
 						Amount
 					</label>
 					<Input
@@ -130,16 +120,11 @@ export function SendPaymentForm({
 						value={amount}
 						onChange={(e) => setAmount(e.target.value)}
 					/>
-					{errors.amount && (
-						<p className="mt-1 text-xs text-red-600">{errors.amount}</p>
-					)}
+					{errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
 				</div>
 
 				<div>
-					<label
-						htmlFor="send-token"
-						className="mb-1 block text-sm font-medium"
-					>
+					<label htmlFor="send-token" className="mb-1 block text-sm font-medium">
 						Token
 					</label>
 					<select
@@ -166,9 +151,7 @@ export function SendPaymentForm({
 						value={memo}
 						onChange={(e) => setMemo(e.target.value)}
 					/>
-					{errors.memo && (
-						<p className="mt-1 text-xs text-red-600">{errors.memo}</p>
-					)}
+					{errors.memo && <p className="mt-1 text-xs text-red-600">{errors.memo}</p>}
 				</div>
 
 				<Button

@@ -1,10 +1,6 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-	BalanceSkeleton,
-	DashboardSkeleton,
-	TransactionSkeleton,
-} from "./skeletons";
+import { BalanceSkeleton, DashboardSkeleton, TransactionSkeleton } from "./skeletons";
 
 afterEach(cleanup);
 

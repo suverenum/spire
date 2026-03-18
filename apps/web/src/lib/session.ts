@@ -40,10 +40,7 @@ function decode(value: string): SessionData | null {
 
 		const expected = sign(payload);
 		if (expected.length !== signature.length) return null;
-		const isValid = timingSafeEqual(
-			Buffer.from(expected),
-			Buffer.from(signature),
-		);
+		const isValid = timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 		if (!isValid) return null;
 
 		return JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
@@ -68,9 +65,7 @@ export async function getSession(): Promise<SessionData | null> {
 	return session;
 }
 
-export async function createSession(
-	data: Omit<SessionData, "authenticatedAt">,
-): Promise<void> {
+export async function createSession(data: Omit<SessionData, "authenticatedAt">): Promise<void> {
 	const cookieStore = await cookies();
 	const session: SessionData = {
 		...data,

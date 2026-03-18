@@ -42,12 +42,7 @@ function TransactionRow({ tx, address }: { tx: Payment; address: string }) {
 				{tx.memo && <p className="truncate text-xs text-gray-400">{tx.memo}</p>}
 			</div>
 			<div className="text-right">
-				<p
-					className={cn(
-						"text-sm font-medium",
-						isSent ? "text-red-600" : "text-green-600",
-					)}
-				>
+				<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
 					{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
 				</p>
 				<p className="text-xs text-gray-400">
@@ -71,9 +66,7 @@ export function RecentTransactions({ address }: RecentTransactionsProps) {
 		return (
 			<div className="py-12 text-center">
 				<p className="text-gray-500">No transactions yet</p>
-				<p className="mt-1 text-sm text-gray-400">
-					Send or receive a payment to get started.
-				</p>
+				<p className="mt-1 text-sm text-gray-400">Send or receive a payment to get started.</p>
 			</div>
 		);
 	}
@@ -84,10 +77,7 @@ export function RecentTransactions({ address }: RecentTransactionsProps) {
 		<div>
 			<div className="mb-3 flex items-center justify-between">
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
-				<Link
-					href="/transactions"
-					className="text-sm text-gray-500 hover:text-gray-700"
-				>
+				<Link href="/transactions" className="text-sm text-gray-500 hover:text-gray-700">
 					View all &rarr;
 				</Link>
 			</div>

@@ -16,9 +16,7 @@ function renderWithQuery(ui: React.ReactElement) {
 	const queryClient = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
-	return render(
-		<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-	);
+	return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
 
 const addr = "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`;
@@ -35,9 +33,7 @@ describe("RecentTransactions", () => {
 	it("shows empty state when no transactions", () => {
 		renderWithQuery(<RecentTransactions address={addr} />);
 		expect(screen.getByText("No transactions yet")).toBeInTheDocument();
-		expect(
-			screen.getByText("Send or receive a payment to get started."),
-		).toBeInTheDocument();
+		expect(screen.getByText("Send or receive a payment to get started.")).toBeInTheDocument();
 	});
 
 	it("shows skeleton when loading and no data", () => {
@@ -190,9 +186,7 @@ describe("RecentTransactions", () => {
 			renderWithQuery(<RecentTransactions address={addr} />);
 			const links = screen.getAllByRole("link");
 			// View all link + 5 tx links
-			const txLinks = links.filter((l) =>
-				l.getAttribute("href")?.startsWith("/transactions/"),
-			);
+			const txLinks = links.filter((l) => l.getAttribute("href")?.startsWith("/transactions/"));
 			expect(txLinks).toHaveLength(5);
 		});
 	});

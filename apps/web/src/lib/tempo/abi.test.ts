@@ -10,23 +10,17 @@ describe("tip20Abi", () => {
 	});
 
 	it("contains transfer function", () => {
-		const transfer = tip20Abi.find(
-			(item) => item.type === "function" && item.name === "transfer",
-		);
+		const transfer = tip20Abi.find((item) => item.type === "function" && item.name === "transfer");
 		expect(transfer).toBeDefined();
 	});
 
 	it("contains Transfer event", () => {
-		const event = tip20Abi.find(
-			(item) => item.type === "event" && item.name === "Transfer",
-		);
+		const event = tip20Abi.find((item) => item.type === "event" && item.name === "Transfer");
 		expect(event).toBeDefined();
 	});
 
 	it("Transfer event has indexed from and to", () => {
-		const event = tip20Abi.find(
-			(item) => item.type === "event" && item.name === "Transfer",
-		);
+		const event = tip20Abi.find((item) => item.type === "event" && item.name === "Transfer");
 		expect(event).toBeDefined();
 		expect(event).toHaveProperty("inputs");
 		const inputs = (
