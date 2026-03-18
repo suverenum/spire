@@ -33,15 +33,10 @@ export const SUPPORTED_TOKENS = {
 export type TokenName = keyof typeof SUPPORTED_TOKENS;
 
 // Tokens available for account creation (subset of SUPPORTED_TOKENS)
-export const ACCOUNT_TOKENS = [
-	SUPPORTED_TOKENS.AlphaUSD,
-	SUPPORTED_TOKENS.BetaUSD,
-] as const;
+export const ACCOUNT_TOKENS = [SUPPORTED_TOKENS.AlphaUSD, SUPPORTED_TOKENS.BetaUSD] as const;
 
-export const DEX_ADDRESS =
-	"0xDEc0000000000000000000000000000000000000" as `0x${string}`;
-export const KEYCHAIN_ADDRESS =
-	"0xAAAAAAAA00000000000000000000000000000000" as `0x${string}`;
+export const DEX_ADDRESS = "0xDEc0000000000000000000000000000000000000" as `0x${string}`;
+export const KEYCHAIN_ADDRESS = "0xAAAAAAAA00000000000000000000000000000000" as `0x${string}`;
 
 export const SESSION_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes
 export const SESSION_COOKIE_NAME = "goldhord-session";
@@ -52,8 +47,6 @@ export const CACHE_KEYS = {
 	accounts: (treasuryId: string) => ["accounts", treasuryId] as const,
 	accountBalance: (walletAddress: string, tokenAddress: string) =>
 		["accountBalance", walletAddress, tokenAddress] as const,
-	multisigConfig: (accountId: string) =>
-		["multisig-config", accountId] as const,
-	pendingTransactions: (accountId: string) =>
-		["pending-transactions", accountId] as const,
+	multisigConfig: (accountId: string) => ["multisig-config", accountId] as const,
+	pendingTransactions: (accountId: string) => ["pending-transactions", accountId] as const,
 } as const;

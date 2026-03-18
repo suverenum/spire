@@ -93,7 +93,4 @@ export interface SwapTransaction extends BaseGroupedTransaction {
 	recoveryRequired: boolean;
 }
 
-export type GroupedTransaction =
-	| PaymentTransaction
-	| InternalTransferTransaction
-	| SwapTransaction;
+export type GroupedTransaction = PaymentTransaction | InternalTransferTransaction | SwapTransaction;
