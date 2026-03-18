@@ -29,8 +29,7 @@ type TaggedPayment = Payment & { accountName: string; accountId: string };
 function makeTx(overrides: Partial<TaggedPayment>): TaggedPayment {
 	return {
 		id: "tx-1",
-		txHash:
-			"0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
+		txHash: "0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
 		from: "0x0000000000000000000000000000000000000099" as `0x${string}`,
 		to: ACCOUNT_A.walletAddress as `0x${string}`,
 		amount: 1000000n,
@@ -122,9 +121,7 @@ describe("groupTransactions", () => {
 
 		const result = groupTransactions(txs, [ACCOUNT_A]);
 		expect(result).toHaveLength(2);
-		expect(result[0].timestamp.getTime()).toBeGreaterThan(
-			result[1].timestamp.getTime(),
-		);
+		expect(result[0].timestamp.getTime()).toBeGreaterThan(result[1].timestamp.getTime());
 	});
 
 	it("returns empty array for empty input", () => {
@@ -181,8 +178,7 @@ describe("groupTransactions", () => {
 		// Swap 1: A -> DEX at t=0s
 		const swap1Tx = makeTx({
 			id: "swap1-dex",
-			txHash:
-				"0xaaaa000000000000000000000000000000000000000000000000000000000001" as `0x${string}`,
+			txHash: "0xaaaa000000000000000000000000000000000000000000000000000000000001" as `0x${string}`,
 			from: ACCOUNT_A.walletAddress as `0x${string}`,
 			to: DEX,
 			amount: 100_000_000n,
@@ -195,8 +191,7 @@ describe("groupTransactions", () => {
 		// Swap 2: A -> DEX at t=5s
 		const swap2Tx = makeTx({
 			id: "swap2-dex",
-			txHash:
-				"0xaaaa000000000000000000000000000000000000000000000000000000000002" as `0x${string}`,
+			txHash: "0xaaaa000000000000000000000000000000000000000000000000000000000002" as `0x${string}`,
 			from: ACCOUNT_A.walletAddress as `0x${string}`,
 			to: DEX,
 			amount: 200_000_000n,
@@ -209,8 +204,7 @@ describe("groupTransactions", () => {
 		// Follow-up 1: A -> B at t=3s (for swap 1)
 		const followUp1 = makeTx({
 			id: "followup1",
-			txHash:
-				"0xbbbb000000000000000000000000000000000000000000000000000000000001" as `0x${string}`,
+			txHash: "0xbbbb000000000000000000000000000000000000000000000000000000000001" as `0x${string}`,
 			from: ACCOUNT_A.walletAddress as `0x${string}`,
 			to: ACCOUNT_B.walletAddress as `0x${string}`,
 			amount: 99_000_000n,
@@ -223,8 +217,7 @@ describe("groupTransactions", () => {
 		// Follow-up 2: A -> B at t=8s (for swap 2)
 		const followUp2 = makeTx({
 			id: "followup2",
-			txHash:
-				"0xbbbb000000000000000000000000000000000000000000000000000000000002" as `0x${string}`,
+			txHash: "0xbbbb000000000000000000000000000000000000000000000000000000000002" as `0x${string}`,
 			from: ACCOUNT_A.walletAddress as `0x${string}`,
 			to: ACCOUNT_B.walletAddress as `0x${string}`,
 			amount: 198_000_000n,

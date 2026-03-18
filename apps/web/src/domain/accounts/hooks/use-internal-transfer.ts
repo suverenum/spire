@@ -110,8 +110,7 @@ export function useInternalTransfer() {
 				})
 				.catch((err) => {
 					setIsPreparing(false);
-					const error =
-						err instanceof Error ? err : new Error("Transfer failed");
+					const error = err instanceof Error ? err : new Error("Transfer failed");
 					toast(error.message, "error");
 					options?.onError?.(error);
 				});
