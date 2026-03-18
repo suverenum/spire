@@ -17,22 +17,33 @@ function useTabs() {
 }
 
 interface TabsProps {
-	defaultValue: string;
+	defaultValue?: string;
+	value?: string;
 	onValueChange?: (value: string) => void;
 	children: ReactNode;
 	className?: string;
 }
 
-export function Tabs({ defaultValue, onValueChange, children, className }: TabsProps) {
-	const [value, setValue] = useState(defaultValue);
+export function Tabs({
+	defaultValue,
+	value: controlledValue,
+	onValueChange,
+	children,
+	className,
+}: TabsProps) {
+	const [internalValue, setInternalValue] = useState(controlledValue ?? defaultValue ?? "");
+	const isControlled = controlledValue !== undefined;
+	const currentValue = isControlled ? controlledValue : internalValue;
 
 	const handleChange = (v: string) => {
-		setValue(v);
+		if (!isControlled) {
+			setInternalValue(v);
+		}
 		onValueChange?.(v);
 	};
 
 	return (
-		<TabsContext value={{ value, onValueChange: handleChange }}>
+		<TabsContext value={{ value: currentValue, onValueChange: handleChange }}>
 			<div className={className}>{children}</div>
 		</TabsContext>
 	);
