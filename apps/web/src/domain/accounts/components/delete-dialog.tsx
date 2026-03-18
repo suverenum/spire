@@ -7,7 +7,10 @@ import { Sheet } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toast";
 import type { AccountWithBalance } from "@/lib/tempo/types";
 import { formatBalance } from "@/lib/utils";
-import { confirmDeleteAccount, prepareDeleteAccount } from "../actions/delete-account";
+import {
+	confirmDeleteAccount,
+	prepareDeleteAccount,
+} from "../actions/delete-account";
 
 interface DeleteDialogProps {
 	open: boolean;
@@ -44,6 +47,7 @@ export function DeleteDialog({
 	useEffect(() => {
 		if (!open || !account) return;
 		setState({ type: "loading" });
+		setIsPending(false);
 
 		prepareDeleteAccount(account.id)
 			.then((result) => {
@@ -65,7 +69,8 @@ export function DeleteDialog({
 			.catch((err) => {
 				setState({
 					type: "error",
-					message: err instanceof Error ? err.message : "Failed to check account",
+					message:
+						err instanceof Error ? err.message : "Failed to check account",
 				});
 			});
 	}, [open, account]);
@@ -104,8 +109,9 @@ export function DeleteDialog({
 							<p className="text-sm font-medium">Cannot delete account</p>
 						</div>
 						<p className="mt-2 text-sm text-gray-600">
-							This account still holds ${formatBalance(state.assignedBalance, 6)}{" "}
-							{state.tokenSymbol}. Transfer the balance before deleting.
+							This account still holds $
+							{formatBalance(state.assignedBalance, 6)} {state.tokenSymbol}.
+							Transfer the balance before deleting.
 						</p>
 						{account && onTransferBalance && (
 							<Button
@@ -129,8 +135,8 @@ export function DeleteDialog({
 							<p className="text-sm font-medium">Unassigned assets detected</p>
 						</div>
 						<p className="mt-2 text-sm text-gray-600">
-							This wallet contains tokens not tracked by this account. They will remain on-chain but
-							inaccessible through the app.
+							This wallet contains tokens not tracked by this account. They will
+							remain on-chain but inaccessible through the app.
 						</p>
 						<div className="mt-2 space-y-1">
 							{state.unassignedBalances.map((b) => (
@@ -153,8 +159,9 @@ export function DeleteDialog({
 				{state.type === "ready" && (
 					<div>
 						<p className="text-sm text-gray-600">
-							Are you sure you want to delete <span className="font-medium">{account?.name}</span>?
-							This action cannot be undone.
+							Are you sure you want to delete{" "}
+							<span className="font-medium">{account?.name}</span>? This action
+							cannot be undone.
 						</p>
 						<Button
 							onClick={() => handleDelete(false)}
@@ -167,7 +174,9 @@ export function DeleteDialog({
 					</div>
 				)}
 
-				{state.type === "error" && <p className="text-sm text-red-600">{state.message}</p>}
+				{state.type === "error" && (
+					<p className="text-sm text-red-600">{state.message}</p>
+				)}
 			</div>
 		</Sheet>
 	);

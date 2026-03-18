@@ -42,7 +42,10 @@ export async function assertCanCreateAccount({
 
 	// Check name uniqueness before any on-chain provisioning to avoid wasting gas
 	const existing = await db.query.accounts.findFirst({
-		where: and(eq(accounts.treasuryId, treasuryId), eq(accounts.name, trimmedName)),
+		where: and(
+			eq(accounts.treasuryId, treasuryId),
+			eq(accounts.name, trimmedName),
+		),
 	});
 	if (existing) {
 		return { error: "Name already taken" };
@@ -78,6 +81,11 @@ export async function finalizeAccountCreate({
 	const token = ACCOUNT_TOKENS.find((t) => t.name === tokenSymbol);
 	if (!token) return { error: "Invalid token" };
 
+	const trimmedName = name.trim();
+	if (!trimmedName || trimmedName.length > 100) {
+		return { error: "Account name must be 1-100 characters" };
+	}
+
 	if (!ADDRESS_RE.test(walletAddress)) {
 		return { error: "Invalid wallet address" };
 	}
@@ -87,7 +95,7 @@ export async function finalizeAccountCreate({
 			.insert(accounts)
 			.values({
 				treasuryId,
-				name: name.trim(),
+				name: trimmedName,
 				tokenSymbol,
 				tokenAddress: token.address,
 				walletAddress: walletAddress.toLowerCase(),

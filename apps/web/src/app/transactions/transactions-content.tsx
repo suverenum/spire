@@ -1,7 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Search } from "lucide-react";
+import {
+	ArrowDownLeft,
+	ArrowLeftRight,
+	ArrowUpRight,
+	Search,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
@@ -22,10 +27,16 @@ interface TransactionsContentProps {
 	treasuryId: string;
 }
 
-function matchesAddressFilter(tx: GroupedTransaction, address: string): boolean {
+function matchesAddressFilter(
+	tx: GroupedTransaction,
+	address: string,
+): boolean {
 	const lower = address.toLowerCase();
 	if (tx.kind === "payment") {
-		return tx.from.toLowerCase().includes(lower) || tx.to.toLowerCase().includes(lower);
+		return (
+			tx.from.toLowerCase().includes(lower) ||
+			tx.to.toLowerCase().includes(lower)
+		);
 	}
 	if (tx.kind === "internalTransfer") {
 		return (
@@ -82,7 +93,12 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 					</p>
 				</div>
 				<div className="text-right">
-					<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
+					<p
+						className={cn(
+							"text-sm font-medium",
+							isSent ? "text-red-600" : "text-green-600",
+						)}
+					>
 						{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
 					</p>
 					<p className="text-xs text-gray-400">
@@ -130,11 +146,14 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 			<div className="min-w-0 flex-1">
 				<p className="text-sm font-medium">Swap</p>
 				<p className="truncate text-xs text-gray-500">
-					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} ({tx.tokenOut})
+					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} (
+					{tx.tokenOut})
 				</p>
 			</div>
 			<div className="text-right">
-				<p className="text-sm font-medium text-gray-900">${formatBalance(tx.amountIn, 6)}</p>
+				<p className="text-sm font-medium text-gray-900">
+					${formatBalance(tx.amountIn, 6)}
+				</p>
 				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 			</div>
 		</Link>
@@ -191,7 +210,10 @@ export function TransactionsContent({
 	const { transactions, isLoading } = useAllTransactions(accounts);
 
 	const filtered = transactions
-		.filter((tx) => accountFilter === "all" || tx.visibleAccountIds.includes(accountFilter))
+		.filter(
+			(tx) =>
+				accountFilter === "all" || tx.visibleAccountIds.includes(accountFilter),
+		)
 		.filter((tx) => {
 			if (tab === "all") return true;
 			// Sent/Received tabs only apply to external payments
@@ -301,7 +323,7 @@ export function TransactionsContent({
 					</div>
 				</div>
 
-				<Tabs defaultValue="all" onValueChange={setTab}>
+				<Tabs defaultValue={tab} onValueChange={setTab}>
 					<TabsList className="mb-4">
 						<TabsTrigger value="all">All</TabsTrigger>
 						<TabsTrigger value="sent">Sent</TabsTrigger>
@@ -310,10 +332,14 @@ export function TransactionsContent({
 
 					<TabsContent value={tab}>
 						{isLoading && (
-							<p className="py-8 text-center text-sm text-gray-500">Loading transactions...</p>
+							<p className="py-8 text-center text-sm text-gray-500">
+								Loading transactions...
+							</p>
 						)}
 						{!isLoading && filtered.length === 0 && (
-							<p className="py-8 text-center text-sm text-gray-500">No transactions found</p>
+							<p className="py-8 text-center text-sm text-gray-500">
+								No transactions found
+							</p>
 						)}
 						<div className="space-y-2">
 							{filtered.map((tx) => (
