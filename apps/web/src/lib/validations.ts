@@ -13,10 +13,25 @@ export const sendPaymentSchema = z.object({
 	token: z.enum(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]),
 	memo: z
 		.string()
-		.refine((v) => new TextEncoder().encode(v).length <= 32, "Memo must be 32 bytes or less")
+		.refine(
+			(v) => new TextEncoder().encode(v).length <= 32,
+			"Memo must be 32 bytes or less",
+		)
 		.optional(),
 });
 
 export const createTreasurySchema = z.object({
 	name: z.string().min(1).max(100),
+});
+
+export const accountNameSchema = z.string().min(1).max(100);
+
+export const createAccountSchema = z.object({
+	name: accountNameSchema,
+	tokenSymbol: z.enum(["AlphaUSD", "BetaUSD"]),
+});
+
+export const renameAccountSchema = z.object({
+	accountId: z.string().uuid(),
+	name: accountNameSchema,
 });

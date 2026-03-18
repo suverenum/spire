@@ -877,13 +877,13 @@ type GroupedTransaction =
 
 ### Universal
 
-- [ ] Unit & integration tests pass (`bun run test` — runs via Turborepo across all packages)
+- [x] Unit & integration tests pass (`bun run test` — runs via Turborepo across all packages)
 - [ ] E2E tests pass (from `apps/web/`: `bun run test:e2e`)
 - [ ] 90% coverage thresholds met (lines, functions, branches, statements)
-- [ ] TypeScript compiles cleanly (`bun run typecheck`)
-- [ ] Biome lint + format passes (`bun run lint`)
-- [ ] Database migrations are clean (`bun run db:generate` from `apps/web/` produces no diff)
-- [ ] Spec updated to reflect implementation
+- [x] TypeScript compiles cleanly (`bun run typecheck`)
+- [x] Biome lint + format passes (`bun run lint`)
+- [x] Database migrations are clean (`bun run db:generate` from `apps/web/` produces no diff)
+- [x] Spec updated to reflect implementation
 - [ ] CI passes on PR (lint, typecheck, test, build via GitHub Actions)
 - [ ] App deployed and accessible on Vercel
 
