@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
 import { useState } from "react";
 import { SidebarLayout } from "@/components/sidebar-layout";
@@ -36,6 +36,7 @@ export function DashboardContent({
 	authenticatedAt,
 	treasuryId,
 }: DashboardContentProps) {
+	const queryClient = useQueryClient();
 	const [sendOpen, setSendOpen] = useState(false);
 	const [receiveOpen, setReceiveOpen] = useState(false);
 	const [createOpen, setCreateOpen] = useState(false);
@@ -171,13 +172,21 @@ export function DashboardContent({
 					open={!!renameAccount}
 					onClose={() => setRenameAccount(null)}
 					account={renameAccount}
-					onSuccess={() => {}}
+					onSuccess={() => {
+						void queryClient.invalidateQueries({
+							queryKey: CACHE_KEYS.accounts(treasuryId),
+						});
+					}}
 				/>
 				<DeleteDialog
 					open={!!deleteAccount}
 					onClose={() => setDeleteAccount(null)}
 					account={deleteAccount}
-					onSuccess={() => {}}
+					onSuccess={() => {
+						void queryClient.invalidateQueries({
+							queryKey: CACHE_KEYS.accounts(treasuryId),
+						});
+					}}
 					onTransferBalance={(acct) => {
 						setSelectedSendAccount(acct);
 						setSendOpen(true);

@@ -197,7 +197,11 @@ export function TransactionsContent({
 		})
 		.filter((tx) => !addressFilter || matchesAddressFilter(tx, addressFilter))
 		.filter((tx) => !dateFrom || tx.timestamp >= new Date(dateFrom))
-		.filter((tx) => !dateTo || tx.timestamp <= new Date(dateTo))
+		.filter((tx) => {
+			if (!dateTo) return true;
+			const endOfDay = new Date(dateTo + "T23:59:59.999Z");
+			return tx.timestamp <= endOfDay;
+		})
 		.filter((tx) => {
 			if (!minAmount) return true;
 			try {

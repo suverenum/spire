@@ -1,4 +1,7 @@
+import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { accounts } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import { fetchTransactions } from "@/lib/tempo/client";
 import { addressSchema } from "@/lib/validations";
@@ -15,8 +18,20 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json({ error: "Invalid address" }, { status: 400 });
 	}
 
-	if (parsed.data.toLowerCase() !== session.tempoAddress.toLowerCase()) {
-		return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+	const lowerAddress = parsed.data.toLowerCase();
+
+	// Allow the treasury root address or any account wallet belonging to this treasury
+	if (lowerAddress !== session.tempoAddress.toLowerCase()) {
+		const ownedAccounts = await db.query.accounts.findMany({
+			where: eq(accounts.treasuryId, session.treasuryId),
+			columns: { walletAddress: true },
+		});
+		const ownedAddresses = new Set(
+			ownedAccounts.map((a) => a.walletAddress.toLowerCase()),
+		);
+		if (!ownedAddresses.has(lowerAddress)) {
+			return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+		}
 	}
 
 	try {
@@ -29,6 +44,9 @@ export async function GET(request: NextRequest) {
 			})),
 		});
 	} catch {
-		return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 502 });
+		return NextResponse.json(
+			{ error: "Failed to fetch transactions" },
+			{ status: 502 },
+		);
 	}
 }

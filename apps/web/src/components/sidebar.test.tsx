@@ -100,5 +100,6 @@ describe("Sidebar", () => {
 		await userEvent.click(logoutButtons[0]);
 		expect(mockQueryClientClear).toHaveBeenCalled();
 		expect(mockClearPersistedCache).toHaveBeenCalled();
+		expect(mockLogoutAction).toHaveBeenCalled();
 	});
 });

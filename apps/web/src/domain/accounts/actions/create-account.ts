@@ -1,6 +1,5 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
@@ -94,30 +93,4 @@ export async function finalizeAccountCreate({
 		}
 		throw err;
 	}
-}
-
-/**
- * Helper to check that a set of account IDs all belong to the session treasury.
- */
-export async function assertTreasuryAccountAccess({
-	accountIds,
-}: {
-	accountIds: string[];
-}): Promise<{ error?: string }> {
-	const session = await getSession();
-	if (!session) return { error: "Not authenticated" };
-
-	const results = await db.query.accounts.findMany({
-		where: eq(accounts.treasuryId, session.treasuryId),
-		columns: { id: true },
-	});
-
-	const ownedIds = new Set(results.map((r) => r.id));
-	for (const id of accountIds) {
-		if (!ownedIds.has(id)) {
-			return { error: "Account does not belong to this treasury" };
-		}
-	}
-
-	return {};
 }

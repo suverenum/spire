@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS, SUPPORTED_TOKENS, TEMPO_WS_URL } from "@/lib/constants";
 import { AnalyticsEvents, trackEvent } from "@/lib/posthog";
@@ -46,13 +46,26 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 		getServerSnapshot,
 	);
 
-	useEffect(() => {
-		if (accounts.length === 0) return;
+	// Stabilize the accounts dependency to avoid reconnect loops on every render
+	const accountsRef = useRef(accounts);
+	accountsRef.current = accounts;
+	const accountAddresses = useMemo(
+		() =>
+			accounts
+				.map((a) => a.walletAddress.toLowerCase())
+				.sort()
+				.join(","),
+		[accounts],
+	);
 
+	useEffect(() => {
+		if (!accountAddresses) return;
+
+		const currentAccounts = accountsRef.current;
 		let cleaned = false;
 
 		const invalidateData = () => {
-			for (const account of accounts) {
+			for (const account of accountsRef.current) {
 				void queryClient.invalidateQueries({
 					queryKey: CACHE_KEYS.accountBalance(
 						account.walletAddress,
@@ -77,7 +90,10 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 			}
 		};
 
-		const walletAddresses = accounts.map((a) => a.walletAddress);
+		const walletAddresses = currentAccounts.map((a) => a.walletAddress);
+		const tokenAddresses = Object.values(SUPPORTED_TOKENS).map(
+			(t) => t.address,
+		);
 
 		try {
 			const ws = new WebSocket(TEMPO_WS_URL);
@@ -87,8 +103,10 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 				if (cleaned) return;
 				setConnected(true);
 				stopPolling();
-				// Subscribe to Transfer events for all account wallets
+				// Subscribe to Transfer events for all account wallets (both incoming and outgoing)
 				for (const addr of walletAddresses) {
+					const paddedAddr = `0x000000000000000000000000${addr.slice(2).toLowerCase()}`;
+					// Incoming transfers (account is the recipient)
 					ws.send(
 						JSON.stringify({
 							jsonrpc: "2.0",
@@ -97,14 +115,23 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 							params: [
 								"logs",
 								{
-									address: Object.values(SUPPORTED_TOKENS).map(
-										(t) => t.address,
-									),
-									topics: [
-										TRANSFER_TOPIC,
-										null,
-										`0x000000000000000000000000${addr.slice(2).toLowerCase()}`,
-									],
+									address: tokenAddresses,
+									topics: [TRANSFER_TOPIC, null, paddedAddr],
+								},
+							],
+						}),
+					);
+					// Outgoing transfers (account is the sender)
+					ws.send(
+						JSON.stringify({
+							jsonrpc: "2.0",
+							id: 2,
+							method: "eth_subscribe",
+							params: [
+								"logs",
+								{
+									address: tokenAddresses,
+									topics: [TRANSFER_TOPIC, paddedAddr, null],
 								},
 							],
 						}),
@@ -118,7 +145,7 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 					const data = JSON.parse(event.data);
 					if (data.method === "eth_subscription") {
 						invalidateData();
-						toast("Payment received!", "success");
+						toast("Transfer detected!", "success");
 						trackEvent(AnalyticsEvents.PAYMENT_RECEIVED);
 					}
 				} catch {
@@ -148,7 +175,7 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 			wsRef.current = null;
 			stopPolling();
 		};
-	}, [accounts, queryClient]);
+	}, [accountAddresses, queryClient]);
 
 	return { isConnected };
 }

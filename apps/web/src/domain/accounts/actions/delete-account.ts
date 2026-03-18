@@ -114,7 +114,14 @@ export async function confirmDeleteAccount({
 		};
 	}
 
-	await db.delete(accounts).where(eq(accounts.id, accountId));
+	await db
+		.delete(accounts)
+		.where(
+			and(
+				eq(accounts.id, accountId),
+				eq(accounts.treasuryId, session.treasuryId),
+			),
+		);
 
 	revalidatePath("/dashboard");
 	revalidatePath("/accounts");

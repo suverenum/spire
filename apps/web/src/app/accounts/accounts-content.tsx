@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { SidebarLayout } from "@/components/sidebar-layout";
@@ -26,6 +26,7 @@ export function AccountsContent({
 	authenticatedAt,
 	treasuryId,
 }: AccountsContentProps) {
+	const queryClient = useQueryClient();
 	const [createOpen, setCreateOpen] = useState(false);
 	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(
 		null,
@@ -72,13 +73,21 @@ export function AccountsContent({
 					open={!!renameAccount}
 					onClose={() => setRenameAccount(null)}
 					account={renameAccount}
-					onSuccess={() => {}}
+					onSuccess={() => {
+						void queryClient.invalidateQueries({
+							queryKey: CACHE_KEYS.accounts(treasuryId),
+						});
+					}}
 				/>
 				<DeleteDialog
 					open={!!deleteAccount}
 					onClose={() => setDeleteAccount(null)}
 					account={deleteAccount}
-					onSuccess={() => {}}
+					onSuccess={() => {
+						void queryClient.invalidateQueries({
+							queryKey: CACHE_KEYS.accounts(treasuryId),
+						});
+					}}
 				/>
 			</SidebarLayout>
 		</SessionGuard>

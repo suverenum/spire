@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
@@ -25,10 +25,12 @@ export function RenameDialog({
 	const [error, setError] = useState("");
 	const [isPending, setIsPending] = useState(false);
 
-	// Sync name when account changes
-	if (account && name === "" && open) {
-		setName(account.name);
-	}
+	// Sync name when dialog opens or account changes
+	useEffect(() => {
+		if (open && account) {
+			setName(account.name);
+		}
+	}, [open, account]);
 
 	async function handleSubmit() {
 		setError("");
