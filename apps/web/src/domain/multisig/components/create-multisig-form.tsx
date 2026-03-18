@@ -40,9 +40,17 @@ export function CreateMultisigForm({
 	const [allowlistEnabled, setAllowlistEnabled] = useState(false);
 	const [error, setError] = useState("");
 
-	const createMutation = useCreateMultisig();
+	const { step, ...createMutation } = useCreateMultisig();
 
 	const totalSigners = signers.filter((s) => s.trim()).length + 1; // +1 for admin
+
+	const stepLabels: Record<string, string> = {
+		validating: "Validating...",
+		"deploying-wallet": "Step 1/3: Deploying wallet...",
+		"deploying-guard": "Step 2/3: Deploying guard...",
+		"setting-guard": "Step 3/3: Setting guard...",
+		finalizing: "Saving...",
+	};
 
 	function addSigner() {
 		setSigners([...signers, ""]);
@@ -359,7 +367,9 @@ export function CreateMultisigForm({
 					size="lg"
 				>
 					<Shield className="h-4 w-4" />
-					{createMutation.isPending ? "Creating..." : "Create Multisig Account"}
+					{createMutation.isPending
+						? (stepLabels[step] ?? "Creating...")
+						: "Create Multisig Account"}
 				</Button>
 			</div>
 		</Sheet>
