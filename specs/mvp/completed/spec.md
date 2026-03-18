@@ -1,15 +1,15 @@
-# SPEC: Spire — Treasury Management on Tempo
+# SPEC: Goldhord — Treasury Management on Tempo
 
 ## 1. Meta Information
 
-- **Branch:** feature/spire-mvp
-- **Epic:** Spire MVP
+- **Branch:** feature/goldhord-mvp
+- **Epic:** Goldhord MVP
 - **PRD:** [prd.md](./prd.md)
 - **Auth Architecture:** [authentication.md](./authentication.md)
 
 ## 2. Context
 
-Spire is a single-wallet treasury management app built on the [Tempo blockchain](https://tempo.xyz/) — a purpose-built Layer 1 for stablecoin payments. One user manages one wallet: view stablecoin balances, send payments, receive payments, and browse transaction history. Authentication is passkey-only. No seed phrases, no gas tokens, no wallet extensions.
+Goldhord is a single-wallet treasury management app built on the [Tempo blockchain](https://tempo.xyz/) — a purpose-built Layer 1 for stablecoin payments. One user manages one wallet: view stablecoin balances, send payments, receive payments, and browse transaction history. Authentication is passkey-only. No seed phrases, no gas tokens, no wallet extensions.
 
 The architecture is designed to support future features (Ledger, multi-sig, compliance policies, sub-accounts, multi-user) without rewrites, but the MVP scope is intentionally minimal. See [prd.md](./prd.md) for the full MVP scope definition.
 
@@ -78,7 +78,7 @@ This is a greenfield project. No existing banking infrastructure exists. The app
 
 ## 6. Proposed Solution
 
-Spire is a Next.js 16.1 application (App Router) using the hybrid approach: Tempo handles all on-chain payment operations while a lightweight backend manages treasury metadata. Single user, single wallet, passkey-only auth. Deployed on Vercel with Neon serverless Postgres. Optimized for instant-feeling performance via PPR, React Compiler, View Transitions, and service worker precaching.
+Goldhord is a Next.js 16.1 application (App Router) using the hybrid approach: Tempo handles all on-chain payment operations while a lightweight backend manages treasury metadata. Single user, single wallet, passkey-only auth. Deployed on Vercel with Neon serverless Postgres. Optimized for instant-feeling performance via PPR, React Compiler, View Transitions, and service worker precaching.
 
 ### 6.1. Architecture Overview
 
@@ -405,7 +405,7 @@ The following accounts and keys must be set up **before development begins**. Al
 
 | Service | What to Create | How | Provides | MVP? |
 |---|---|---|---|---|
-| **GitHub** | Repository for `spire` | github.com/new | Source code hosting, CI triggers | **Yes** |
+| **GitHub** | Repository for `goldhord` | github.com/new | Source code hosting, CI triggers | **Yes** |
 | **Vercel** | Project linked to GitHub repo | vercel.com → Import Git Repository | Hosting, `*.vercel.app` domain, preview deployments, env var storage | **Yes** |
 | **Neon** | Postgres project (region: `aws-us-east-1`) | console.neon.tech → New Project | `DATABASE_URL` connection string | **Yes** |
 | **Sentry** | Next.js project | sentry.io → Create Project → Next.js | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN` | MVP+ |

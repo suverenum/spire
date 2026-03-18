@@ -35,3 +35,9 @@ Thumbs.db
 
 # ralphex progress logs
 .ralphex/progress/
+
+# Turborepo
+.turbo
+
+# Sentry
+.env.sentry-build-plugin

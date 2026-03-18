@@ -1,9 +1,9 @@
-# PRD: Spire — MVP
+# PRD: Goldhord — MVP
 
 ## 1. Meta Information
 
 - **Created Date:** 2026-03-16
-- **Epic:** Spire MVP
+- **Epic:** Goldhord MVP
 - **SPEC:** [spec.md](./spec.md)
 - **Auth Architecture:** [authentication.md](./authentication.md)
 
@@ -89,7 +89,7 @@ User opens app
 ┌─────────────────────────────────┐
 │                                 │
 │                                 │
-│            ◆ SPIRE              │
+│            ◆ GOLDHORD              │
 │                                 │
 │   Manage your stablecoin        │
 │   treasury. No passwords,       │
@@ -110,7 +110,7 @@ User opens app
 ```
 ┌─────────────────────────────────┐
 │                                 │
-│            ◆ SPIRE              │
+│            ◆ GOLDHORD              │
 │                                 │
 │                                 │
 │   Name your treasury            │
@@ -135,12 +135,12 @@ User opens app
 ```
 ┌─────────────────────────────────┐
 │                                 │
-│            ◆ SPIRE              │
+│            ◆ GOLDHORD              │
 │                                 │
 │   ┌───────────────────────┐     │
 │   │                       │     │
 │   │   Create a passkey    │     │
-│   │   for spire.app       │     │
+│   │   for goldhord.app       │     │
 │   │                       │     │
 │   │   ┌─────────────┐     │     │
 │   │   │  ◉ Touch ID  │     │     │
@@ -164,7 +164,7 @@ User opens app
 │                                 │
 │                                 │
 │                                 │
-│            ◆ SPIRE              │
+│            ◆ GOLDHORD              │
 │                                 │
 │                                 │
 │         ◌  Creating your        │
@@ -184,7 +184,7 @@ User opens app
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -241,7 +241,7 @@ User opens app
 │                                 │
 │                                 │
 │                                 │
-│            ◆ SPIRE              │
+│            ◆ GOLDHORD              │
 │                                 │
 │          Ops Fund               │
 │                                 │
@@ -269,7 +269,7 @@ User opens app
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -447,7 +447,7 @@ User taps "Send" on dashboard
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -489,7 +489,7 @@ User taps "Send" on dashboard
 │  ┌─────────────────────────┐    │
 │  │ ✓ Payment confirmed     │    │
 │  └─────────────────────────┘    │
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Recent Transactions  View all →│
@@ -518,7 +518,7 @@ User taps "Receive" on dashboard
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  ┌─────────────────────────┐    │
@@ -569,7 +569,7 @@ External sender transfers stablecoins to this wallet's address
 
 ```
 ┌─────────────────────────────────┐
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -608,7 +608,7 @@ External sender transfers stablecoins to this wallet's address
 │  │ ↓ Received $500.00      │    │
 │  │   pathUSD from 0xbc7... │    │
 │  └─────────────────────────┘    │
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │
@@ -650,7 +650,7 @@ External sender transfers stablecoins to this wallet's address
 ```
 ┌─────────────────────────────────┐
 │ ⚠ Live updates paused  Refresh │
-│ ◆ Spire · Ops Fund  0x1a2… ⏻  │
+│ ◆ Goldhord · Ops Fund  0x1a2… ⏻  │
 │─────────────────────────────────│
 │                                 │
 │  Total Balance                  │

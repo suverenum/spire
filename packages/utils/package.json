@@ -1,0 +1,22 @@
+{
+	"name": "@goldhord/utils",
+	"version": "0.0.0",
+	"private": true,
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"test": "vitest run",
+		"lint": "biome check .",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"clsx": "^2",
+		"tailwind-merge": "^3"
+	},
+	"devDependencies": {
+		"@goldhord/tsconfig": "workspace:*",
+		"typescript": "^5",
+		"vitest": "^4"
+	}
+}
