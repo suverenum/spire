@@ -109,13 +109,19 @@ export function CreateMultisigForm({
 			return;
 		}
 
-		const parsedTiers = tiers
-			.filter((t) => t.maxValue.trim())
-			.map((t) => ({
-				maxValue: BigInt(Math.round(Number(t.maxValue) * 1e6)).toString(),
-				requiredConfirmations:
-					Number.parseInt(t.requiredConfirmations, 10) || 1,
-			}));
+		// Validate and parse tier values
+		const tiersWithValues = tiers.filter((t) => t.maxValue.trim());
+		for (const t of tiersWithValues) {
+			const num = Number(t.maxValue);
+			if (!Number.isFinite(num) || num < 0) {
+				setError(`Invalid tier amount: "${t.maxValue}"`);
+				return;
+			}
+		}
+		const parsedTiers = tiersWithValues.map((t) => ({
+			maxValue: BigInt(Math.round(Number(t.maxValue) * 1e6)).toString(),
+			requiredConfirmations: Number.parseInt(t.requiredConfirmations, 10) || 1,
+		}));
 
 		for (const t of parsedTiers) {
 			if (t.requiredConfirmations > totalSigners) {

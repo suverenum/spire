@@ -25,7 +25,7 @@ export default defineConfig({
 	webServer: {
 		command: `DATABASE_URL="${TEST_DB_URL}" bun run dev`,
 		url: "http://localhost:3000",
-		reuseExistingServer: true,
+		reuseExistingServer: !process.env.CI,
 		env: {
 			DATABASE_URL: TEST_DB_URL,
 		},

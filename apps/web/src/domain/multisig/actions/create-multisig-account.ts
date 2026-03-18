@@ -68,11 +68,19 @@ export async function assertCanCreateMultisigAccount(
 	for (let i = 0; i < params.tiers.length; i++) {
 		if (params.tiers[i].requiredConfirmations < 1)
 			return { error: "Required confirmations must be at least 1" };
-		if (
-			i > 0 &&
-			BigInt(params.tiers[i].maxValue) <= BigInt(params.tiers[i - 1].maxValue)
-		)
-			return { error: "Tiers must be sorted ascending by maxValue" };
+		if (!/^\d+$/.test(params.tiers[i].maxValue))
+			return { error: `Invalid tier value: ${params.tiers[i].maxValue}` };
+		if (i > 0) {
+			try {
+				if (
+					BigInt(params.tiers[i].maxValue) <=
+					BigInt(params.tiers[i - 1].maxValue)
+				)
+					return { error: "Tiers must be sorted ascending by maxValue" };
+			} catch {
+				return { error: `Invalid tier value: ${params.tiers[i].maxValue}` };
+			}
+		}
 	}
 
 	// Allowlist validation

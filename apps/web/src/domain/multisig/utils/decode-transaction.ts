@@ -77,11 +77,17 @@ export function decodeTransactionDescription(
 		}
 	}
 
-	// Native value transfer
+	// Native value transfer (18 decimals, not dollar-denominated)
 	if (data === "0x" || data.length <= 2) {
 		const val = BigInt(value);
 		if (val > 0n) {
-			return `Transfer ${formatAmount(val.toString(16))} to ${truncateAddress(to)}`;
+			const whole = val / 10n ** 18n;
+			const frac = val % 10n ** 18n;
+			const formatted =
+				frac === 0n
+					? whole.toString()
+					: `${whole}.${frac.toString().padStart(18, "0").replace(/0+$/, "")}`;
+			return `Transfer ${formatted} native to ${truncateAddress(to)}`;
 		}
 	}
 

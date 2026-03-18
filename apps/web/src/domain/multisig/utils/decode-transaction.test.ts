@@ -77,10 +77,11 @@ describe("decodeTransactionDescription", () => {
 		const result = decodeTransactionDescription(
 			RECIPIENT,
 			"0x",
-			"1000000000", // 10^9 wei
+			"1000000000000000000", // 1e18 wei = 1 native token
 			WALLET,
 		);
 		expect(result).toContain("Transfer");
+		expect(result).toContain("native");
 		expect(result).toContain("2222...2222");
 	});
 });

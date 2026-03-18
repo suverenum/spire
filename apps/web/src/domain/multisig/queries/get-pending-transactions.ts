@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { multisigConfirmations, multisigTransactions } from "@/db/schema";
 
@@ -24,6 +24,7 @@ export interface PendingTransactionData {
 
 /**
  * Get pending (non-executed) multisig transactions for an account.
+ * Fetches confirmations in a single batched query (no N+1).
  */
 export async function getPendingTransactions(
 	accountId: string,
@@ -36,31 +37,37 @@ export async function getPendingTransactions(
 		orderBy: desc(multisigTransactions.createdAt),
 	});
 
-	// Fetch confirmations for each transaction
-	const results: PendingTransactionData[] = [];
-	for (const tx of txs) {
-		const confs = await db.query.multisigConfirmations.findMany({
-			where: eq(multisigConfirmations.multisigTransactionId, tx.id),
-		});
+	if (txs.length === 0) return [];
 
-		results.push({
-			id: tx.id,
-			accountId: tx.accountId,
-			onChainTxId: tx.onChainTxId.toString(),
-			to: tx.to,
-			value: tx.value,
-			data: tx.data,
-			requiredConfirmations: tx.requiredConfirmations,
-			currentConfirmations: tx.currentConfirmations,
-			executed: tx.executed,
-			executedAt: tx.executedAt,
-			createdAt: tx.createdAt,
-			confirmations: confs.map((c) => ({
-				signerAddress: c.signerAddress,
-				confirmedAt: c.confirmedAt,
-			})),
-		});
+	// Batch-fetch all confirmations for all pending transactions in one query
+	const txIds = txs.map((tx) => tx.id);
+	const allConfs = await db.query.multisigConfirmations.findMany({
+		where: inArray(multisigConfirmations.multisigTransactionId, txIds),
+	});
+
+	// Group confirmations by transaction ID
+	const confsByTxId = new Map<
+		string,
+		Array<{ signerAddress: string; confirmedAt: Date }>
+	>();
+	for (const c of allConfs) {
+		const list = confsByTxId.get(c.multisigTransactionId) ?? [];
+		list.push({ signerAddress: c.signerAddress, confirmedAt: c.confirmedAt });
+		confsByTxId.set(c.multisigTransactionId, list);
 	}
 
-	return results;
+	return txs.map((tx) => ({
+		id: tx.id,
+		accountId: tx.accountId,
+		onChainTxId: tx.onChainTxId.toString(),
+		to: tx.to,
+		value: tx.value,
+		data: tx.data,
+		requiredConfirmations: tx.requiredConfirmations,
+		currentConfirmations: tx.currentConfirmations,
+		executed: tx.executed,
+		executedAt: tx.executedAt,
+		createdAt: tx.createdAt,
+		confirmations: confsByTxId.get(tx.id) ?? [],
+	}));
 }

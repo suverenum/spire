@@ -106,6 +106,17 @@ export function SendPaymentForm({
 	function handleSubmit() {
 		if (!validate()) return;
 
+		if (isMultisig) {
+			// TODO: Route through multisig submitTransaction flow
+			// For now, show a toast indicating this is pending implementation
+			// The actual flow will call submitTransaction on the multisig contract
+			// and create a pending transaction in the DB
+			alert(
+				"Multisig transaction submission will be routed through the approval flow. This requires wallet connection to submit on-chain.",
+			);
+			return;
+		}
+
 		sendMutation.mutate(
 			{
 				to: to as `0x${string}`,
