@@ -1,4 +1,10 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ReceiveSheet } from "./receive-sheet";
 
@@ -23,7 +29,9 @@ describe("ReceiveSheet", () => {
 	});
 
 	it("renders nothing when closed", () => {
-		const { container } = render(<ReceiveSheet open={false} onClose={() => {}} address={addr} />);
+		const { container } = render(
+			<ReceiveSheet open={false} onClose={() => {}} address={addr} />,
+		);
 		expect(container.querySelector("svg")).toBeNull();
 	});
 
@@ -44,7 +52,9 @@ describe("ReceiveSheet", () => {
 
 	it("shows sharing instructions", () => {
 		render(<ReceiveSheet open={true} onClose={() => {}} address={addr} />);
-		expect(screen.getByText(/Share this address or QR code/)).toBeInTheDocument();
+		expect(
+			screen.getByText(/Share this address or QR code/),
+		).toBeInTheDocument();
 	});
 
 	it("copies address to clipboard on copy button click", async () => {
@@ -105,8 +115,11 @@ describe("ReceiveSheet", () => {
 				treasuryId: "t-1",
 				name: "Main Alpha",
 				tokenSymbol: "AlphaUSD",
-				tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
-				walletAddress: "0xaaaa000000000000000000000000000000000001" as `0x${string}`,
+				tokenAddress:
+					"0x1111111111111111111111111111111111111111" as `0x${string}`,
+				walletAddress:
+					"0xaaaa000000000000000000000000000000000001" as `0x${string}`,
+				walletType: "eoa",
 				isDefault: true,
 				createdAt: new Date("2025-01-01"),
 				balance: 5000000n,
@@ -117,8 +130,11 @@ describe("ReceiveSheet", () => {
 				treasuryId: "t-1",
 				name: "Main Beta",
 				tokenSymbol: "BetaUSD",
-				tokenAddress: "0x2222222222222222222222222222222222222222" as `0x${string}`,
-				walletAddress: "0xbbbb000000000000000000000000000000000002" as `0x${string}`,
+				tokenAddress:
+					"0x2222222222222222222222222222222222222222" as `0x${string}`,
+				walletAddress:
+					"0xbbbb000000000000000000000000000000000002" as `0x${string}`,
+				walletType: "eoa",
 				isDefault: true,
 				createdAt: new Date("2025-01-01"),
 				balance: 3000000n,
@@ -151,7 +167,9 @@ describe("ReceiveSheet", () => {
 					onAccountChange={vi.fn()}
 				/>,
 			);
-			expect(screen.getByText("0xaaaa000000000000000000000000000000000001")).toBeInTheDocument();
+			expect(
+				screen.getByText("0xaaaa000000000000000000000000000000000001"),
+			).toBeInTheDocument();
 		});
 
 		it("shows account-specific label and sharing text", () => {
@@ -188,8 +206,12 @@ describe("ReceiveSheet", () => {
 		});
 
 		it("does not show account selector when accounts is empty array", () => {
-			render(<ReceiveSheet open onClose={vi.fn()} address={addr} accounts={[]} />);
-			expect(screen.queryByLabelText("Receive to Account")).not.toBeInTheDocument();
+			render(
+				<ReceiveSheet open onClose={vi.fn()} address={addr} accounts={[]} />,
+			);
+			expect(
+				screen.queryByLabelText("Receive to Account"),
+			).not.toBeInTheDocument();
 		});
 	});
 });

@@ -29,6 +29,7 @@ const account: AccountWithBalance = {
 	tokenSymbol: "AlphaUSD",
 	tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
 	walletAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`,
+	walletType: "eoa",
 	isDefault: false,
 	createdAt: new Date("2025-01-01"),
 	balance: 0n,
@@ -38,17 +39,35 @@ const account: AccountWithBalance = {
 describe("DeleteDialog", () => {
 	it("shows loading state initially", () => {
 		mockPrepareDelete.mockReturnValue(new Promise(() => {}));
-		render(<DeleteDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={vi.fn()}
+				account={account}
+				onSuccess={vi.fn()}
+			/>,
+		);
 		expect(screen.getByText("Checking account status...")).toBeInTheDocument();
 	});
 
 	it("shows ready state when balance is zero", async () => {
 		mockPrepareDelete.mockResolvedValue({ status: "ready" });
-		render(<DeleteDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={vi.fn()}
+				account={account}
+				onSuccess={vi.fn()}
+			/>,
+		);
 		await waitFor(() => {
-			expect(screen.getByText(/Are you sure you want to delete/)).toBeInTheDocument();
+			expect(
+				screen.getByText(/Are you sure you want to delete/),
+			).toBeInTheDocument();
 		});
-		expect(screen.getByRole("button", { name: "Delete Account" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Delete Account" }),
+		).toBeInTheDocument();
 	});
 
 	it("shows blocked state when assigned token has balance", async () => {
@@ -57,7 +76,14 @@ describe("DeleteDialog", () => {
 			assignedBalance: 5000000n,
 			tokenSymbol: "AlphaUSD",
 		});
-		render(<DeleteDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={vi.fn()}
+				account={account}
+				onSuccess={vi.fn()}
+			/>,
+		);
 		await waitFor(() => {
 			expect(screen.getByText("Cannot delete account")).toBeInTheDocument();
 		});
@@ -98,12 +124,23 @@ describe("DeleteDialog", () => {
 				},
 			],
 		});
-		render(<DeleteDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={vi.fn()}
+				account={account}
+				onSuccess={vi.fn()}
+			/>,
+		);
 		await waitFor(() => {
-			expect(screen.getByText("Unassigned assets detected")).toBeInTheDocument();
+			expect(
+				screen.getByText("Unassigned assets detected"),
+			).toBeInTheDocument();
 		});
 		expect(screen.getByText(/BetaUSD/)).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Delete Anyway" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Delete Anyway" }),
+		).toBeInTheDocument();
 	});
 
 	it("calls confirmDelete with acknowledge on warn state", async () => {
@@ -118,11 +155,22 @@ describe("DeleteDialog", () => {
 			],
 		});
 		mockConfirmDelete.mockResolvedValue({ success: true });
-		render(<DeleteDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={vi.fn()}
+				account={account}
+				onSuccess={vi.fn()}
+			/>,
+		);
 		await waitFor(() => {
-			expect(screen.getByRole("button", { name: "Delete Anyway" })).toBeInTheDocument();
+			expect(
+				screen.getByRole("button", { name: "Delete Anyway" }),
+			).toBeInTheDocument();
 		});
-		await userEvent.click(screen.getByRole("button", { name: "Delete Anyway" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Anyway" }),
+		);
 		await waitFor(() => {
 			expect(mockConfirmDelete).toHaveBeenCalledWith({
 				accountId: "acc-1",
@@ -136,11 +184,22 @@ describe("DeleteDialog", () => {
 		mockConfirmDelete.mockResolvedValue({ success: true });
 		const onSuccess = vi.fn();
 		const onClose = vi.fn();
-		render(<DeleteDialog open onClose={onClose} account={account} onSuccess={onSuccess} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={onClose}
+				account={account}
+				onSuccess={onSuccess}
+			/>,
+		);
 		await waitFor(() => {
-			expect(screen.getByRole("button", { name: "Delete Account" })).toBeInTheDocument();
+			expect(
+				screen.getByRole("button", { name: "Delete Account" }),
+			).toBeInTheDocument();
 		});
-		await userEvent.click(screen.getByRole("button", { name: "Delete Account" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Account" }),
+		);
 		await waitFor(() => {
 			expect(mockConfirmDelete).toHaveBeenCalledWith({
 				accountId: "acc-1",
@@ -155,11 +214,22 @@ describe("DeleteDialog", () => {
 		mockConfirmDelete.mockResolvedValue({
 			error: "Account still has funds",
 		});
-		render(<DeleteDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={vi.fn()}
+				account={account}
+				onSuccess={vi.fn()}
+			/>,
+		);
 		await waitFor(() => {
-			expect(screen.getByRole("button", { name: "Delete Account" })).toBeInTheDocument();
+			expect(
+				screen.getByRole("button", { name: "Delete Account" }),
+			).toBeInTheDocument();
 		});
-		await userEvent.click(screen.getByRole("button", { name: "Delete Account" }));
+		await userEvent.click(
+			screen.getByRole("button", { name: "Delete Account" }),
+		);
 		await waitFor(() => {
 			expect(screen.getByText("Account still has funds")).toBeInTheDocument();
 		});
@@ -167,7 +237,14 @@ describe("DeleteDialog", () => {
 
 	it("shows error when prepare fails", async () => {
 		mockPrepareDelete.mockRejectedValue(new Error("Network error"));
-		render(<DeleteDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
+		render(
+			<DeleteDialog
+				open
+				onClose={vi.fn()}
+				account={account}
+				onSuccess={vi.fn()}
+			/>,
+		);
 		await waitFor(() => {
 			expect(screen.getByText("Network error")).toBeInTheDocument();
 		});

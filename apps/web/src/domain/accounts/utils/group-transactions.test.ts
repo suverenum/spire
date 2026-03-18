@@ -9,6 +9,7 @@ const ACCOUNT_A: AccountRecord = {
 	tokenSymbol: "AlphaUSD",
 	tokenAddress: "0x20c0000000000000000000000000000000000001",
 	walletAddress: "0xaaa0000000000000000000000000000000000001",
+	walletType: "eoa",
 	isDefault: true,
 	createdAt: new Date("2024-01-01"),
 };
@@ -20,6 +21,7 @@ const ACCOUNT_B: AccountRecord = {
 	tokenSymbol: "BetaUSD",
 	tokenAddress: "0x20c0000000000000000000000000000000000002",
 	walletAddress: "0xbbb0000000000000000000000000000000000002",
+	walletType: "eoa",
 	isDefault: true,
 	createdAt: new Date("2024-01-01"),
 };

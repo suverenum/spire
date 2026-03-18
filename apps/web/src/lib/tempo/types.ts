@@ -31,6 +31,7 @@ export interface AccountRecord {
 	tokenSymbol: string;
 	tokenAddress: string;
 	walletAddress: string;
+	walletType: string; // "eoa" | "multisig"
 	isDefault: boolean;
 	createdAt: Date;
 }
@@ -92,4 +93,7 @@ export interface SwapTransaction extends BaseGroupedTransaction {
 	recoveryRequired: boolean;
 }
 
-export type GroupedTransaction = PaymentTransaction | InternalTransferTransaction | SwapTransaction;
+export type GroupedTransaction =
+	| PaymentTransaction
+	| InternalTransferTransaction
+	| SwapTransaction;

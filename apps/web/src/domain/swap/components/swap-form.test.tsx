@@ -45,6 +45,7 @@ function makeAccount(
 		tokenSymbol: token,
 		tokenAddress: tokenAddr as `0x${string}`,
 		walletAddress: `0x${id.padStart(40, "a")}` as `0x${string}`,
+		walletType: "eoa",
 		isDefault: false,
 		createdAt: new Date("2025-01-01"),
 		balance,
@@ -141,7 +142,9 @@ describe("SwapForm", () => {
 		await userEvent.selectOptions(screen.getByLabelText("To"), "2");
 		await userEvent.type(screen.getByLabelText("Amount"), "999");
 		await userEvent.click(screen.getByRole("button", { name: "Swap" }));
-		expect(screen.getByText("Amount exceeds available balance")).toBeInTheDocument();
+		expect(
+			screen.getByText("Amount exceeds available balance"),
+		).toBeInTheDocument();
 	});
 
 	it("resets To account when From changes to same token", async () => {

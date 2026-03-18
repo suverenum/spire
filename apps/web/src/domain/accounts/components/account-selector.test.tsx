@@ -19,6 +19,7 @@ function makeAccount(
 		tokenSymbol,
 		tokenAddress: `0x${id.padStart(40, "1")}` as `0x${string}`,
 		walletAddress: `0x${id.padStart(40, "a")}` as `0x${string}`,
+		walletType: "eoa",
 		isDefault: false,
 		createdAt: new Date("2025-01-01"),
 		balance,
@@ -35,7 +36,11 @@ const accounts = [
 describe("AccountSelector", () => {
 	it("renders label and all accounts as options", () => {
 		render(
-			<AccountSelector accounts={accounts} selectedAccountId={undefined} onSelect={vi.fn()} />,
+			<AccountSelector
+				accounts={accounts}
+				selectedAccountId={undefined}
+				onSelect={vi.fn()}
+			/>,
 		);
 		expect(screen.getByLabelText("Account")).toBeInTheDocument();
 		expect(screen.getByText("Select account")).toBeInTheDocument();
@@ -79,7 +84,11 @@ describe("AccountSelector", () => {
 	it("calls onSelect when selection changes", async () => {
 		const onSelect = vi.fn();
 		render(
-			<AccountSelector accounts={accounts} selectedAccountId={undefined} onSelect={onSelect} />,
+			<AccountSelector
+				accounts={accounts}
+				selectedAccountId={undefined}
+				onSelect={onSelect}
+			/>,
 		);
 		await userEvent.selectOptions(screen.getByRole("combobox"), "1");
 		expect(onSelect).toHaveBeenCalledWith("1");
@@ -98,7 +107,13 @@ describe("AccountSelector", () => {
 	});
 
 	it("shows selected account", () => {
-		render(<AccountSelector accounts={accounts} selectedAccountId="2" onSelect={vi.fn()} />);
+		render(
+			<AccountSelector
+				accounts={accounts}
+				selectedAccountId="2"
+				onSelect={vi.fn()}
+			/>,
+		);
 		const select = screen.getByRole("combobox") as HTMLSelectElement;
 		expect(select.value).toBe("2");
 	});
