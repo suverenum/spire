@@ -61,9 +61,7 @@ export default function CreateTreasuryPage() {
 					router.push("/dashboard");
 				}
 			} catch (err) {
-				setError(
-					err instanceof Error ? err.message : "Passkey creation failed",
-				);
+				setError(err instanceof Error ? err.message : "Passkey creation failed");
 			}
 		});
 	}
@@ -76,17 +74,12 @@ export default function CreateTreasuryPage() {
 						<Fingerprint className="h-8 w-8 text-white" />
 					</div>
 					<h1 className="text-2xl font-semibold">Create Treasury</h1>
-					<p className="mt-1 text-sm text-gray-500">
-						Choose a name and create your passkey
-					</p>
+					<p className="mt-1 text-sm text-gray-500">Choose a name and create your passkey</p>
 				</div>
 
 				<form action={handleSubmit} className="space-y-4">
 					<div>
-						<label
-							htmlFor="treasury-name"
-							className="mb-1 block text-sm font-medium"
-						>
+						<label htmlFor="treasury-name" className="mb-1 block text-sm font-medium">
 							Treasury Name
 						</label>
 						<Input
@@ -104,12 +97,7 @@ export default function CreateTreasuryPage() {
 						</p>
 					)}
 
-					<Button
-						type="submit"
-						disabled={isPending}
-						className="w-full"
-						size="lg"
-					>
+					<Button type="submit" disabled={isPending} className="w-full" size="lg">
 						<Fingerprint className="h-5 w-5" />
 						{isPending ? "Creating..." : "Create with Passkey"}
 					</Button>

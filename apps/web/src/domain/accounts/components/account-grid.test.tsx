@@ -4,14 +4,7 @@ import type { AccountWithBalance } from "@/lib/tempo/types";
 import { AccountGrid } from "./account-grid";
 
 vi.mock("next/link", () => ({
-	default: ({
-		href,
-		children,
-		...props
-	}: {
-		href: string;
-		children: React.ReactNode;
-	}) => (
+	default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
 		<a href={href} {...props}>
 			{children}
 		</a>
@@ -53,9 +46,7 @@ describe("AccountGrid", () => {
 			makeAccount("2", "High", 999999n),
 			makeAccount("3", "Mid", 5000n),
 		];
-		render(
-			<AccountGrid accounts={accounts} onRename={vi.fn()} onDelete={vi.fn()} />,
-		);
+		render(<AccountGrid accounts={accounts} onRename={vi.fn()} onDelete={vi.fn()} />);
 		const cards = screen.getAllByTestId(/^card-/);
 		expect(cards).toHaveLength(3);
 		expect(cards[0]).toHaveTextContent("High");
@@ -69,14 +60,7 @@ describe("AccountGrid", () => {
 			makeAccount("2", "B", 200n),
 			makeAccount("3", "C", 300n),
 		];
-		render(
-			<AccountGrid
-				accounts={accounts}
-				maxItems={2}
-				onRename={vi.fn()}
-				onDelete={vi.fn()}
-			/>,
-		);
+		render(<AccountGrid accounts={accounts} maxItems={2} onRename={vi.fn()} onDelete={vi.fn()} />);
 		expect(screen.getAllByTestId(/^card-/)).toHaveLength(2);
 	});
 
@@ -117,9 +101,7 @@ describe("AccountGrid", () => {
 			makeAccount("1", "Later", 100n, new Date("2025-06-01")),
 			makeAccount("2", "Earlier", 100n, new Date("2025-01-01")),
 		];
-		render(
-			<AccountGrid accounts={accounts} onRename={vi.fn()} onDelete={vi.fn()} />,
-		);
+		render(<AccountGrid accounts={accounts} onRename={vi.fn()} onDelete={vi.fn()} />);
 		const cards = screen.getAllByTestId(/^card-/);
 		expect(cards[0]).toHaveTextContent("Earlier");
 		expect(cards[1]).toHaveTextContent("Later");

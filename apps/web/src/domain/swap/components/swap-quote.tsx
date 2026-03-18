@@ -45,9 +45,7 @@ export function SwapQuoteDisplay({
 			</div>
 			<div className="flex items-center justify-between">
 				<p className="text-xs text-gray-400">Min received</p>
-				<p className="text-xs text-gray-500">
-					${formatBalance(minAmountOut, 6)}
-				</p>
+				<p className="text-xs text-gray-500">${formatBalance(minAmountOut, 6)}</p>
 			</div>
 		</div>
 	);

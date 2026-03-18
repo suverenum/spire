@@ -3,10 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS } from "@/lib/constants";
-import {
-	assertCanCreateAccount,
-	finalizeAccountCreate,
-} from "../actions/create-account";
+import { assertCanCreateAccount, finalizeAccountCreate } from "../actions/create-account";
 
 interface CreateAccountParams {
 	treasuryId: string;
@@ -23,11 +20,7 @@ export function useCreateAccount() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({
-			treasuryId,
-			tokenSymbol,
-			name,
-		}: CreateAccountParams) => {
+		mutationFn: async ({ treasuryId, tokenSymbol, name }: CreateAccountParams) => {
 			// 1. Server-side auth + validation
 			const validation = await assertCanCreateAccount({
 				treasuryId,

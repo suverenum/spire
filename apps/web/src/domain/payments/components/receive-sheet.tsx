@@ -44,10 +44,7 @@ export function ReceiveSheet({
 			<div className="flex flex-col items-center gap-6">
 				{accounts && accounts.length > 0 && (
 					<div className="w-full">
-						<label
-							htmlFor="receive-account"
-							className="mb-1 block text-sm font-medium"
-						>
+						<label htmlFor="receive-account" className="mb-1 block text-sm font-medium">
 							Receive to Account
 						</label>
 						<select
@@ -70,14 +67,10 @@ export function ReceiveSheet({
 				</div>
 				<div className="w-full">
 					<p className="mb-1 text-center text-sm text-gray-500">
-						{selectedAccount
-							? `${selectedAccount.name} wallet address`
-							: "Your wallet address"}
+						{selectedAccount ? `${selectedAccount.name} wallet address` : "Your wallet address"}
 					</p>
 					<div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-						<code className="min-w-0 flex-1 truncate text-xs">
-							{displayAddress}
-						</code>
+						<code className="min-w-0 flex-1 truncate text-xs">{displayAddress}</code>
 						<Button variant="ghost" size="icon" onClick={handleCopy}>
 							<Copy className="h-4 w-4" />
 						</Button>

@@ -18,9 +18,7 @@ test.describe("Multi-Account Management", () => {
 		test("desktop sidebar shows all navigation links", async ({ page }) => {
 			await page.goto("/dashboard");
 			await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
-			await expect(
-				page.getByRole("link", { name: "Transactions" }),
-			).toBeVisible();
+			await expect(page.getByRole("link", { name: "Transactions" })).toBeVisible();
 			await expect(page.getByRole("link", { name: "Accounts" })).toBeVisible();
 			await expect(page.getByRole("link", { name: "Swap" })).toBeVisible();
 			await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
@@ -41,9 +39,7 @@ test.describe("Multi-Account Management", () => {
 
 		test("shows create account button", async ({ page }) => {
 			await page.goto("/accounts");
-			await expect(
-				page.getByRole("button", { name: /Create Account/ }),
-			).toBeVisible();
+			await expect(page.getByRole("button", { name: /Create Account/ })).toBeVisible();
 		});
 	});
 

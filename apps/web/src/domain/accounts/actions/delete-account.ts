@@ -34,21 +34,15 @@ async function fetchDetectableTokenBalances(
 	}));
 }
 
-const UUID_RE =
-	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function prepareDeleteAccount(
-	accountId: string,
-): Promise<DeleteAccountPreparation> {
+export async function prepareDeleteAccount(accountId: string): Promise<DeleteAccountPreparation> {
 	if (!UUID_RE.test(accountId)) throw new Error("Invalid account ID");
 	const session = await getSession();
 	if (!session) throw new Error("Not authenticated");
 
 	const account = await db.query.accounts.findFirst({
-		where: and(
-			eq(accounts.id, accountId),
-			eq(accounts.treasuryId, session.treasuryId),
-		),
+		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
 	});
 
 	if (!account) throw new Error("Account not found");
@@ -56,12 +50,9 @@ export async function prepareDeleteAccount(
 
 	const balances = await fetchDetectableTokenBalances(account.walletAddress);
 	const assignedBalance =
-		balances.find((balance) => balance.tokenAddress === account.tokenAddress)
-			?.amount ?? BigInt(0);
+		balances.find((balance) => balance.tokenAddress === account.tokenAddress)?.amount ?? BigInt(0);
 	const unassignedBalances = balances.filter(
-		(balance) =>
-			balance.tokenAddress !== account.tokenAddress &&
-			balance.amount > BigInt(0),
+		(balance) => balance.tokenAddress !== account.tokenAddress && balance.amount > BigInt(0),
 	);
 
 	if (assignedBalance > BigInt(0)) {
@@ -95,10 +86,7 @@ export async function confirmDeleteAccount({
 
 	// Verify ownership
 	const account = await db.query.accounts.findFirst({
-		where: and(
-			eq(accounts.id, accountId),
-			eq(accounts.treasuryId, session.treasuryId),
-		),
+		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
 	});
 
 	if (!account) return { error: "Account not found" };
@@ -107,16 +95,14 @@ export async function confirmDeleteAccount({
 	// Check balances directly instead of calling prepareDeleteAccount (avoids redundant DB queries)
 	const balances = await fetchDetectableTokenBalances(account.walletAddress);
 	const assignedBalance =
-		balances.find((b) => b.tokenAddress === account.tokenAddress)?.amount ??
-		BigInt(0);
+		balances.find((b) => b.tokenAddress === account.tokenAddress)?.amount ?? BigInt(0);
 	const unassignedBalances = balances.filter(
 		(b) => b.tokenAddress !== account.tokenAddress && b.amount > BigInt(0),
 	);
 
 	if (assignedBalance > BigInt(0)) {
 		return {
-			error:
-				"Account wallet still holds assigned-token funds. Transfer them before deleting.",
+			error: "Account wallet still holds assigned-token funds. Transfer them before deleting.",
 		};
 	}
 
@@ -128,12 +114,7 @@ export async function confirmDeleteAccount({
 
 	await db
 		.delete(accounts)
-		.where(
-			and(
-				eq(accounts.id, accountId),
-				eq(accounts.treasuryId, session.treasuryId),
-			),
-		);
+		.where(and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)));
 
 	revalidatePath("/dashboard");
 	revalidatePath("/accounts");

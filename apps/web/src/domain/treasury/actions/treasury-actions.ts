@@ -76,9 +76,7 @@ export async function createTreasuryAction(
 	return { success: true, treasuryId: row.id };
 }
 
-export async function updateTreasuryNameAction(
-	formData: FormData,
-): Promise<{ error?: string }> {
+export async function updateTreasuryNameAction(formData: FormData): Promise<{ error?: string }> {
 	const session = await getSession();
 	if (!session) return { error: "Not authenticated" };
 
@@ -89,10 +87,7 @@ export async function updateTreasuryNameAction(
 	}
 	const name = parsed.data.name;
 
-	await db
-		.update(treasuries)
-		.set({ name })
-		.where(eq(treasuries.id, session.treasuryId));
+	await db.update(treasuries).set({ name }).where(eq(treasuries.id, session.treasuryId));
 
 	await createSession({
 		treasuryId: session.treasuryId,

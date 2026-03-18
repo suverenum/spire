@@ -43,12 +43,7 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 					</p>
 				</div>
 				<div className="text-right">
-					<p
-						className={cn(
-							"text-sm font-medium",
-							isSent ? "text-red-600" : "text-green-600",
-						)}
-					>
+					<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
 						{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
 					</p>
 					<p className="text-xs text-gray-400">
@@ -96,32 +91,25 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 			<div className="min-w-0 flex-1">
 				<p className="text-sm font-medium">Swap</p>
 				<p className="truncate text-xs text-gray-500">
-					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} (
-					{tx.tokenOut})
+					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} ({tx.tokenOut})
 				</p>
 			</div>
 			<div className="text-right">
-				<p className="text-sm font-medium text-gray-900">
-					${formatBalance(tx.amountIn, 6)}
-				</p>
+				<p className="text-sm font-medium text-gray-900">${formatBalance(tx.amountIn, 6)}</p>
 				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 			</div>
 		</Link>
 	);
 }
 
-export function DashboardRecentTransactions({
-	transactions,
-}: DashboardRecentTransactionsProps) {
+export function DashboardRecentTransactions({ transactions }: DashboardRecentTransactionsProps) {
 	const recent = transactions.slice(0, 5);
 
 	if (recent.length === 0) {
 		return (
 			<div className="py-12 text-center">
 				<p className="text-gray-500">No transactions yet</p>
-				<p className="mt-1 text-sm text-gray-400">
-					Send or receive a payment to get started.
-				</p>
+				<p className="mt-1 text-sm text-gray-400">Send or receive a payment to get started.</p>
 			</div>
 		);
 	}
@@ -130,10 +118,7 @@ export function DashboardRecentTransactions({
 		<div>
 			<div className="mb-3 flex items-center justify-between">
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
-				<Link
-					href="/transactions"
-					className="text-sm text-gray-500 hover:text-gray-700"
-				>
+				<Link href="/transactions" className="text-sm text-gray-500 hover:text-gray-700">
 					View all &rarr;
 				</Link>
 			</div>

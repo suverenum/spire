@@ -29,8 +29,7 @@ type TaggedPayment = Payment & { accountName: string; accountId: string };
 function makeTx(overrides: Partial<TaggedPayment>): TaggedPayment {
 	return {
 		id: "tx-1",
-		txHash:
-			"0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
+		txHash: "0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
 		from: "0x0000000000000000000000000000000000000099" as `0x${string}`,
 		to: ACCOUNT_A.walletAddress as `0x${string}`,
 		amount: 1000000n,
@@ -122,9 +121,7 @@ describe("groupTransactions", () => {
 
 		const result = groupTransactions(txs, [ACCOUNT_A]);
 		expect(result).toHaveLength(2);
-		expect(result[0].timestamp.getTime()).toBeGreaterThan(
-			result[1].timestamp.getTime(),
-		);
+		expect(result[0].timestamp.getTime()).toBeGreaterThan(result[1].timestamp.getTime());
 	});
 
 	it("returns empty array for empty input", () => {

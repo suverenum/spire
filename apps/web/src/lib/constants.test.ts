@@ -34,12 +34,7 @@ describe("constants", () => {
 	});
 
 	it("has all four supported tokens", () => {
-		expect(Object.keys(SUPPORTED_TOKENS)).toEqual([
-			"AlphaUSD",
-			"BetaUSD",
-			"pathUSD",
-			"ThetaUSD",
-		]);
+		expect(Object.keys(SUPPORTED_TOKENS)).toEqual(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]);
 	});
 
 	it("all tokens have 6 decimals", () => {

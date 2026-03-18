@@ -43,16 +43,12 @@ export function DashboardContent({
 	const [sendOpen, setSendOpen] = useState(false);
 	const [receiveOpen, setReceiveOpen] = useState(false);
 	const [createOpen, setCreateOpen] = useState(false);
-	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(
+	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(null);
+	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(null);
+	const [selectedSendAccount, setSelectedSendAccount] = useState<AccountWithBalance | null>(null);
+	const [selectedReceiveAccount, setSelectedReceiveAccount] = useState<AccountWithBalance | null>(
 		null,
 	);
-	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(
-		null,
-	);
-	const [selectedSendAccount, setSelectedSendAccount] =
-		useState<AccountWithBalance | null>(null);
-	const [selectedReceiveAccount, setSelectedReceiveAccount] =
-		useState<AccountWithBalance | null>(null);
 
 	const { data: rawAccounts = [] } = useQuery({
 		queryKey: CACHE_KEYS.accounts(treasuryId),
@@ -64,8 +60,7 @@ export function DashboardContent({
 		createdAt: new Date(a.createdAt),
 	}));
 
-	const { accounts: accountsWithBalances, totalBalance } =
-		useAllBalances(accounts);
+	const { accounts: accountsWithBalances, totalBalance } = useAllBalances(accounts);
 
 	const { transactions } = useAllTransactions(accounts);
 	const { isConnected } = useMultiAccountWs(accounts);
@@ -92,10 +87,8 @@ export function DashboardContent({
 		setReceiveOpen(true);
 	}
 
-	const sendFromAddress =
-		(selectedSendAccount?.walletAddress as `0x${string}`) ?? tempoAddress;
-	const receiveAddress =
-		(selectedReceiveAccount?.walletAddress as `0x${string}`) ?? tempoAddress;
+	const sendFromAddress = (selectedSendAccount?.walletAddress as `0x${string}`) ?? tempoAddress;
+	const receiveAddress = (selectedReceiveAccount?.walletAddress as `0x${string}`) ?? tempoAddress;
 
 	return (
 		<SessionGuard authenticatedAt={authenticatedAt}>
@@ -104,9 +97,7 @@ export function DashboardContent({
 
 				{!hasAllDefaults && (
 					<Card className="mb-4 border-amber-200 bg-amber-50">
-						<p className="text-sm text-amber-800">
-							Some default accounts failed to set up.
-						</p>
+						<p className="text-sm text-amber-800">Some default accounts failed to set up.</p>
 						<Button
 							variant="outline"
 							size="sm"
@@ -129,9 +120,7 @@ export function DashboardContent({
 
 				<Card className="mb-6">
 					<p className="text-sm text-gray-500">Total Balance</p>
-					<p className="text-3xl font-semibold">
-						${formatBalance(totalBalance, 6)}
-					</p>
+					<p className="text-3xl font-semibold">${formatBalance(totalBalance, 6)}</p>
 				</Card>
 
 				<div className="mb-6 flex gap-3">
@@ -139,20 +128,11 @@ export function DashboardContent({
 						<ArrowUpRight className="h-5 w-5" />
 						Send
 					</Button>
-					<Button
-						onClick={handleReceiveOpen}
-						variant="outline"
-						className="flex-1"
-						size="lg"
-					>
+					<Button onClick={handleReceiveOpen} variant="outline" className="flex-1" size="lg">
 						<ArrowDownLeft className="h-5 w-5" />
 						Receive
 					</Button>
-					<Button
-						onClick={() => setCreateOpen(true)}
-						variant="outline"
-						size="lg"
-					>
+					<Button onClick={() => setCreateOpen(true)} variant="outline" size="lg">
 						<Plus className="h-5 w-5" />
 					</Button>
 				</div>

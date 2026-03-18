@@ -9,15 +9,11 @@ import { formatBalance } from "@/lib/utils";
 export function useAllBalances(accounts: AccountRecord[]) {
 	const queries = useQueries({
 		queries: accounts.map((account) => ({
-			queryKey: CACHE_KEYS.accountBalance(
-				account.walletAddress,
-				account.tokenAddress,
-			),
+			queryKey: CACHE_KEYS.accountBalance(account.walletAddress, account.tokenAddress),
 			queryFn: async () => {
 				const result = await fetchBalancesClient(account.walletAddress);
 				const tokenBalance = result.balances.find(
-					(b) =>
-						b.tokenAddress.toLowerCase() === account.tokenAddress.toLowerCase(),
+					(b) => b.tokenAddress.toLowerCase() === account.tokenAddress.toLowerCase(),
 				);
 				return tokenBalance?.balance ?? 0n;
 			},
@@ -27,21 +23,16 @@ export function useAllBalances(accounts: AccountRecord[]) {
 		})),
 	});
 
-	const accountsWithBalances: AccountWithBalance[] = accounts.map(
-		(account, i) => {
-			const balance = queries[i]?.data ?? 0n;
-			return {
-				...account,
-				balance,
-				balanceFormatted: `$${formatBalance(balance, 6)}`,
-			};
-		},
-	);
+	const accountsWithBalances: AccountWithBalance[] = accounts.map((account, i) => {
+		const balance = queries[i]?.data ?? 0n;
+		return {
+			...account,
+			balance,
+			balanceFormatted: `$${formatBalance(balance, 6)}`,
+		};
+	});
 
-	const totalBalance = accountsWithBalances.reduce(
-		(sum, a) => sum + a.balance,
-		0n,
-	);
+	const totalBalance = accountsWithBalances.reduce((sum, a) => sum + a.balance, 0n);
 
 	const isLoading = queries.some((q) => q.isLoading);
 	const isError = queries.some((q) => q.isError);

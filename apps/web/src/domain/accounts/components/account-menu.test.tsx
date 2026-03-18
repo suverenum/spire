@@ -13,8 +13,7 @@ function makeAccount(isDefault: boolean): AccountWithBalance {
 		name: "Test Account",
 		tokenSymbol: "AlphaUSD",
 		tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
-		walletAddress:
-			"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`,
+		walletAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`,
 		isDefault,
 		createdAt: new Date("2025-01-01"),
 		balance: 1000000n,
@@ -24,37 +23,19 @@ function makeAccount(isDefault: boolean): AccountWithBalance {
 
 describe("AccountMenu", () => {
 	it("renders the menu button", () => {
-		render(
-			<AccountMenu
-				account={makeAccount(false)}
-				onRename={vi.fn()}
-				onDelete={vi.fn()}
-			/>,
-		);
+		render(<AccountMenu account={makeAccount(false)} onRename={vi.fn()} onDelete={vi.fn()} />);
 		expect(screen.getByLabelText("Account actions")).toBeInTheDocument();
 	});
 
 	it("opens menu on click", async () => {
-		render(
-			<AccountMenu
-				account={makeAccount(false)}
-				onRename={vi.fn()}
-				onDelete={vi.fn()}
-			/>,
-		);
+		render(<AccountMenu account={makeAccount(false)} onRename={vi.fn()} onDelete={vi.fn()} />);
 		await userEvent.click(screen.getByLabelText("Account actions"));
 		expect(screen.getByText("Rename")).toBeInTheDocument();
 		expect(screen.getByText("Delete")).toBeInTheDocument();
 	});
 
 	it("hides Delete option for default accounts", async () => {
-		render(
-			<AccountMenu
-				account={makeAccount(true)}
-				onRename={vi.fn()}
-				onDelete={vi.fn()}
-			/>,
-		);
+		render(<AccountMenu account={makeAccount(true)} onRename={vi.fn()} onDelete={vi.fn()} />);
 		await userEvent.click(screen.getByLabelText("Account actions"));
 		expect(screen.getByText("Rename")).toBeInTheDocument();
 		expect(screen.queryByText("Delete")).not.toBeInTheDocument();
@@ -62,13 +43,7 @@ describe("AccountMenu", () => {
 
 	it("calls onRename and closes menu", async () => {
 		const onRename = vi.fn();
-		render(
-			<AccountMenu
-				account={makeAccount(false)}
-				onRename={onRename}
-				onDelete={vi.fn()}
-			/>,
-		);
+		render(<AccountMenu account={makeAccount(false)} onRename={onRename} onDelete={vi.fn()} />);
 		await userEvent.click(screen.getByLabelText("Account actions"));
 		await userEvent.click(screen.getByText("Rename"));
 		expect(onRename).toHaveBeenCalledOnce();
@@ -77,13 +52,7 @@ describe("AccountMenu", () => {
 
 	it("calls onDelete and closes menu", async () => {
 		const onDelete = vi.fn();
-		render(
-			<AccountMenu
-				account={makeAccount(false)}
-				onRename={vi.fn()}
-				onDelete={onDelete}
-			/>,
-		);
+		render(<AccountMenu account={makeAccount(false)} onRename={vi.fn()} onDelete={onDelete} />);
 		await userEvent.click(screen.getByLabelText("Account actions"));
 		await userEvent.click(screen.getByText("Delete"));
 		expect(onDelete).toHaveBeenCalledOnce();
@@ -91,13 +60,7 @@ describe("AccountMenu", () => {
 	});
 
 	it("closes menu when clicking outside overlay", async () => {
-		render(
-			<AccountMenu
-				account={makeAccount(false)}
-				onRename={vi.fn()}
-				onDelete={vi.fn()}
-			/>,
-		);
+		render(<AccountMenu account={makeAccount(false)} onRename={vi.fn()} onDelete={vi.fn()} />);
 		await userEvent.click(screen.getByLabelText("Account actions"));
 		expect(screen.getByText("Rename")).toBeInTheDocument();
 		// Click the overlay

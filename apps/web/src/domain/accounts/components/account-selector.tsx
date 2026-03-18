@@ -47,8 +47,7 @@ export function AccountSelector({
 				</option>
 				{filtered.map((account) => (
 					<option key={account.id} value={account.id}>
-						{account.name} ({account.tokenSymbol}) - $
-						{formatBalance(account.balance, 6)}
+						{account.name} ({account.tokenSymbol}) - ${formatBalance(account.balance, 6)}
 					</option>
 				))}
 			</select>

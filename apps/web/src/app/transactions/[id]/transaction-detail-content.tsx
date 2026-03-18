@@ -34,11 +34,7 @@ function CopyableField({ label, value }: { label: string; value: string }) {
 			<p className="text-sm text-gray-500">{label}</p>
 			<div className="flex items-center gap-1">
 				<code className="text-sm">{truncateAddress(value)}</code>
-				<button
-					type="button"
-					onClick={handleCopy}
-					className="text-gray-400 hover:text-gray-600"
-				>
+				<button type="button" onClick={handleCopy} className="text-gray-400 hover:text-gray-600">
 					<Copy className="h-3 w-3" />
 				</button>
 			</div>
@@ -46,11 +42,7 @@ function CopyableField({ label, value }: { label: string; value: string }) {
 	);
 }
 
-function PaymentDetail({
-	tx,
-}: {
-	tx: GroupedTransaction & { kind: "payment" };
-}) {
+function PaymentDetail({ tx }: { tx: GroupedTransaction & { kind: "payment" } }) {
 	const isSent = tx.direction === "sent";
 	return (
 		<Card>
@@ -69,10 +61,7 @@ function PaymentDetail({
 						${formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 				</div>
-				<CopyableField
-					label={isSent ? "To" : "From"}
-					value={isSent ? tx.to : tx.from}
-				/>
+				<CopyableField label={isSent ? "To" : "From"} value={isSent ? tx.to : tx.from} />
 				{tx.memo && (
 					<div className="flex items-center justify-between py-2">
 						<p className="text-sm text-gray-500">Memo</p>
@@ -93,11 +82,7 @@ function PaymentDetail({
 	);
 }
 
-function InternalTransferDetail({
-	tx,
-}: {
-	tx: GroupedTransaction & { kind: "internalTransfer" };
-}) {
+function InternalTransferDetail({ tx }: { tx: GroupedTransaction & { kind: "internalTransfer" } }) {
 	return (
 		<Card>
 			<div className="divide-y divide-gray-100">
@@ -177,11 +162,7 @@ function SwapDetail({ tx }: { tx: GroupedTransaction & { kind: "swap" } }) {
 				<div className="py-2">
 					<p className="mb-1 text-sm text-gray-500">Transaction Hashes</p>
 					{tx.txHashes.map((hash, i) => (
-						<CopyableField
-							key={hash}
-							label={i === 0 ? "Swap" : "Transfer"}
-							value={hash}
-						/>
+						<CopyableField key={hash} label={i === 0 ? "Swap" : "Transfer"} value={hash} />
 					))}
 				</div>
 			</div>
@@ -209,9 +190,7 @@ export function TransactionDetailContent({
 
 	// Find the grouped transaction by matching any tx hash or exact group ID
 	const tx = transactions.find(
-		(t) =>
-			t.txHashes.some((h) => h === transactionId) ||
-			t.groupId === transactionId,
+		(t) => t.txHashes.some((h) => h === transactionId) || t.groupId === transactionId,
 	);
 
 	return (
@@ -223,9 +202,7 @@ export function TransactionDetailContent({
 				) : tx ? (
 					<>
 						{tx.kind === "payment" && <PaymentDetail tx={tx} />}
-						{tx.kind === "internalTransfer" && (
-							<InternalTransferDetail tx={tx} />
-						)}
+						{tx.kind === "internalTransfer" && <InternalTransferDetail tx={tx} />}
 						{tx.kind === "swap" && <SwapDetail tx={tx} />}
 					</>
 				) : (

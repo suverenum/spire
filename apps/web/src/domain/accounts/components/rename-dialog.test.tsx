@@ -35,41 +35,20 @@ const account: AccountWithBalance = {
 
 describe("RenameDialog", () => {
 	it("renders with current account name", () => {
-		render(
-			<RenameDialog
-				open
-				onClose={vi.fn()}
-				account={account}
-				onSuccess={vi.fn()}
-			/>,
-		);
+		render(<RenameDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
 		expect(screen.getByLabelText("New Name")).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Rename" })).toBeInTheDocument();
 	});
 
 	it("pre-fills account name in input", () => {
-		render(
-			<RenameDialog
-				open
-				onClose={vi.fn()}
-				account={account}
-				onSuccess={vi.fn()}
-			/>,
-		);
+		render(<RenameDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
 		const input = screen.getByLabelText("New Name") as HTMLInputElement;
 		expect(input.value).toBe("Old Name");
 	});
 
 	it("calls rename action on valid submit", async () => {
 		mockRenameAction.mockResolvedValue({ success: true });
-		render(
-			<RenameDialog
-				open
-				onClose={vi.fn()}
-				account={account}
-				onSuccess={vi.fn()}
-			/>,
-		);
+		render(<RenameDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
 		const input = screen.getByLabelText("New Name");
 		await userEvent.clear(input);
 		await userEvent.type(input, "New Name");
@@ -81,14 +60,7 @@ describe("RenameDialog", () => {
 
 	it("shows error from action result", async () => {
 		mockRenameAction.mockResolvedValue({ error: "Name already taken" });
-		render(
-			<RenameDialog
-				open
-				onClose={vi.fn()}
-				account={account}
-				onSuccess={vi.fn()}
-			/>,
-		);
+		render(<RenameDialog open onClose={vi.fn()} account={account} onSuccess={vi.fn()} />);
 		const input = screen.getByLabelText("New Name");
 		await userEvent.clear(input);
 		await userEvent.type(input, "Duplicate");
@@ -102,14 +74,7 @@ describe("RenameDialog", () => {
 		mockRenameAction.mockResolvedValue({ success: true });
 		const onClose = vi.fn();
 		const onSuccess = vi.fn();
-		render(
-			<RenameDialog
-				open
-				onClose={onClose}
-				account={account}
-				onSuccess={onSuccess}
-			/>,
-		);
+		render(<RenameDialog open onClose={onClose} account={account} onSuccess={onSuccess} />);
 		const input = screen.getByLabelText("New Name");
 		await userEvent.clear(input);
 		await userEvent.type(input, "New Name");
@@ -121,14 +86,7 @@ describe("RenameDialog", () => {
 	});
 
 	it("does not render interactive content when account is null", () => {
-		render(
-			<RenameDialog
-				open
-				onClose={vi.fn()}
-				account={null}
-				onSuccess={vi.fn()}
-			/>,
-		);
+		render(<RenameDialog open onClose={vi.fn()} account={null} onSuccess={vi.fn()} />);
 		// Still renders the sheet but input will be empty
 		expect(screen.getByLabelText("New Name")).toBeInTheDocument();
 	});

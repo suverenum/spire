@@ -30,12 +30,8 @@ export function AccountsContent({
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const [createOpen, setCreateOpen] = useState(false);
-	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(
-		null,
-	);
-	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(
-		null,
-	);
+	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(null);
+	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(null);
 
 	const { data: rawAccounts = [] } = useQuery({
 		queryKey: CACHE_KEYS.accounts(treasuryId),

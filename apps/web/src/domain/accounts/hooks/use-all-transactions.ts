@@ -3,11 +3,7 @@
 import { useQueries } from "@tanstack/react-query";
 import { fetchTransactionsClient } from "@/domain/payments/hooks/use-transactions";
 import { CACHE_KEYS } from "@/lib/constants";
-import type {
-	AccountRecord,
-	GroupedTransaction,
-	Payment,
-} from "@/lib/tempo/types";
+import type { AccountRecord, GroupedTransaction, Payment } from "@/lib/tempo/types";
 import { groupTransactions } from "../utils/group-transactions";
 
 export function useAllTransactions(accounts: AccountRecord[]) {
@@ -31,10 +27,7 @@ export function useAllTransactions(accounts: AccountRecord[]) {
 		})),
 	);
 
-	const grouped: GroupedTransaction[] = groupTransactions(
-		rawTransactions,
-		accounts,
-	);
+	const grouped: GroupedTransaction[] = groupTransactions(rawTransactions, accounts);
 
 	return {
 		transactions: grouped,

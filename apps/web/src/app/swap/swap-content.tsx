@@ -15,11 +15,7 @@ interface SwapContentProps {
 	treasuryId: string;
 }
 
-export function SwapContent({
-	treasuryName,
-	authenticatedAt,
-	treasuryId,
-}: SwapContentProps) {
+export function SwapContent({ treasuryName, authenticatedAt, treasuryId }: SwapContentProps) {
 	const { data: rawAccounts = [] } = useQuery({
 		queryKey: CACHE_KEYS.accounts(treasuryId),
 		queryFn: () => getAccounts(),

@@ -6,9 +6,7 @@ import { db } from "@/db";
 import { accounts } from "@/db/schema";
 import { getSession } from "@/lib/session";
 
-export async function renameAccountAction(
-	formData: FormData,
-): Promise<{ error?: string }> {
+export async function renameAccountAction(formData: FormData): Promise<{ error?: string }> {
 	const session = await getSession();
 	if (!session) return { error: "Not authenticated" };
 
@@ -17,9 +15,7 @@ export async function renameAccountAction(
 
 	if (
 		!accountId ||
-		!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-			accountId,
-		)
+		!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(accountId)
 	) {
 		return { error: "Invalid account ID" };
 	}
@@ -28,10 +24,7 @@ export async function renameAccountAction(
 	}
 
 	const account = await db.query.accounts.findFirst({
-		where: and(
-			eq(accounts.id, accountId),
-			eq(accounts.treasuryId, session.treasuryId),
-		),
+		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
 	});
 
 	if (!account) return { error: "Account not found" };
@@ -40,12 +33,7 @@ export async function renameAccountAction(
 		await db
 			.update(accounts)
 			.set({ name })
-			.where(
-				and(
-					eq(accounts.id, accountId),
-					eq(accounts.treasuryId, session.treasuryId),
-				),
-			);
+			.where(and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)));
 	} catch (err: unknown) {
 		const pgCode =
 			err != null && typeof err === "object" && "code" in err

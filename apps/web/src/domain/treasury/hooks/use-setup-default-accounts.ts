@@ -109,9 +109,7 @@ export function useRetryDefaultAccountSetup() {
 				existingAccounts.filter((a) => a.isDefault).map((a) => a.tokenSymbol),
 			);
 
-			const missing = DEFAULT_ACCOUNTS.filter(
-				(d) => !existingDefaults.has(d.tokenSymbol),
-			);
+			const missing = DEFAULT_ACCOUNTS.filter((d) => !existingDefaults.has(d.tokenSymbol));
 
 			if (missing.length === 0) return [];
 

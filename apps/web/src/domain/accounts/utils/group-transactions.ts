@@ -33,10 +33,7 @@ export function groupTransactions(
 
 	// First pass: detect swap-related transactions (involving DEX address)
 	const swapTxHashes = new Set<string>();
-	const swapsByKey = new Map<
-		string,
-		{ dexTx: TaggedPayment; sourceAccount: AccountRecord }
-	>();
+	const swapsByKey = new Map<string, { dexTx: TaggedPayment; sourceAccount: AccountRecord }>();
 
 	for (const tx of transactions) {
 		const toAddr = tx.to.toLowerCase();
@@ -64,16 +61,9 @@ export function groupTransactions(
 		const fromAccount = walletToAccount.get(fromAddr);
 		const toAccount = walletToAccount.get(toAddr);
 
-		if (
-			fromAccount &&
-			toAccount &&
-			fromAccount.tokenSymbol !== toAccount.tokenSymbol
-		) {
+		if (fromAccount && toAccount && fromAccount.tokenSymbol !== toAccount.tokenSymbol) {
 			for (const [key, _swap] of swapsByKey) {
-				if (
-					key.startsWith(`swap-source-${fromAccount.id}-`) &&
-					!swapFollowUps.has(key)
-				) {
+				if (key.startsWith(`swap-source-${fromAccount.id}-`) && !swapFollowUps.has(key)) {
 					swapFollowUps.set(key, tx);
 					swapTxHashes.add(tx.txHash);
 					break;
@@ -85,9 +75,7 @@ export function groupTransactions(
 	// Build swap grouped entries
 	for (const [key, swap] of swapsByKey) {
 		const followUp = swapFollowUps.get(key);
-		const destAccount = followUp
-			? walletToAccount.get(followUp.to.toLowerCase())
-			: undefined;
+		const destAccount = followUp ? walletToAccount.get(followUp.to.toLowerCase()) : undefined;
 
 		const txHashes: `0x${string}`[] = [swap.dexTx.txHash];
 		if (followUp) txHashes.push(followUp.txHash);
@@ -181,7 +169,5 @@ export function groupTransactions(
 		}
 	}
 
-	return Array.from(grouped.values()).sort(
-		(a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-	);
+	return Array.from(grouped.values()).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 }

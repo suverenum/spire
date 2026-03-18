@@ -55,9 +55,7 @@ export function AccountDetailContent({
 	const account = accountsWithBalances.find((a) => a.id === accountId);
 
 	// Filter transactions to only those involving this account
-	const scopedTransactions = transactions.filter((tx) =>
-		tx.visibleAccountIds.includes(accountId),
-	);
+	const scopedTransactions = transactions.filter((tx) => tx.visibleAccountIds.includes(accountId));
 
 	// Same-token accounts for transfer eligibility
 	const sameTokenAccounts = account
@@ -131,9 +129,7 @@ export function AccountDetailContent({
 					<Card>
 						<p className="mb-1 text-sm text-gray-500">Wallet Address</p>
 						<div className="flex items-center gap-2">
-							<code className="min-w-0 flex-1 truncate text-xs">
-								{account.walletAddress}
-							</code>
+							<code className="min-w-0 flex-1 truncate text-xs">{account.walletAddress}</code>
 							<button
 								type="button"
 								onClick={handleCopy}
@@ -162,11 +158,7 @@ export function AccountDetailContent({
 
 				<DashboardRecentTransactions transactions={scopedTransactions} />
 
-				<Sheet
-					open={transferOpen}
-					onClose={() => setTransferOpen(false)}
-					title="Internal Transfer"
-				>
+				<Sheet open={transferOpen} onClose={() => setTransferOpen(false)} title="Internal Transfer">
 					<div className="space-y-4">
 						<div>
 							<p className="text-sm text-gray-500">
@@ -183,10 +175,7 @@ export function AccountDetailContent({
 							excludeAccountId={accountId}
 						/>
 						<div>
-							<label
-								htmlFor="transfer-amount"
-								className="mb-1 block text-sm font-medium"
-							>
+							<label htmlFor="transfer-amount" className="mb-1 block text-sm font-medium">
 								Amount
 							</label>
 							<Input
@@ -198,9 +187,7 @@ export function AccountDetailContent({
 								onChange={(e) => setTransferAmount(e.target.value)}
 							/>
 						</div>
-						{transferError && (
-							<p className="text-sm text-red-600">{transferError}</p>
-						)}
+						{transferError && <p className="text-sm text-red-600">{transferError}</p>}
 						<Button
 							onClick={handleTransfer}
 							disabled={transferMutation.isPending}

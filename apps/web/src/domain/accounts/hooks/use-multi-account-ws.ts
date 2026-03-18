@@ -7,8 +7,7 @@ import { CACHE_KEYS, SUPPORTED_TOKENS, TEMPO_WS_URL } from "@/lib/constants";
 import { AnalyticsEvents, trackEvent } from "@/lib/posthog";
 import type { AccountRecord } from "@/lib/tempo/types";
 
-const TRANSFER_TOPIC =
-	"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const POLLING_INTERVAL = 15_000;
 const TOAST_DEBOUNCE_MS = 2_000;
 
@@ -41,11 +40,7 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 	const queryClient = useQueryClient();
 	const wsRef = useRef<WebSocket | null>(null);
 	const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-	const isConnected = useSyncExternalStore(
-		subscribe,
-		getSnapshot,
-		getServerSnapshot,
-	);
+	const isConnected = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
 	// Stabilize the accounts dependency to avoid reconnect loops on every render
 	const accountsRef = useRef(accounts);
@@ -69,10 +64,7 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 		const invalidateData = () => {
 			for (const account of accountsRef.current) {
 				void queryClient.invalidateQueries({
-					queryKey: CACHE_KEYS.accountBalance(
-						account.walletAddress,
-						account.tokenAddress,
-					),
+					queryKey: CACHE_KEYS.accountBalance(account.walletAddress, account.tokenAddress),
 				});
 				void queryClient.invalidateQueries({
 					queryKey: CACHE_KEYS.transactions(account.walletAddress),
@@ -101,9 +93,7 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 		};
 
 		const walletAddresses = currentAccounts.map((a) => a.walletAddress);
-		const tokenAddresses = Object.values(SUPPORTED_TOKENS).map(
-			(t) => t.address,
-		);
+		const tokenAddresses = Object.values(SUPPORTED_TOKENS).map((t) => t.address);
 
 		try {
 			const ws = new WebSocket(TEMPO_WS_URL);

@@ -53,9 +53,7 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 	const navContent = (
 		<>
 			<div className="mb-8 px-2">
-				<h2 className="truncate text-lg font-semibold text-gray-900">
-					{treasuryName}
-				</h2>
+				<h2 className="truncate text-lg font-semibold text-gray-900">{treasuryName}</h2>
 			</div>
 
 			<nav className="flex-1 space-y-1">

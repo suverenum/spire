@@ -33,16 +33,10 @@ export async function prepareInternalTransfer({
 
 	const [fromAccount, toAccount] = await Promise.all([
 		db.query.accounts.findFirst({
-			where: and(
-				eq(accounts.id, fromAccountId),
-				eq(accounts.treasuryId, session.treasuryId),
-			),
+			where: and(eq(accounts.id, fromAccountId), eq(accounts.treasuryId, session.treasuryId)),
 		}),
 		db.query.accounts.findFirst({
-			where: and(
-				eq(accounts.id, toAccountId),
-				eq(accounts.treasuryId, session.treasuryId),
-			),
+			where: and(eq(accounts.id, toAccountId), eq(accounts.treasuryId, session.treasuryId)),
 		}),
 	]);
 

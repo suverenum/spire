@@ -141,9 +141,7 @@ describe("SwapForm", () => {
 		await userEvent.selectOptions(screen.getByLabelText("To"), "2");
 		await userEvent.type(screen.getByLabelText("Amount"), "999");
 		await userEvent.click(screen.getByRole("button", { name: "Swap" }));
-		expect(
-			screen.getByText("Amount exceeds available balance"),
-		).toBeInTheDocument();
+		expect(screen.getByText("Amount exceeds available balance")).toBeInTheDocument();
 	});
 
 	it("resets To account when From changes to same token", async () => {

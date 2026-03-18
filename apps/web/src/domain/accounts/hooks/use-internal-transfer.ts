@@ -16,11 +16,7 @@ export function useInternalTransfer() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({
-			fromAccountId,
-			toAccountId,
-			amount: _amount,
-		}: TransferParams) => {
+		mutationFn: async ({ fromAccountId, toAccountId, amount: _amount }: TransferParams) => {
 			// Server-side ownership + same-token validation
 			const result = await prepareInternalTransfer({
 				fromAccountId,

@@ -14,15 +14,9 @@ interface CreateAccountFormProps {
 	treasuryId: string;
 }
 
-export function CreateAccountForm({
-	open,
-	onClose,
-	treasuryId,
-}: CreateAccountFormProps) {
+export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFormProps) {
 	const [name, setName] = useState("");
-	const [tokenSymbol, setTokenSymbol] = useState<string>(
-		ACCOUNT_TOKENS[0].name,
-	);
+	const [tokenSymbol, setTokenSymbol] = useState<string>(ACCOUNT_TOKENS[0].name);
 	const [error, setError] = useState("");
 
 	const createMutation = useCreateAccount();
@@ -59,10 +53,7 @@ export function CreateAccountForm({
 		<Sheet open={open} onClose={onClose} title="Create Account">
 			<div className="space-y-4">
 				<div>
-					<label
-						htmlFor="account-name"
-						className="mb-1 block text-sm font-medium"
-					>
+					<label htmlFor="account-name" className="mb-1 block text-sm font-medium">
 						Account Name
 					</label>
 					<Input
@@ -74,10 +65,7 @@ export function CreateAccountForm({
 				</div>
 
 				<div>
-					<label
-						htmlFor="account-token"
-						className="mb-1 block text-sm font-medium"
-					>
+					<label htmlFor="account-token" className="mb-1 block text-sm font-medium">
 						Token
 					</label>
 					<select

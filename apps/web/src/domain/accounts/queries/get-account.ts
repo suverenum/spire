@@ -10,10 +10,7 @@ export async function getAccount(accountId: string) {
 	if (!session) throw new Error("Not authenticated");
 
 	const account = await db.query.accounts.findFirst({
-		where: and(
-			eq(accounts.id, accountId),
-			eq(accounts.treasuryId, session.treasuryId),
-		),
+		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
 	});
 
 	if (!account) throw new Error("Account not found");

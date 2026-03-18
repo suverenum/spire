@@ -15,12 +15,7 @@ interface RenameDialogProps {
 	onSuccess: () => void;
 }
 
-export function RenameDialog({
-	open,
-	onClose,
-	account,
-	onSuccess,
-}: RenameDialogProps) {
+export function RenameDialog({ open, onClose, account, onSuccess }: RenameDialogProps) {
 	const [name, setName] = useState(account?.name ?? "");
 	const [error, setError] = useState("");
 	const [isPending, setIsPending] = useState(false);
@@ -66,27 +61,15 @@ export function RenameDialog({
 		<Sheet open={open} onClose={onClose} title="Rename Account">
 			<div className="space-y-4">
 				<div>
-					<label
-						htmlFor="rename-name"
-						className="mb-1 block text-sm font-medium"
-					>
+					<label htmlFor="rename-name" className="mb-1 block text-sm font-medium">
 						New Name
 					</label>
-					<Input
-						id="rename-name"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-					/>
+					<Input id="rename-name" value={name} onChange={(e) => setName(e.target.value)} />
 				</div>
 
 				{error && <p className="text-sm text-red-600">{error}</p>}
 
-				<Button
-					onClick={handleSubmit}
-					disabled={isPending}
-					className="w-full"
-					size="lg"
-				>
+				<Button onClick={handleSubmit} disabled={isPending} className="w-full" size="lg">
 					{isPending ? "Renaming..." : "Rename"}
 				</Button>
 			</div>

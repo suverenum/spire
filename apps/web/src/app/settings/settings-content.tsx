@@ -14,10 +14,7 @@ interface SettingsContentProps {
 	authenticatedAt: number;
 }
 
-export function SettingsContent({
-	treasuryName,
-	authenticatedAt,
-}: SettingsContentProps) {
+export function SettingsContent({ treasuryName, authenticatedAt }: SettingsContentProps) {
 	const [name, setName] = useState(treasuryName);
 	const [isPending, startTransition] = useTransition();
 
@@ -41,15 +38,8 @@ export function SettingsContent({
 				<Card>
 					<h2 className="mb-4 text-lg font-semibold">Treasury Name</h2>
 					<div className="flex gap-3">
-						<Input
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							maxLength={100}
-						/>
-						<Button
-							onClick={handleSave}
-							disabled={isPending || name === treasuryName}
-						>
+						<Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
+						<Button onClick={handleSave} disabled={isPending || name === treasuryName}>
 							{isPending ? "Saving..." : "Save"}
 						</Button>
 					</div>
