@@ -4,7 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev --turbopack",
-		"build": "drizzle-kit migrate && next build",
+		"build": "next build",
+		"build:deploy": "drizzle-kit migrate && next build",
 		"start": "next start",
 		"lint": "biome check .",
 		"typecheck": "tsc --noEmit",
