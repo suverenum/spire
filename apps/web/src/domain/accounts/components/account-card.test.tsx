@@ -12,6 +12,10 @@ vi.mock("next/link", () => ({
 	),
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+	useQuery: () => ({ data: null }),
+}));
+
 vi.mock("./account-menu", () => ({
 	AccountMenu: ({ onRename, onDelete }: { onRename: () => void; onDelete: () => void }) => (
 		<div data-testid="account-menu">

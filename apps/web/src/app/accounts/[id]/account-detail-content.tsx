@@ -1,9 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeftRight, Copy } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeftRight, Copy, Shield, Users } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
+import { useConfig } from "wagmi";
+import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { DashboardRecentTransactions } from "@/app/dashboard/dashboard-recent-transactions";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
@@ -17,9 +19,30 @@ import { useAllTransactions } from "@/domain/accounts/hooks/use-all-transactions
 import { useInternalTransfer } from "@/domain/accounts/hooks/use-internal-transfer";
 import { getAccounts } from "@/domain/accounts/queries/get-accounts";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
+import { addMultisigConfirmation } from "@/domain/multisig/actions/sync-multisig-state";
+import { PendingTransactions } from "@/domain/multisig/components/pending-transactions";
+import { getMultisigConfig } from "@/domain/multisig/queries/get-multisig-config";
+import { getPendingTransactions } from "@/domain/multisig/queries/get-pending-transactions";
 import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord } from "@/lib/tempo/types";
-import { formatBalance } from "@/lib/utils";
+import { formatBalance, truncateAddress } from "@/lib/utils";
+
+const MultisigAbi = [
+	{
+		type: "function",
+		name: "confirmTransaction",
+		inputs: [{ name: "txId", type: "uint256" }],
+		outputs: [],
+		stateMutability: "nonpayable",
+	},
+	{
+		type: "function",
+		name: "executeTransaction",
+		inputs: [{ name: "txId", type: "uint256" }],
+		outputs: [],
+		stateMutability: "nonpayable",
+	},
+] as const;
 
 interface AccountDetailContentProps {
 	accountId: string;
@@ -34,6 +57,8 @@ export function AccountDetailContent({
 	authenticatedAt,
 	treasuryId,
 }: AccountDetailContentProps) {
+	const wagmiConfig = useConfig();
+	const queryClient = useQueryClient();
 	const [transferOpen, setTransferOpen] = useState(false);
 	const [transferToId, setTransferToId] = useState("");
 	const [transferAmount, setTransferAmount] = useState("");
@@ -53,6 +78,81 @@ export function AccountDetailContent({
 	const { transactions } = useAllTransactions(accounts);
 
 	const account = accountsWithBalances.find((a) => a.id === accountId);
+	const isMultisig = account?.walletType === "multisig";
+
+	const { data: multisigConfig } = useQuery({
+		queryKey: CACHE_KEYS.multisigConfig(accountId),
+		queryFn: () => getMultisigConfig(accountId),
+		enabled: isMultisig,
+	});
+
+	const { data: pendingTxs = [] } = useQuery({
+		queryKey: CACHE_KEYS.pendingTransactions(accountId),
+		queryFn: () => getPendingTransactions(accountId),
+		enabled: isMultisig,
+	});
+
+	async function handleConfirm(onChainTxId: string) {
+		if (!account) return;
+		try {
+			const publicClient = getPublicClient(wagmiConfig);
+			const walletClient = await getWalletClient(wagmiConfig);
+			if (!publicClient || !walletClient) {
+				toast("Wallet not connected", "error");
+				return;
+			}
+			const hash = await walletClient.writeContract({
+				account: walletClient.account!,
+				chain: walletClient.chain,
+				address: account.walletAddress as `0x${string}`,
+				abi: MultisigAbi,
+				functionName: "confirmTransaction",
+				args: [BigInt(onChainTxId)],
+			});
+			await publicClient.waitForTransactionReceipt({ hash });
+			// Sync confirmation to DB
+			const pendingTx = pendingTxs.find((tx) => tx.onChainTxId === onChainTxId);
+			if (pendingTx && walletClient.account) {
+				await addMultisigConfirmation({
+					multisigTransactionId: pendingTx.id,
+					signerAddress: walletClient.account.address,
+				});
+			}
+			toast("Transaction confirmed", "success");
+			void queryClient.invalidateQueries({
+				queryKey: CACHE_KEYS.pendingTransactions(accountId),
+			});
+		} catch (err) {
+			toast(err instanceof Error ? err.message : "Confirmation failed", "error");
+		}
+	}
+
+	async function handleExecute(onChainTxId: string) {
+		if (!account) return;
+		try {
+			const publicClient = getPublicClient(wagmiConfig);
+			const walletClient = await getWalletClient(wagmiConfig);
+			if (!publicClient || !walletClient) {
+				toast("Wallet not connected", "error");
+				return;
+			}
+			const hash = await walletClient.writeContract({
+				account: walletClient.account!,
+				chain: walletClient.chain,
+				address: account.walletAddress as `0x${string}`,
+				abi: MultisigAbi,
+				functionName: "executeTransaction",
+				args: [BigInt(onChainTxId)],
+			});
+			await publicClient.waitForTransactionReceipt({ hash });
+			toast("Transaction executed", "success");
+			void queryClient.invalidateQueries({
+				queryKey: CACHE_KEYS.pendingTransactions(accountId),
+			});
+		} catch (err) {
+			toast(err instanceof Error ? err.message : "Execution failed", "error");
+		}
+	}
 
 	// Filter transactions to only those involving this account
 	const scopedTransactions = transactions.filter((tx) => tx.visibleAccountIds.includes(accountId));
@@ -146,6 +246,59 @@ export function AccountDetailContent({
 						<QRCodeSVG value={account.walletAddress} size={160} level="M" />
 					</div>
 				</div>
+
+				{isMultisig && multisigConfig && (
+					<div className="mb-6 space-y-4">
+						{/* Signers */}
+						<Card>
+							<div className="mb-2 flex items-center gap-2">
+								<Users className="h-4 w-4 text-gray-500" />
+								<p className="text-sm font-medium">Signers ({multisigConfig.owners.length})</p>
+							</div>
+							<div className="space-y-1">
+								{multisigConfig.owners.map((owner) => (
+									<p key={owner} className="font-mono text-xs text-gray-600">
+										{truncateAddress(owner)}
+									</p>
+								))}
+							</div>
+						</Card>
+
+						{/* Approval Policy */}
+						<Card>
+							<div className="mb-2 flex items-center gap-2">
+								<Shield className="h-4 w-4 text-blue-600" />
+								<p className="text-sm font-medium">Approval Policy</p>
+							</div>
+							<div className="space-y-1 text-sm text-gray-600">
+								{multisigConfig.tiersJson.map((tier) => (
+									<p key={tier.maxValue}>
+										Up to ${(Number(tier.maxValue) / 1e6).toLocaleString()}:{" "}
+										{tier.requiredConfirmations}/{multisigConfig.owners.length} approvals
+									</p>
+								))}
+								<p>
+									Above all tiers: {multisigConfig.defaultConfirmations}/
+									{multisigConfig.owners.length} approvals
+								</p>
+								{multisigConfig.allowlistEnabled && (
+									<p className="text-amber-600">Only allowlisted addresses can receive</p>
+								)}
+							</div>
+						</Card>
+
+						{/* Pending Transactions */}
+						<div>
+							<h2 className="mb-2 text-lg font-semibold">Pending Approvals</h2>
+							<PendingTransactions
+								transactions={pendingTxs}
+								walletAddress={account.walletAddress}
+								onConfirm={handleConfirm}
+								onExecute={handleExecute}
+							/>
+						</div>
+					</div>
+				)}
 
 				{sameTokenAccounts.length > 0 && (
 					<div className="mb-6">

@@ -7,6 +7,24 @@ const mockMutate = vi.fn();
 const mockUseSendPayment = vi.fn();
 const mockUseBalances = vi.fn();
 
+vi.mock("wagmi", () => ({
+	useConfig: () => ({}),
+}));
+
+vi.mock("wagmi/actions", () => ({
+	getPublicClient: () => null,
+	getWalletClient: () => Promise.resolve(null),
+}));
+
+vi.mock("@/domain/multisig/queries/get-multisig-config", () => ({
+	getMultisigConfig: () => Promise.resolve(null),
+}));
+
+vi.mock("@/domain/multisig/actions/sync-multisig-state", () => ({
+	upsertMultisigTransaction: () => Promise.resolve({ id: "mock-id" }),
+	addMultisigConfirmation: () => Promise.resolve(),
+}));
+
 vi.mock("../hooks/use-send-payment", () => ({
 	useSendPayment: (...args: unknown[]) => mockUseSendPayment(...args),
 }));

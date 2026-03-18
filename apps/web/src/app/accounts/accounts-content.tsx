@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SidebarLayout } from "@/components/sidebar-layout";
@@ -13,6 +13,7 @@ import { RenameDialog } from "@/domain/accounts/components/rename-dialog";
 import { useAllBalances } from "@/domain/accounts/hooks/use-all-balances";
 import { getAccounts } from "@/domain/accounts/queries/get-accounts";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
+import { CreateMultisigForm } from "@/domain/multisig/components/create-multisig-form";
 import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord, AccountWithBalance } from "@/lib/tempo/types";
 
@@ -20,16 +21,19 @@ interface AccountsContentProps {
 	treasuryName: string;
 	authenticatedAt: number;
 	treasuryId: string;
+	tempoAddress: string;
 }
 
 export function AccountsContent({
 	treasuryName,
 	authenticatedAt,
 	treasuryId,
+	tempoAddress,
 }: AccountsContentProps) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const [createOpen, setCreateOpen] = useState(false);
+	const [multisigOpen, setMultisigOpen] = useState(false);
 	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(null);
 	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(null);
 
@@ -50,10 +54,16 @@ export function AccountsContent({
 			<SidebarLayout treasuryName={treasuryName}>
 				<div className="mb-4 flex items-center justify-between">
 					<h1 className="text-2xl font-semibold">Accounts</h1>
-					<Button onClick={() => setCreateOpen(true)}>
-						<Plus className="h-4 w-4" />
-						Create Account
-					</Button>
+					<div className="flex gap-2">
+						<Button variant="outline" onClick={() => setMultisigOpen(true)}>
+							<Shield className="h-4 w-4" />
+							Create Multisig
+						</Button>
+						<Button onClick={() => setCreateOpen(true)}>
+							<Plus className="h-4 w-4" />
+							Create Account
+						</Button>
+					</div>
 				</div>
 
 				<AccountGrid
@@ -66,6 +76,12 @@ export function AccountsContent({
 					open={createOpen}
 					onClose={() => setCreateOpen(false)}
 					treasuryId={treasuryId}
+				/>
+				<CreateMultisigForm
+					open={multisigOpen}
+					onClose={() => setMultisigOpen(false)}
+					treasuryId={treasuryId}
+					adminAddress={tempoAddress}
 				/>
 				<RenameDialog
 					open={!!renameAccount}
