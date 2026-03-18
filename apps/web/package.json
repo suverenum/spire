@@ -20,7 +20,7 @@
 		"@goldhord/ui": "workspace:*",
 		"@goldhord/utils": "workspace:*",
 		"@neondatabase/serverless": "^1.0.2",
-		"@sentry/nextjs": "^10.43.0",
+		"@sentry/nextjs": "^10",
 		"@serwist/next": "^9.5.7",
 		"@tanstack/react-query": "^5.90.21",
 		"@tanstack/react-query-persist-client": "^5.90.24",

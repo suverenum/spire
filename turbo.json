@@ -28,7 +28,9 @@
 				"PGDATABASE",
 				"PGPASSWORD",
 				"PGUSER",
-				"NEON_PROJECT_ID"
+				"NEON_PROJECT_ID",
+				"SENTRY_AUTH_TOKEN",
+				"NEXT_PUBLIC_SENTRY_DSN"
 			]
 		},
 		"test": {},

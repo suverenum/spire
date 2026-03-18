@@ -55,8 +55,15 @@ const withSW = withSerwist({
 });
 
 export default withSentryConfig(withSW(nextConfig), {
-	org: process.env.SENTRY_ORG,
-	project: process.env.SENTRY_PROJECT,
+	org: "suverenum",
+	project: "goldhord",
 	silent: !process.env.CI,
+	widenClientFileUpload: true,
 	tunnelRoute: "/monitoring",
+	webpack: {
+		automaticVercelMonitors: true,
+		treeshake: {
+			removeDebugLogging: true,
+		},
+	},
 });

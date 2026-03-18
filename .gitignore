@@ -38,3 +38,6 @@ Thumbs.db
 
 # Turborepo
 .turbo
+
+# Sentry
+.env.sentry-build-plugin
