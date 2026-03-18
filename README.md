@@ -28,7 +28,7 @@ No banking license required. Trust is provided by the chain.
 | Frontend | Next.js 16, React 19, TypeScript |
 | Database | Neon serverless Postgres, Drizzle ORM |
 | Auth | WebAuthn passkeys (Tempo Account Keychain) |
-| State | TanStack Query, Jotai |
+| State | TanStack Query |
 | Styling | Tailwind CSS v4 |
 | Monorepo | Bun workspaces, Turborepo |
 | Linting | Biome |

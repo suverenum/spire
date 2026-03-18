@@ -15,7 +15,7 @@ Goldhord (goldhord.xyz) is a corporate treasury management platform for large en
 - **Language:** TypeScript (strict mode)
 - **Monorepo:** Bun workspaces + Turborepo
 - **Database:** Neon serverless Postgres + Drizzle ORM
-- **State:** TanStack Query (server state) + Jotai (client state)
+- **State:** TanStack Query (server state) + React useState (local UI state)
 - **Auth:** WebAuthn passkeys via Tempo's Account Keychain
 - **Wallet:** Wagmi + Viem with Tempo support
 - **Styling:** Tailwind CSS v4 + custom UI components
