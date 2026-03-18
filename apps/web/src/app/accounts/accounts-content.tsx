@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export function AccountsContent({
 	authenticatedAt,
 	treasuryId,
 }: AccountsContentProps) {
+	const router = useRouter();
 	const queryClient = useQueryClient();
 	const [createOpen, setCreateOpen] = useState(false);
 	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(
@@ -88,8 +90,9 @@ export function AccountsContent({
 							queryKey: CACHE_KEYS.accounts(treasuryId),
 						});
 					}}
-					onTransferBalance={() => {
+					onTransferBalance={(acct) => {
 						setDeleteAccount(null);
+						router.push(`/accounts/${acct.id}`);
 					}}
 				/>
 			</SidebarLayout>

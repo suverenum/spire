@@ -10,6 +10,7 @@ import type { AccountRecord } from "@/lib/tempo/types";
 const TRANSFER_TOPIC =
 	"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const POLLING_INTERVAL = 15_000;
+const TOAST_DEBOUNCE_MS = 2_000;
 
 let wsConnected = false;
 const listeners = new Set<() => void>();
@@ -63,6 +64,7 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 
 		const currentAccounts = accountsRef.current;
 		let cleaned = false;
+		let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 		const invalidateData = () => {
 			for (const account of accountsRef.current) {
@@ -76,6 +78,14 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 					queryKey: CACHE_KEYS.transactions(account.walletAddress),
 				});
 			}
+		};
+
+		const debouncedToast = () => {
+			if (toastTimer) return;
+			toast("Transfer detected!", "success");
+			toastTimer = setTimeout(() => {
+				toastTimer = null;
+			}, TOAST_DEBOUNCE_MS);
 		};
 
 		const startPolling = () => {
@@ -145,8 +155,16 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 					const data = JSON.parse(event.data);
 					if (data.method === "eth_subscription") {
 						invalidateData();
-						toast("Transfer detected!", "success");
-						trackEvent(AnalyticsEvents.PAYMENT_RECEIVED);
+						debouncedToast();
+						// Determine direction from log topics to track the correct analytics event
+						const topics = data.params?.result?.topics;
+						if (Array.isArray(topics) && topics.length >= 3) {
+							const toAddress = `0x${(topics[2] as string).slice(26).toLowerCase()}`;
+							const addrs = walletAddresses.map((a) => a.toLowerCase());
+							if (addrs.includes(toAddress)) {
+								trackEvent(AnalyticsEvents.PAYMENT_RECEIVED);
+							}
+						}
 					}
 				} catch {
 					// Ignore malformed messages
@@ -174,6 +192,7 @@ export function useMultiAccountWs(accounts: AccountRecord[]) {
 			wsRef.current?.close();
 			wsRef.current = null;
 			stopPolling();
+			if (toastTimer) clearTimeout(toastTimer);
 		};
 	}, [accountAddresses, queryClient]);
 

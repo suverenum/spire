@@ -19,7 +19,7 @@ export function useInternalTransfer() {
 		mutationFn: async ({
 			fromAccountId,
 			toAccountId,
-			amount,
+			amount: _amount,
 		}: TransferParams) => {
 			// Server-side ownership + same-token validation
 			const result = await prepareInternalTransfer({

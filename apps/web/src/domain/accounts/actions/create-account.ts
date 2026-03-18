@@ -7,6 +7,8 @@ import { accounts } from "@/db/schema";
 import { ACCOUNT_TOKENS } from "@/lib/constants";
 import { getSession } from "@/lib/session";
 
+const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+
 const VALID_TOKEN_SYMBOLS = new Set<string>(ACCOUNT_TOKENS.map((t) => t.name));
 
 /**
@@ -79,6 +81,10 @@ export async function finalizeAccountCreate({
 	const token = ACCOUNT_TOKENS.find((t) => t.name === tokenSymbol);
 	if (!token) return { error: "Invalid token" };
 
+	if (!ADDRESS_RE.test(walletAddress)) {
+		return { error: "Invalid wallet address" };
+	}
+
 	try {
 		const [inserted] = await db
 			.insert(accounts)
@@ -102,6 +108,13 @@ export async function finalizeAccountCreate({
 				? (err as { code: unknown }).code
 				: undefined;
 		if (pgCode === "23505") {
+			const pgConstraint =
+				err != null && typeof err === "object" && "constraint" in err
+					? (err as { constraint: unknown }).constraint
+					: undefined;
+			if (pgConstraint === "accounts_wallet_address_unique") {
+				return { error: "Wallet address already registered" };
+			}
 			return { error: "Name already taken" };
 		}
 		throw err;

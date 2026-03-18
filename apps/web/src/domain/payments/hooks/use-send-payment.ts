@@ -31,14 +31,18 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 					queryKey: CACHE_KEYS.balances(addr),
 				});
 
-				const previousTxs = queryClient.getQueryData<Payment[]>(CACHE_KEYS.transactions(addr));
+				const previousTxs = queryClient.getQueryData<Payment[]>(
+					CACHE_KEYS.transactions(addr),
+				);
 				const previousBalances = queryClient.getQueryData<BalancesResult>(
 					CACHE_KEYS.balances(addr),
 				);
 
 				const tokenName =
 					Object.keys(SUPPORTED_TOKENS).find(
-						(k) => SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() === tokenStr,
+						(k) =>
+							SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() ===
+							tokenStr,
 					) ?? "Unknown";
 
 				const optimisticPayment: Payment = {
@@ -52,10 +56,10 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 					timestamp: new Date(),
 				};
 
-				queryClient.setQueryData<Payment[]>(CACHE_KEYS.transactions(addr), (old) => [
-					optimisticPayment,
-					...(old ?? []),
-				]);
+				queryClient.setQueryData<Payment[]>(
+					CACHE_KEYS.transactions(addr),
+					(old) => [optimisticPayment, ...(old ?? [])],
+				);
 
 				if (previousBalances) {
 					queryClient.setQueryData<BalancesResult>(CACHE_KEYS.balances(addr), {
@@ -64,7 +68,8 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 							b.tokenAddress.toLowerCase() === tokenStr
 								? {
 										...b,
-										balance: b.balance > vars.amount ? b.balance - vars.amount : 0n,
+										balance:
+											b.balance > vars.amount ? b.balance - vars.amount : 0n,
 									}
 								: b,
 						),
@@ -76,10 +81,16 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 			onError: (_err, _vars, context) => {
 				if (fromAddress) {
 					if (context?.previousTxs) {
-						queryClient.setQueryData(CACHE_KEYS.transactions(fromAddress), context.previousTxs);
+						queryClient.setQueryData(
+							CACHE_KEYS.transactions(fromAddress),
+							context.previousTxs,
+						);
 					}
 					if (context?.previousBalances) {
-						queryClient.setQueryData(CACHE_KEYS.balances(fromAddress), context.previousBalances);
+						queryClient.setQueryData(
+							CACHE_KEYS.balances(fromAddress),
+							context.previousBalances,
+						);
 					}
 				}
 				toast("Payment failed. Please try again.", "error");
@@ -88,20 +99,27 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 				const successTokenStr = String(vars.token).toLowerCase();
 				const tokenName =
 					Object.keys(SUPPORTED_TOKENS).find(
-						(k) => SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() === successTokenStr,
+						(k) =>
+							SUPPORTED_TOKENS[k as TokenName].address.toLowerCase() ===
+							successTokenStr,
 					) ?? "";
 				toast("Payment sent successfully!", "success");
 				trackEvent(AnalyticsEvents.PAYMENT_SENT, {
 					token: tokenName,
 				});
 			},
-			onSettled: () => {
+			onSettled: (_data, _error, vars) => {
 				if (fromAddress) {
 					void queryClient.invalidateQueries({
 						queryKey: CACHE_KEYS.transactions(fromAddress),
 					});
 					void queryClient.invalidateQueries({
 						queryKey: CACHE_KEYS.balances(fromAddress),
+					});
+					// Also invalidate the account-level balance cache used by the multi-account dashboard
+					const tokenStr = String(vars.token).toLowerCase();
+					void queryClient.invalidateQueries({
+						queryKey: CACHE_KEYS.accountBalance(fromAddress, tokenStr),
 					});
 				}
 			},
@@ -114,7 +132,10 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 
 	return {
 		...rest,
-		mutate: (params: SendPaymentParams, options?: { onSuccess?: () => void }) => {
+		mutate: (
+			params: SendPaymentParams,
+			options?: { onSuccess?: () => void },
+		) => {
 			const tokenConfig = SUPPORTED_TOKENS[params.token as TokenName];
 			if (!tokenConfig) {
 				toast("Unsupported token", "error");
@@ -126,7 +147,9 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 					to: params.to,
 					token: tokenConfig.address,
 					amount: parseUnits(params.amount, tokenConfig.decimals),
-					memo: params.memo ? pad(stringToHex(params.memo), { size: 32 }) : undefined,
+					memo: params.memo
+						? pad(stringToHex(params.memo), { size: 32 })
+						: undefined,
 				},
 				{ onSuccess: options?.onSuccess },
 			);

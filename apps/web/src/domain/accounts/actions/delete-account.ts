@@ -99,16 +99,23 @@ export async function confirmDeleteAccount({
 	if (!account) return { error: "Account not found" };
 	if (account.isDefault) return { error: "Cannot delete default account" };
 
-	const preflight = await prepareDeleteAccount(accountId);
+	// Check balances directly instead of calling prepareDeleteAccount (avoids redundant DB queries)
+	const balances = await fetchDetectableTokenBalances(account.walletAddress);
+	const assignedBalance =
+		balances.find((b) => b.tokenAddress === account.tokenAddress)?.amount ??
+		BigInt(0);
+	const unassignedBalances = balances.filter(
+		(b) => b.tokenAddress !== account.tokenAddress && b.amount > BigInt(0),
+	);
 
-	if (preflight.status === "blocked") {
+	if (assignedBalance > BigInt(0)) {
 		return {
 			error:
 				"Account wallet still holds assigned-token funds. Transfer them before deleting.",
 		};
 	}
 
-	if (preflight.status === "warn" && !acknowledgeUnassignedAssets) {
+	if (unassignedBalances.length > 0 && !acknowledgeUnassignedAssets) {
 		return {
 			error: "Deletion requires acknowledging unassigned assets.",
 		};
