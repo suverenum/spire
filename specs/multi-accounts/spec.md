@@ -884,8 +884,8 @@ type GroupedTransaction =
 - [x] Biome lint + format passes (`bun run lint`)
 - [x] Database migrations are clean (`bun run db:generate` from `apps/web/` produces no diff)
 - [x] Spec updated to reflect implementation
-- [ ] CI passes on PR (lint, typecheck, test, build via GitHub Actions)
-- [ ] App deployed and accessible on Vercel
+- [x] CI passes on PR (lint, typecheck, test, build via GitHub Actions)
+- [x] App deployed and accessible on Vercel
 
 ### Feature-Specific
 

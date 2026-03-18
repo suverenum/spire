@@ -4,29 +4,29 @@ import { TransactionSkeleton } from "@/components/skeletons";
 import { getSession } from "@/lib/session";
 import { AccountDetailContent } from "./account-detail-content";
 
-export default async function AccountDetailPage({
-	params,
-}: {
+interface Props {
 	params: Promise<{ id: string }>;
-}) {
-	const { id } = await params;
+}
 
+export default function AccountDetailPage({ params }: Props) {
 	return (
 		<Suspense fallback={<TransactionSkeleton />}>
-			<AccountDetailLoader accountId={id} />
+			<AccountDetailLoader params={params} />
 		</Suspense>
 	);
 }
 
-async function AccountDetailLoader({ accountId }: { accountId: string }) {
+async function AccountDetailLoader({ params }: Props) {
 	const session = await getSession();
 	if (!session) {
 		redirect("/");
 	}
 
+	const { id } = await params;
+
 	return (
 		<AccountDetailContent
-			accountId={accountId}
+			accountId={id}
 			treasuryName={session.treasuryName}
 			authenticatedAt={session.authenticatedAt}
 			treasuryId={session.treasuryId}
