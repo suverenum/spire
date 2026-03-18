@@ -1,0 +1,4 @@
+{
+	"installCommand": "bun install",
+	"buildCommand": "turbo build --filter=@goldhord/web"
+}
