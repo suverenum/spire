@@ -7,9 +7,7 @@ afterEach(cleanup);
 
 const WALLET = "0x1111111111111111111111111111111111111111";
 
-function makeTx(
-	overrides: Partial<PendingTransactionData> = {},
-): PendingTransactionData {
+function makeTx(overrides: Partial<PendingTransactionData> = {}): PendingTransactionData {
 	return {
 		id: "tx-1",
 		accountId: "acc-1",
@@ -35,16 +33,11 @@ function makeTx(
 describe("PendingTransactions", () => {
 	it("shows empty state when no transactions", () => {
 		render(<PendingTransactions transactions={[]} walletAddress={WALLET} />);
-		expect(screen.getByTestId("no-pending")).toHaveTextContent(
-			"No pending transactions",
-		);
+		expect(screen.getByTestId("no-pending")).toHaveTextContent("No pending transactions");
 	});
 
 	it("renders pending transactions list", () => {
-		const txs = [
-			makeTx({ onChainTxId: "0" }),
-			makeTx({ onChainTxId: "1", id: "tx-2" }),
-		];
+		const txs = [makeTx({ onChainTxId: "0" }), makeTx({ onChainTxId: "1", id: "tx-2" })];
 		render(<PendingTransactions transactions={txs} walletAddress={WALLET} />);
 		expect(screen.getByTestId("pending-list")).toBeInTheDocument();
 		expect(screen.getByTestId("pending-tx-0")).toBeInTheDocument();
@@ -54,9 +47,7 @@ describe("PendingTransactions", () => {
 	it("shows confirmation count", () => {
 		render(
 			<PendingTransactions
-				transactions={[
-					makeTx({ currentConfirmations: 2, requiredConfirmations: 5 }),
-				]}
+				transactions={[makeTx({ currentConfirmations: 2, requiredConfirmations: 5 })]}
 				walletAddress={WALLET}
 			/>,
 		);
@@ -66,9 +57,7 @@ describe("PendingTransactions", () => {
 	it("disables execute button when confirmations insufficient", () => {
 		render(
 			<PendingTransactions
-				transactions={[
-					makeTx({ currentConfirmations: 1, requiredConfirmations: 3 }),
-				]}
+				transactions={[makeTx({ currentConfirmations: 1, requiredConfirmations: 3 })]}
 				walletAddress={WALLET}
 				onExecute={vi.fn()}
 			/>,
@@ -80,9 +69,7 @@ describe("PendingTransactions", () => {
 	it("enables execute button when confirmations sufficient", () => {
 		render(
 			<PendingTransactions
-				transactions={[
-					makeTx({ currentConfirmations: 3, requiredConfirmations: 3 }),
-				]}
+				transactions={[makeTx({ currentConfirmations: 3, requiredConfirmations: 3 })]}
 				walletAddress={WALLET}
 				onExecute={vi.fn()}
 			/>,
@@ -92,9 +79,7 @@ describe("PendingTransactions", () => {
 	});
 
 	it("shows signer addresses for confirmations", () => {
-		render(
-			<PendingTransactions transactions={[makeTx()]} walletAddress={WALLET} />,
-		);
+		render(<PendingTransactions transactions={[makeTx()]} walletAddress={WALLET} />);
 		expect(screen.getByText("0xabc1...abc1")).toBeInTheDocument();
 	});
 });

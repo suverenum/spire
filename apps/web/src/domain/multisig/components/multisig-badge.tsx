@@ -7,10 +7,7 @@ interface MultisigBadgeProps {
 	pendingCount?: number;
 }
 
-export function MultisigBadge({
-	ownerCount,
-	pendingCount,
-}: MultisigBadgeProps) {
+export function MultisigBadge({ ownerCount, pendingCount }: MultisigBadgeProps) {
 	return (
 		<div className="flex items-center gap-1.5">
 			<span

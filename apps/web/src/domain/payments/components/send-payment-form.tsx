@@ -40,9 +40,7 @@ export function SendPaymentForm({
 	const isMultisig = selectedAccount?.walletType === "multisig";
 
 	// When account is selected, auto-set token to account's token
-	const effectiveToken = selectedAccount
-		? (selectedAccount.tokenSymbol as TokenName)
-		: token;
+	const effectiveToken = selectedAccount ? (selectedAccount.tokenSymbol as TokenName) : token;
 
 	const sendMutation = useSendPayment(fromAddress);
 	const { data: balancesData } = useBalances(fromAddress);
@@ -81,9 +79,7 @@ export function SendPaymentForm({
 				const tokenConfig = SUPPORTED_TOKENS[effectiveToken];
 				if (tokenConfig && balancesData) {
 					const tokenBalance = balancesData.balances.find(
-						(b) =>
-							b.tokenAddress.toLowerCase() ===
-							tokenConfig.address.toLowerCase(),
+						(b) => b.tokenAddress.toLowerCase() === tokenConfig.address.toLowerCase(),
 					);
 					if (tokenBalance) {
 						try {
@@ -141,10 +137,7 @@ export function SendPaymentForm({
 			<div className="space-y-4">
 				{accounts && accounts.length > 0 && (
 					<div>
-						<label
-							htmlFor="send-account"
-							className="mb-1 block text-sm font-medium"
-						>
+						<label htmlFor="send-account" className="mb-1 block text-sm font-medium">
 							From Account
 						</label>
 						<select
@@ -172,16 +165,11 @@ export function SendPaymentForm({
 						value={to}
 						onChange={(e) => setTo(e.target.value)}
 					/>
-					{errors.to && (
-						<p className="mt-1 text-xs text-red-600">{errors.to}</p>
-					)}
+					{errors.to && <p className="mt-1 text-xs text-red-600">{errors.to}</p>}
 				</div>
 
 				<div>
-					<label
-						htmlFor="send-amount"
-						className="mb-1 block text-sm font-medium"
-					>
+					<label htmlFor="send-amount" className="mb-1 block text-sm font-medium">
 						Amount
 					</label>
 					<Input
@@ -192,17 +180,12 @@ export function SendPaymentForm({
 						value={amount}
 						onChange={(e) => setAmount(e.target.value)}
 					/>
-					{errors.amount && (
-						<p className="mt-1 text-xs text-red-600">{errors.amount}</p>
-					)}
+					{errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
 				</div>
 
 				{!selectedAccount && (
 					<div>
-						<label
-							htmlFor="send-token"
-							className="mb-1 block text-sm font-medium"
-						>
+						<label htmlFor="send-token" className="mb-1 block text-sm font-medium">
 							Token
 						</label>
 						<select
@@ -222,9 +205,7 @@ export function SendPaymentForm({
 
 				{selectedAccount && (
 					<div>
-						<p className="text-sm text-gray-500">
-							Token: {selectedAccount.tokenSymbol}
-						</p>
+						<p className="text-sm text-gray-500">Token: {selectedAccount.tokenSymbol}</p>
 					</div>
 				)}
 
@@ -238,9 +219,7 @@ export function SendPaymentForm({
 						value={memo}
 						onChange={(e) => setMemo(e.target.value)}
 					/>
-					{errors.memo && (
-						<p className="mt-1 text-xs text-red-600">{errors.memo}</p>
-					)}
+					{errors.memo && <p className="mt-1 text-xs text-red-600">{errors.memo}</p>}
 				</div>
 
 				<Button
@@ -249,11 +228,7 @@ export function SendPaymentForm({
 					className="w-full"
 					size="lg"
 				>
-					{isMultisig ? (
-						<Shield className="h-4 w-4" />
-					) : (
-						<Send className="h-4 w-4" />
-					)}
+					{isMultisig ? <Shield className="h-4 w-4" /> : <Send className="h-4 w-4" />}
 					{sendMutation.isPending
 						? isMultisig
 							? "Submitting..."

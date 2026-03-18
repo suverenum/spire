@@ -27,12 +27,7 @@ beforeEach(() => {
 describe("CreateMultisigForm", () => {
 	it("renders form fields when open", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 		expect(screen.getByLabelText("Account Name")).toBeInTheDocument();
 		expect(screen.getByLabelText("Token")).toBeInTheDocument();
@@ -43,39 +38,22 @@ describe("CreateMultisigForm", () => {
 
 	it("shows admin address as first signer", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 		expect(screen.getByText(/0xf39F.*2266 \(you\)/)).toBeInTheDocument();
 	});
 
 	it("validates empty name", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
-		fireEvent.click(
-			screen.getByRole("button", { name: /Create Multisig Account/ }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: /Create Multisig Account/ }));
 		expect(screen.getByText("Account name is required")).toBeInTheDocument();
 	});
 
 	it("validates invalid signer address", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 		fireEvent.change(screen.getByLabelText("Account Name"), {
 			target: { value: "Test" },
@@ -83,20 +61,13 @@ describe("CreateMultisigForm", () => {
 		fireEvent.change(screen.getByLabelText("Signer 2 address"), {
 			target: { value: "not-an-address" },
 		});
-		fireEvent.click(
-			screen.getByRole("button", { name: /Create Multisig Account/ }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: /Create Multisig Account/ }));
 		expect(screen.getByText(/Invalid signer address/)).toBeInTheDocument();
 	});
 
 	it("shows policy preview with tier configuration", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 		const preview = screen.getByTestId("policy-preview");
 		expect(preview).toHaveTextContent("Transfers up to $10,000");
@@ -106,12 +77,7 @@ describe("CreateMultisigForm", () => {
 
 	it("calls mutate with correct params on valid submit", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 
 		fireEvent.change(screen.getByLabelText("Account Name"), {
@@ -125,9 +91,7 @@ describe("CreateMultisigForm", () => {
 		fireEvent.change(screen.getByLabelText("Default confirmations"), {
 			target: { value: "2" },
 		});
-		fireEvent.click(
-			screen.getByRole("button", { name: /Create Multisig Account/ }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: /Create Multisig Account/ }));
 
 		expect(mockMutate).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -142,12 +106,7 @@ describe("CreateMultisigForm", () => {
 
 	it("validates default confirmations exceeds signer count", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 
 		fireEvent.change(screen.getByLabelText("Account Name"), {
@@ -161,12 +120,7 @@ describe("CreateMultisigForm", () => {
 
 	it("adds and removes signers", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 
 		// Initially one signer input
@@ -184,12 +138,7 @@ describe("CreateMultisigForm", () => {
 
 	it("toggles allowlist", () => {
 		renderWithQuery(
-			<CreateMultisigForm
-				open={true}
-				onClose={vi.fn()}
-				treasuryId="t1"
-				adminAddress={ADMIN}
-			/>,
+			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 
 		const checkbox = screen.getByLabelText(/Enable address allowlist/);
@@ -197,8 +146,6 @@ describe("CreateMultisigForm", () => {
 
 		fireEvent.click(checkbox);
 		expect(checkbox).toBeChecked();
-		expect(screen.getByTestId("policy-preview")).toHaveTextContent(
-			"Only allowlisted addresses",
-		);
+		expect(screen.getByTestId("policy-preview")).toHaveTextContent("Only allowlisted addresses");
 	});
 });

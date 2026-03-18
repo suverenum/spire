@@ -19,10 +19,7 @@ export function PendingTransactions({
 }: PendingTransactionsProps) {
 	if (transactions.length === 0) {
 		return (
-			<div
-				data-testid="no-pending"
-				className="py-8 text-center text-sm text-gray-500"
-			>
+			<div data-testid="no-pending" className="py-8 text-center text-sm text-gray-500">
 				No pending transactions
 			</div>
 		);
@@ -31,12 +28,7 @@ export function PendingTransactions({
 	return (
 		<div data-testid="pending-list" className="space-y-3">
 			{transactions.map((tx) => {
-				const description = decodeTransactionDescription(
-					tx.to,
-					tx.data,
-					tx.value,
-					walletAddress,
-				);
+				const description = decodeTransactionDescription(tx.to, tx.data, tx.value, walletAddress);
 				const canExecute = tx.currentConfirmations >= tx.requiredConfirmations;
 
 				return (
@@ -47,14 +39,11 @@ export function PendingTransactions({
 					>
 						<div className="flex items-start justify-between">
 							<div>
-								<p className="text-sm font-medium text-gray-900">
-									{description}
-								</p>
+								<p className="text-sm font-medium text-gray-900">{description}</p>
 								<div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
 									<Clock className="h-3 w-3" />
 									<span>
-										{tx.currentConfirmations}/{tx.requiredConfirmations}{" "}
-										confirmations
+										{tx.currentConfirmations}/{tx.requiredConfirmations} confirmations
 									</span>
 								</div>
 							</div>

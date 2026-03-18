@@ -29,9 +29,7 @@ export function CreateMultisigForm({
 	adminAddress,
 }: CreateMultisigFormProps) {
 	const [name, setName] = useState("");
-	const [tokenSymbol, setTokenSymbol] = useState<string>(
-		ACCOUNT_TOKENS[0].name,
-	);
+	const [tokenSymbol, setTokenSymbol] = useState<string>(ACCOUNT_TOKENS[0].name);
 	const [signers, setSigners] = useState<string[]>([""]);
 	const [tiers, setTiers] = useState<TierInput[]>([
 		{ maxValue: "10000", requiredConfirmations: "1" },
@@ -207,8 +205,7 @@ export function CreateMultisigForm({
 				<div>
 					<span className="mb-1 block text-sm font-medium">Signers</span>
 					<p className="mb-2 text-xs text-gray-500">
-						Your address is automatically included. Add additional signers
-						below.
+						Your address is automatically included. Add additional signers below.
 					</p>
 					<div className="mb-2 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-600">
 						{adminAddress.slice(0, 6)}...{adminAddress.slice(-4)} (you)
@@ -245,18 +242,14 @@ export function CreateMultisigForm({
 
 				{/* Approval Tiers */}
 				<div>
-					<span className="mb-1 block text-sm font-medium">
-						Approval Thresholds
-					</span>
+					<span className="mb-1 block text-sm font-medium">Approval Thresholds</span>
 					<p className="mb-2 text-xs text-gray-500">
 						Define how many approvals are needed based on transfer amount.
 					</p>
 					{tiers.map((tier, i) => (
 						// biome-ignore lint/suspicious/noArrayIndexKey: positional form inputs
 						<div key={i} className="mb-2 flex items-center gap-2">
-							<span className="text-xs whitespace-nowrap text-gray-500">
-								Up to $
-							</span>
+							<span className="text-xs whitespace-nowrap text-gray-500">Up to $</span>
 							<Input
 								placeholder="10000"
 								value={tier.maxValue}
@@ -264,14 +257,10 @@ export function CreateMultisigForm({
 								aria-label={`Tier ${i + 1} max value`}
 								className="w-28"
 							/>
-							<span className="text-xs whitespace-nowrap text-gray-500">
-								needs
-							</span>
+							<span className="text-xs whitespace-nowrap text-gray-500">needs</span>
 							<select
 								value={tier.requiredConfirmations}
-								onChange={(e) =>
-									updateTier(i, "requiredConfirmations", e.target.value)
-								}
+								onChange={(e) => updateTier(i, "requiredConfirmations", e.target.value)}
 								className="h-10 rounded-lg border border-gray-300 bg-white px-2 text-sm"
 								aria-label={`Tier ${i + 1} confirmations`}
 							>
@@ -303,9 +292,7 @@ export function CreateMultisigForm({
 						+ Add tier
 					</button>
 					<div className="flex items-center gap-2">
-						<span className="text-xs text-gray-500">
-							Above all tiers, require
-						</span>
+						<span className="text-xs text-gray-500">Above all tiers, require</span>
 						<select
 							value={defaultConfirmations}
 							onChange={(e) => setDefaultConfirmations(e.target.value)}
@@ -352,16 +339,14 @@ export function CreateMultisigForm({
 						.filter((t) => t.maxValue.trim())
 						.map((t) => (
 							<div key={`preview-${t.maxValue}`}>
-								Transfers up to ${Number(t.maxValue).toLocaleString()}:{" "}
-								{t.requiredConfirmations}/{totalSigners} approvals
+								Transfers up to ${Number(t.maxValue).toLocaleString()}: {t.requiredConfirmations}/
+								{totalSigners} approvals
 							</div>
 						))}
 					<div>
 						Above all tiers: {defaultConfirmations}/{totalSigners} approvals
 					</div>
-					{allowlistEnabled && (
-						<div>Only allowlisted addresses can receive</div>
-					)}
+					{allowlistEnabled && <div>Only allowlisted addresses can receive</div>}
 				</div>
 
 				{error && <p className="text-sm text-red-600">{error}</p>}
