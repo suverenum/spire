@@ -38,7 +38,7 @@ const validParams = {
 		"0xabcdef1234567890abcdef1234567890abcdef12",
 	],
 	tiers: [{ maxValue: "10000000000", requiredConfirmations: 1 }],
-	defaultConfirmations: 3,
+	defaultConfirmations: 2,
 	allowlistEnabled: true,
 	initialAllowlist: ["0xdead000000000000000000000000000000000001"],
 };

@@ -7,6 +7,7 @@ import { decodeTransactionDescription } from "../utils/decode-transaction";
 interface PendingTransactionsProps {
 	transactions: PendingTransactionData[];
 	walletAddress: string;
+	currentUserAddress?: string;
 	onConfirm?: (txId: string) => void;
 	onExecute?: (txId: string) => void;
 }
@@ -14,6 +15,7 @@ interface PendingTransactionsProps {
 export function PendingTransactions({
 	transactions,
 	walletAddress,
+	currentUserAddress,
 	onConfirm,
 	onExecute,
 }: PendingTransactionsProps) {
@@ -30,6 +32,11 @@ export function PendingTransactions({
 			{transactions.map((tx) => {
 				const description = decodeTransactionDescription(tx.to, tx.data, tx.value, walletAddress);
 				const canExecute = tx.currentConfirmations >= tx.requiredConfirmations;
+				const alreadyConfirmed = currentUserAddress
+					? tx.confirmations.some(
+							(c) => c.signerAddress.toLowerCase() === currentUserAddress.toLowerCase(),
+						)
+					: false;
 
 				return (
 					<div
@@ -48,7 +55,7 @@ export function PendingTransactions({
 								</div>
 							</div>
 							<div className="flex gap-2">
-								{onConfirm && (
+								{onConfirm && !alreadyConfirmed && (
 									<button
 										type="button"
 										data-testid={`confirm-btn-${tx.onChainTxId}`}

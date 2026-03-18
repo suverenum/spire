@@ -57,9 +57,17 @@ export async function assertCanCreateMultisigAccount(
 	// Tier validation
 	if (params.tiers.length > 10) return { error: "Maximum 10 tiers" };
 	if (params.defaultConfirmations < 1) return { error: "Default confirmations must be at least 1" };
+	if (params.defaultConfirmations > params.owners.length)
+		return {
+			error: `Default confirmations (${params.defaultConfirmations}) cannot exceed owner count (${params.owners.length})`,
+		};
 	for (let i = 0; i < params.tiers.length; i++) {
 		if (params.tiers[i].requiredConfirmations < 1)
 			return { error: "Required confirmations must be at least 1" };
+		if (params.tiers[i].requiredConfirmations > params.owners.length)
+			return {
+				error: `Tier confirmations (${params.tiers[i].requiredConfirmations}) cannot exceed owner count (${params.owners.length})`,
+			};
 		if (!/^\d+$/.test(params.tiers[i].maxValue))
 			return { error: `Invalid tier value: ${params.tiers[i].maxValue}` };
 		if (i > 0) {

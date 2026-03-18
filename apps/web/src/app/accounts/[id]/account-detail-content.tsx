@@ -19,7 +19,10 @@ import { useAllTransactions } from "@/domain/accounts/hooks/use-all-transactions
 import { useInternalTransfer } from "@/domain/accounts/hooks/use-internal-transfer";
 import { getAccounts } from "@/domain/accounts/queries/get-accounts";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
-import { addMultisigConfirmation } from "@/domain/multisig/actions/sync-multisig-state";
+import {
+	addMultisigConfirmation,
+	upsertMultisigTransaction,
+} from "@/domain/multisig/actions/sync-multisig-state";
 import { PendingTransactions } from "@/domain/multisig/components/pending-transactions";
 import { getMultisigConfig } from "@/domain/multisig/queries/get-multisig-config";
 import { getPendingTransactions } from "@/domain/multisig/queries/get-pending-transactions";
@@ -49,6 +52,7 @@ interface AccountDetailContentProps {
 	treasuryName: string;
 	authenticatedAt: number;
 	treasuryId: string;
+	tempoAddress: string;
 }
 
 export function AccountDetailContent({
@@ -56,6 +60,7 @@ export function AccountDetailContent({
 	treasuryName,
 	authenticatedAt,
 	treasuryId,
+	tempoAddress,
 }: AccountDetailContentProps) {
 	const wagmiConfig = useConfig();
 	const queryClient = useQueryClient();
@@ -117,6 +122,16 @@ export function AccountDetailContent({
 					multisigTransactionId: pendingTx.id,
 					signerAddress: walletClient.account.address,
 				});
+				await upsertMultisigTransaction({
+					accountId,
+					onChainTxId: BigInt(onChainTxId),
+					to: pendingTx.to,
+					value: pendingTx.value,
+					data: pendingTx.data,
+					requiredConfirmations: pendingTx.requiredConfirmations,
+					currentConfirmations: pendingTx.currentConfirmations + 1,
+					executed: false,
+				});
 			}
 			toast("Transaction confirmed", "success");
 			void queryClient.invalidateQueries({
@@ -145,6 +160,20 @@ export function AccountDetailContent({
 				args: [BigInt(onChainTxId)],
 			});
 			await publicClient.waitForTransactionReceipt({ hash });
+			// Mark as executed in DB
+			const executedTx = pendingTxs.find((tx) => tx.onChainTxId === onChainTxId);
+			if (executedTx) {
+				await upsertMultisigTransaction({
+					accountId,
+					onChainTxId: BigInt(onChainTxId),
+					to: executedTx.to,
+					value: executedTx.value,
+					data: executedTx.data,
+					requiredConfirmations: executedTx.requiredConfirmations,
+					currentConfirmations: executedTx.currentConfirmations,
+					executed: true,
+				});
+			}
 			toast("Transaction executed", "success");
 			void queryClient.invalidateQueries({
 				queryKey: CACHE_KEYS.pendingTransactions(accountId),
@@ -293,6 +322,7 @@ export function AccountDetailContent({
 							<PendingTransactions
 								transactions={pendingTxs}
 								walletAddress={account.walletAddress}
+								currentUserAddress={tempoAddress}
 								onConfirm={handleConfirm}
 								onExecute={handleExecute}
 							/>
