@@ -27,12 +27,12 @@ jobs:
         run: bun run lint
 
       - name: Type check
-        run: turbo typecheck
+        run: bun run typecheck
 
       - name: Tests
-        run: turbo test
+        run: bun run test
 
       - name: Build
-        run: turbo build
+        run: bunx turbo build
         env:
           DATABASE_URL: postgresql://fake:fake@localhost:5432/fake
