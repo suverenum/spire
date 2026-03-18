@@ -13,6 +13,11 @@ interface TaggedPayment extends Payment {
 
 const DEX_ADDR_LOWER = DEX_ADDRESS.toLowerCase();
 
+// Maximum time gap (ms) between a DEX swap and its follow-up transfer
+// to consider them part of the same operation. Tempo settles in seconds,
+// so 60s is generous while still preventing mis-association.
+const SWAP_FOLLOWUP_WINDOW_MS = 60_000;
+
 /**
  * Groups raw per-wallet transactions into grouped entries:
  * - Swaps (transactions involving the DEX address) group into one swap row
@@ -33,7 +38,10 @@ export function groupTransactions(
 
 	// First pass: detect swap-related transactions (involving DEX address)
 	const swapTxHashes = new Set<string>();
-	const swapsByKey = new Map<string, { dexTx: TaggedPayment; sourceAccount: AccountRecord }>();
+	const swapsByKey = new Map<
+		string,
+		{ dexTx: TaggedPayment; sourceAccount: AccountRecord }
+	>();
 
 	for (const tx of transactions) {
 		const toAddr = tx.to.toLowerCase();
@@ -51,8 +59,15 @@ export function groupTransactions(
 	}
 
 	// Second pass: find follow-up internal transfers from swap source to destination
-	// with a different token (the output of the swap being moved)
+	// with a different token (the output of the swap being moved).
+	// Group swaps and candidate transfers by source account, sort both by timestamp,
+	// then match 1-to-1 in chronological order. This avoids mis-association when
+	// multiple swaps from the same source happen close together — the client executes
+	// each swap-then-transfer sequentially, so follow-ups are in the same order as swaps.
 	const swapFollowUps = new Map<string, TaggedPayment>();
+
+	// Collect candidate follow-up transfers grouped by source account ID
+	const candidatesBySource = new Map<string, TaggedPayment[]>();
 	for (const tx of transactions) {
 		if (swapTxHashes.has(tx.txHash)) continue;
 
@@ -61,13 +76,72 @@ export function groupTransactions(
 		const fromAccount = walletToAccount.get(fromAddr);
 		const toAccount = walletToAccount.get(toAddr);
 
-		if (fromAccount && toAccount && fromAccount.tokenSymbol !== toAccount.tokenSymbol) {
-			for (const [key, _swap] of swapsByKey) {
-				if (key.startsWith(`swap-source-${fromAccount.id}-`) && !swapFollowUps.has(key)) {
-					swapFollowUps.set(key, tx);
-					swapTxHashes.add(tx.txHash);
+		if (
+			fromAccount &&
+			toAccount &&
+			fromAccount.tokenSymbol !== toAccount.tokenSymbol
+		) {
+			let arr = candidatesBySource.get(fromAccount.id);
+			if (!arr) {
+				arr = [];
+				candidatesBySource.set(fromAccount.id, arr);
+			}
+			arr.push(tx);
+		}
+	}
+
+	// Group swaps by source account ID
+	const swapKeysBySource = new Map<string, string[]>();
+	for (const [key, swap] of swapsByKey) {
+		const accountId = swap.sourceAccount.id;
+		let arr = swapKeysBySource.get(accountId);
+		if (!arr) {
+			arr = [];
+			swapKeysBySource.set(accountId, arr);
+		}
+		arr.push(key);
+	}
+
+	// For each source account, sort swaps and candidates by timestamp, then match in order
+	for (const [accountId, keys] of swapKeysBySource) {
+		const candidates = candidatesBySource.get(accountId);
+		if (!candidates || candidates.length === 0) continue;
+
+		// Sort swaps by timestamp ascending
+		keys.sort(
+			(a, b) =>
+				swapsByKey.get(a)!.dexTx.timestamp.getTime() -
+				swapsByKey.get(b)!.dexTx.timestamp.getTime(),
+		);
+
+		// Sort candidate transfers by timestamp ascending
+		candidates.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+		let candidateIdx = 0;
+		for (const key of keys) {
+			const swap = swapsByKey.get(key)!;
+			// Find the first unmatched candidate that is after the swap and within the window
+			while (candidateIdx < candidates.length) {
+				const tx = candidates[candidateIdx];
+				const timeDiffMs =
+					tx.timestamp.getTime() - swap.dexTx.timestamp.getTime();
+
+				if (timeDiffMs < 0) {
+					// Transfer is before this swap — skip it (can't be a follow-up)
+					candidateIdx++;
+					continue;
+				}
+
+				if (timeDiffMs > SWAP_FOLLOWUP_WINDOW_MS) {
+					// Transfer is too far after — no match for this swap
 					break;
 				}
+
+				// Valid match — assign and advance
+				swapFollowUps.set(key, tx);
+				swapTxHashes.add(tx.txHash);
+				candidateIdx++;
+				break;
 			}
 		}
 	}
@@ -75,7 +149,9 @@ export function groupTransactions(
 	// Build swap grouped entries
 	for (const [key, swap] of swapsByKey) {
 		const followUp = swapFollowUps.get(key);
-		const destAccount = followUp ? walletToAccount.get(followUp.to.toLowerCase()) : undefined;
+		const destAccount = followUp
+			? walletToAccount.get(followUp.to.toLowerCase())
+			: undefined;
 
 		const txHashes: `0x${string}`[] = [swap.dexTx.txHash];
 		if (followUp) txHashes.push(followUp.txHash);
@@ -169,5 +245,7 @@ export function groupTransactions(
 		}
 	}
 
-	return Array.from(grouped.values()).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+	return Array.from(grouped.values()).sort(
+		(a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+	);
 }

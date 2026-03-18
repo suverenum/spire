@@ -90,6 +90,20 @@ export async function finalizeAccountCreate({
 		return { error: "Invalid wallet address" };
 	}
 
+	// Prevent arbitrary isDefault: only allow when a default slot is still open for this token
+	if (isDefault) {
+		const existingDefault = await db.query.accounts.findFirst({
+			where: and(
+				eq(accounts.treasuryId, treasuryId),
+				eq(accounts.tokenSymbol, tokenSymbol),
+				eq(accounts.isDefault, true),
+			),
+		});
+		if (existingDefault) {
+			return { error: "Default account for this token already exists" };
+		}
+	}
+
 	try {
 		const [inserted] = await db
 			.insert(accounts)
@@ -119,6 +133,9 @@ export async function finalizeAccountCreate({
 					: undefined;
 			if (pgConstraint === "accounts_wallet_address_idx") {
 				return { error: "Wallet address already registered" };
+			}
+			if (pgConstraint === "accounts_default_token_idx") {
+				return { error: "Default account for this token already exists" };
 			}
 			return { error: "Name already taken" };
 		}

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "accounts_default_token_idx" ON "accounts" USING btree ("treasury_id","token_symbol") WHERE "accounts"."is_default" = true;

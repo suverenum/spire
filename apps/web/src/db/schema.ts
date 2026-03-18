@@ -1,4 +1,12 @@
-import { boolean, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+	boolean,
+	pgTable,
+	text,
+	timestamp,
+	uniqueIndex,
+	uuid,
+} from "drizzle-orm/pg-core";
 
 export const treasuries = pgTable("treasuries", {
 	id: uuid("id").defaultRandom().primaryKey(),
@@ -24,5 +32,8 @@ export const accounts = pgTable(
 	(table) => [
 		uniqueIndex("accounts_treasury_name_idx").on(table.treasuryId, table.name),
 		uniqueIndex("accounts_wallet_address_idx").on(table.walletAddress),
+		uniqueIndex("accounts_default_token_idx")
+			.on(table.treasuryId, table.tokenSymbol)
+			.where(sql`${table.isDefault} = true`),
 	],
 );

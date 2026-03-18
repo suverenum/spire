@@ -29,7 +29,8 @@ type TaggedPayment = Payment & { accountName: string; accountId: string };
 function makeTx(overrides: Partial<TaggedPayment>): TaggedPayment {
 	return {
 		id: "tx-1",
-		txHash: "0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
+		txHash:
+			"0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
 		from: "0x0000000000000000000000000000000000000099" as `0x${string}`,
 		to: ACCOUNT_A.walletAddress as `0x${string}`,
 		amount: 1000000n,
@@ -121,7 +122,9 @@ describe("groupTransactions", () => {
 
 		const result = groupTransactions(txs, [ACCOUNT_A]);
 		expect(result).toHaveLength(2);
-		expect(result[0].timestamp.getTime()).toBeGreaterThan(result[1].timestamp.getTime());
+		expect(result[0].timestamp.getTime()).toBeGreaterThan(
+			result[1].timestamp.getTime(),
+		);
 	});
 
 	it("returns empty array for empty input", () => {
@@ -167,6 +170,91 @@ describe("groupTransactions", () => {
 
 		const result = groupTransactions(txs, [ACCOUNT_A]);
 		expect(result).toHaveLength(1);
+	});
+
+	it("correctly matches concurrent swap follow-ups from the same source", () => {
+		// Two swaps from ACCOUNT_A (AlphaUSD) close together, each with a follow-up
+		// transfer to ACCOUNT_B (BetaUSD). The algorithm must pair them correctly
+		// by chronological order, not greedily by closest-match.
+		const DEX = "0xDEc0000000000000000000000000000000000000" as `0x${string}`;
+
+		// Swap 1: A -> DEX at t=0s
+		const swap1Tx = makeTx({
+			id: "swap1-dex",
+			txHash:
+				"0xaaaa000000000000000000000000000000000000000000000000000000000001" as `0x${string}`,
+			from: ACCOUNT_A.walletAddress as `0x${string}`,
+			to: DEX,
+			amount: 100_000_000n,
+			token: "AlphaUSD",
+			timestamp: new Date("2024-06-15T10:00:00Z"),
+			accountId: ACCOUNT_A.id,
+			accountName: ACCOUNT_A.name,
+		});
+
+		// Swap 2: A -> DEX at t=5s
+		const swap2Tx = makeTx({
+			id: "swap2-dex",
+			txHash:
+				"0xaaaa000000000000000000000000000000000000000000000000000000000002" as `0x${string}`,
+			from: ACCOUNT_A.walletAddress as `0x${string}`,
+			to: DEX,
+			amount: 200_000_000n,
+			token: "AlphaUSD",
+			timestamp: new Date("2024-06-15T10:00:05Z"),
+			accountId: ACCOUNT_A.id,
+			accountName: ACCOUNT_A.name,
+		});
+
+		// Follow-up 1: A -> B at t=3s (for swap 1)
+		const followUp1 = makeTx({
+			id: "followup1",
+			txHash:
+				"0xbbbb000000000000000000000000000000000000000000000000000000000001" as `0x${string}`,
+			from: ACCOUNT_A.walletAddress as `0x${string}`,
+			to: ACCOUNT_B.walletAddress as `0x${string}`,
+			amount: 99_000_000n,
+			token: "BetaUSD",
+			timestamp: new Date("2024-06-15T10:00:03Z"),
+			accountId: ACCOUNT_A.id,
+			accountName: ACCOUNT_A.name,
+		});
+
+		// Follow-up 2: A -> B at t=8s (for swap 2)
+		const followUp2 = makeTx({
+			id: "followup2",
+			txHash:
+				"0xbbbb000000000000000000000000000000000000000000000000000000000002" as `0x${string}`,
+			from: ACCOUNT_A.walletAddress as `0x${string}`,
+			to: ACCOUNT_B.walletAddress as `0x${string}`,
+			amount: 198_000_000n,
+			token: "BetaUSD",
+			timestamp: new Date("2024-06-15T10:00:08Z"),
+			accountId: ACCOUNT_A.id,
+			accountName: ACCOUNT_A.name,
+		});
+
+		// Pass follow-ups in reverse order to stress the algorithm
+		const txs = [followUp2, swap2Tx, followUp1, swap1Tx];
+
+		const result = groupTransactions(txs, [ACCOUNT_A, ACCOUNT_B]);
+		const swaps = result.filter((r) => r.kind === "swap");
+		expect(swaps).toHaveLength(2);
+
+		// Sort swaps by timestamp to verify pairing
+		swaps.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+		// Swap 1 (t=0) should be matched with follow-up 1 (amount 99M)
+		if (swaps[0].kind === "swap") {
+			expect(swaps[0].amountIn).toBe(100_000_000n);
+			expect(swaps[0].amountOut).toBe(99_000_000n);
+		}
+
+		// Swap 2 (t=5) should be matched with follow-up 2 (amount 198M)
+		if (swaps[1].kind === "swap") {
+			expect(swaps[1].amountIn).toBe(200_000_000n);
+			expect(swaps[1].amountOut).toBe(198_000_000n);
+		}
 	});
 
 	it("deduplicates internal transfer entries with same tx hash", () => {

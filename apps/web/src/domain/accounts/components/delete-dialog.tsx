@@ -30,6 +30,7 @@ type DeleteState =
 				tokenSymbol: string;
 				amount: bigint;
 			}[];
+			partialBalanceCheck?: boolean;
 	  }
 	| { type: "ready" }
 	| { type: "error"; message: string };
@@ -61,6 +62,7 @@ export function DeleteDialog({
 					setState({
 						type: "warn",
 						unassignedBalances: result.unassignedBalances,
+						partialBalanceCheck: result.partialBalanceCheck,
 					});
 				} else {
 					setState({ type: "ready" });
@@ -90,6 +92,12 @@ export function DeleteDialog({
 				onSuccess();
 				onClose();
 			}
+		} catch (err) {
+			setState({
+				type: "error",
+				message:
+					err instanceof Error ? err.message : "Failed to delete account",
+			});
 		} finally {
 			setIsPending(false);
 		}
@@ -132,11 +140,16 @@ export function DeleteDialog({
 					<div>
 						<div className="flex items-center gap-2 text-yellow-600">
 							<AlertTriangle className="h-5 w-5" />
-							<p className="text-sm font-medium">Unassigned assets detected</p>
+							<p className="text-sm font-medium">
+								{state.partialBalanceCheck
+									? "Balance check incomplete"
+									: "Unassigned assets detected"}
+							</p>
 						</div>
 						<p className="mt-2 text-sm text-gray-600">
-							This wallet contains tokens not tracked by this account. They will
-							remain on-chain but inaccessible through the app.
+							{state.partialBalanceCheck
+								? "Some token balances could not be verified. There may be unassigned assets on this wallet that will remain on-chain but inaccessible through the app."
+								: "This wallet contains tokens not tracked by this account. They will remain on-chain but inaccessible through the app."}
 						</p>
 						<div className="mt-2 space-y-1">
 							{state.unassignedBalances.map((b) => (
