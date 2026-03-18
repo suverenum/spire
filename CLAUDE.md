@@ -81,8 +81,8 @@ domain/
 ├── auth/           # Passkey authentication, session management
 ├── payments/       # Send, receive, transaction history
 ├── treasury/       # Treasury CRUD, header, settings
-├── accounts/       # Multi-account management (upcoming)
-└── swap/           # Token swaps via Tempo DEX (upcoming)
+├── accounts/       # Multi-account management (create, rename, delete, transfer, grouping)
+└── swap/           # Token swaps via Tempo DEX
 ```
 
 ## Key Patterns

@@ -95,13 +95,18 @@ export function useSendPayment(fromAddress: `0x${string}` | undefined) {
 					token: tokenName,
 				});
 			},
-			onSettled: () => {
+			onSettled: (_data, _error, vars) => {
 				if (fromAddress) {
 					void queryClient.invalidateQueries({
 						queryKey: CACHE_KEYS.transactions(fromAddress),
 					});
 					void queryClient.invalidateQueries({
 						queryKey: CACHE_KEYS.balances(fromAddress),
+					});
+					// Also invalidate the account-level balance cache used by the multi-account dashboard
+					const tokenStr = String(vars.token).toLowerCase();
+					void queryClient.invalidateQueries({
+						queryKey: CACHE_KEYS.accountBalance(fromAddress, tokenStr),
 					});
 				}
 			},

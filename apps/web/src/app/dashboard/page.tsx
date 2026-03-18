@@ -24,6 +24,7 @@ async function DashboardLoader() {
 			treasuryName={session.treasuryName}
 			tempoAddress={session.tempoAddress}
 			authenticatedAt={session.authenticatedAt}
+			treasuryId={session.treasuryId}
 		/>
 	);
 }

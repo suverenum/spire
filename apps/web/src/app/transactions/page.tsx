@@ -20,9 +20,9 @@ async function TransactionsLoader() {
 
 	return (
 		<TransactionsContent
-			tempoAddress={session.tempoAddress}
 			treasuryName={session.treasuryName}
 			authenticatedAt={session.authenticatedAt}
+			treasuryId={session.treasuryId}
 		/>
 	);
 }

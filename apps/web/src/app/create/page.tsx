@@ -7,6 +7,7 @@ import { useConfig, useConnect, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTreasuryAction } from "@/domain/treasury/actions/treasury-actions";
+import { useSetupDefaultAccounts } from "@/domain/treasury/hooks/use-setup-default-accounts";
 import { AnalyticsEvents, trackEvent } from "@/lib/posthog";
 
 export default function CreateTreasuryPage() {
@@ -16,6 +17,7 @@ export default function CreateTreasuryPage() {
 	const config = useConfig();
 	const { connectAsync, connectors } = useConnect();
 	const { disconnectAsync } = useDisconnect();
+	const setupDefaults = useSetupDefaultAccounts();
 
 	function handleSubmit(formData: FormData) {
 		setError(null);
@@ -46,6 +48,16 @@ export default function CreateTreasuryPage() {
 					setError(actionResult.error);
 				} else {
 					trackEvent(AnalyticsEvents.TREASURY_CREATED);
+					// Provision default accounts (Main AlphaUSD, Main BetaUSD)
+					if (actionResult.treasuryId) {
+						try {
+							await setupDefaults.mutateAsync({
+								treasuryId: actionResult.treasuryId,
+							});
+						} catch {
+							// Default account setup failure is non-fatal; dashboard retry handles it
+						}
+					}
 					router.push("/dashboard");
 				}
 			} catch (err) {

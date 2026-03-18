@@ -39,6 +39,9 @@ export function Sheet({ open, onClose, children, title }: SheetProps) {
 			onClick={(e) => {
 				if (e.target === overlayRef.current) onClose();
 			}}
+			onKeyDown={(e) => {
+				if (e.key === "Escape") onClose();
+			}}
 			role="dialog"
 			aria-modal="true"
 			aria-label={title}

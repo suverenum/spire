@@ -1,8 +1,7 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { useState, useTransition } from "react";
+import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,32 +33,18 @@ export function SettingsContent({ treasuryName, authenticatedAt }: SettingsConte
 
 	return (
 		<SessionGuard authenticatedAt={authenticatedAt}>
-			<div className="min-h-screen bg-gray-50">
-				<header className="border-b border-gray-200 bg-white">
-					<div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-4">
-						<Link
-							href="/dashboard"
-							className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
-						>
-							<ArrowLeft className="h-4 w-4" />
-							Back
-						</Link>
-						<h1 className="text-xl font-semibold">Settings</h1>
+			<SidebarLayout treasuryName={treasuryName}>
+				<h1 className="mb-6 text-2xl font-semibold">Settings</h1>
+				<Card>
+					<h2 className="mb-4 text-lg font-semibold">Treasury Name</h2>
+					<div className="flex gap-3">
+						<Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
+						<Button onClick={handleSave} disabled={isPending || name === treasuryName}>
+							{isPending ? "Saving..." : "Save"}
+						</Button>
 					</div>
-				</header>
-
-				<main className="mx-auto max-w-4xl px-4 py-6">
-					<Card>
-						<h2 className="mb-4 text-lg font-semibold">Treasury Name</h2>
-						<div className="flex gap-3">
-							<Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
-							<Button onClick={handleSave} disabled={isPending || name === treasuryName}>
-								{isPending ? "Saving..." : "Save"}
-							</Button>
-						</div>
-					</Card>
-				</main>
-			</div>
+				</Card>
+			</SidebarLayout>
 		</SessionGuard>
 	);
 }

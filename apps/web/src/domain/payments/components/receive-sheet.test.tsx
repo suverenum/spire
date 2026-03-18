@@ -97,4 +97,99 @@ describe("ReceiveSheet", () => {
 		fireEvent.click(closeButton);
 		expect(onClose).toHaveBeenCalled();
 	});
+
+	describe("with accounts", () => {
+		const accounts = [
+			{
+				id: "acc-1",
+				treasuryId: "t-1",
+				name: "Main Alpha",
+				tokenSymbol: "AlphaUSD",
+				tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
+				walletAddress: "0xaaaa000000000000000000000000000000000001" as `0x${string}`,
+				isDefault: true,
+				createdAt: new Date("2025-01-01"),
+				balance: 5000000n,
+				balanceFormatted: "$5.00",
+			},
+			{
+				id: "acc-2",
+				treasuryId: "t-1",
+				name: "Main Beta",
+				tokenSymbol: "BetaUSD",
+				tokenAddress: "0x2222222222222222222222222222222222222222" as `0x${string}`,
+				walletAddress: "0xbbbb000000000000000000000000000000000002" as `0x${string}`,
+				isDefault: true,
+				createdAt: new Date("2025-01-01"),
+				balance: 3000000n,
+				balanceFormatted: "$3.00",
+			},
+		];
+
+		it("shows account selector when accounts are provided", () => {
+			render(
+				<ReceiveSheet
+					open
+					onClose={vi.fn()}
+					address={addr}
+					accounts={accounts}
+					selectedAccountId="acc-1"
+					onAccountChange={vi.fn()}
+				/>,
+			);
+			expect(screen.getByLabelText("Receive to Account")).toBeInTheDocument();
+		});
+
+		it("displays selected account wallet address", () => {
+			render(
+				<ReceiveSheet
+					open
+					onClose={vi.fn()}
+					address={addr}
+					accounts={accounts}
+					selectedAccountId="acc-1"
+					onAccountChange={vi.fn()}
+				/>,
+			);
+			expect(screen.getByText("0xaaaa000000000000000000000000000000000001")).toBeInTheDocument();
+		});
+
+		it("shows account-specific label and sharing text", () => {
+			render(
+				<ReceiveSheet
+					open
+					onClose={vi.fn()}
+					address={addr}
+					accounts={accounts}
+					selectedAccountId="acc-1"
+					onAccountChange={vi.fn()}
+				/>,
+			);
+			expect(screen.getByText("Main Alpha wallet address")).toBeInTheDocument();
+			expect(screen.getByText(/receive AlphaUSD payments/)).toBeInTheDocument();
+		});
+
+		it("calls onAccountChange when account is changed", () => {
+			const onAccountChange = vi.fn();
+			render(
+				<ReceiveSheet
+					open
+					onClose={vi.fn()}
+					address={addr}
+					accounts={accounts}
+					selectedAccountId="acc-1"
+					onAccountChange={onAccountChange}
+				/>,
+			);
+			fireEvent.change(screen.getByLabelText("Receive to Account"), {
+				target: { value: "acc-2" },
+			});
+			expect(onAccountChange).toHaveBeenCalledWith("acc-2");
+		});
+
+		it("does not show account selector when accounts is empty array", () => {
+			render(<ReceiveSheet open onClose={vi.fn()} address={addr} accounts={[]} />);
+			expect(screen.queryByLabelText("Receive to Account")).not.toBeInTheDocument();
+		});
+	});
 });

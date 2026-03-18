@@ -26,9 +26,9 @@ async function TransactionDetailLoader({ params }: Props) {
 	return (
 		<TransactionDetailContent
 			transactionId={id}
-			tempoAddress={session.tempoAddress}
 			treasuryName={session.treasuryName}
 			authenticatedAt={session.authenticatedAt}
+			treasuryId={session.treasuryId}
 		/>
 	);
 }

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { addressSchema, createTreasurySchema, sendPaymentSchema } from "./validations";
+import {
+	accountNameSchema,
+	addressSchema,
+	createAccountSchema,
+	createTreasurySchema,
+	renameAccountSchema,
+	sendPaymentSchema,
+} from "./validations";
 
 describe("addressSchema", () => {
 	it("accepts valid address", () => {
@@ -174,6 +181,96 @@ describe("createTreasurySchema", () => {
 
 	it("rejects name over 100 characters", () => {
 		const result = createTreasurySchema.safeParse({ name: "a".repeat(101) });
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("accountNameSchema", () => {
+	it("accepts valid account name", () => {
+		const result = accountNameSchema.safeParse("Main AlphaUSD");
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects empty name", () => {
+		const result = accountNameSchema.safeParse("");
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects name over 100 characters", () => {
+		const result = accountNameSchema.safeParse("a".repeat(101));
+		expect(result.success).toBe(false);
+	});
+
+	it("accepts name at exactly 100 characters", () => {
+		const result = accountNameSchema.safeParse("a".repeat(100));
+		expect(result.success).toBe(true);
+	});
+});
+
+describe("createAccountSchema", () => {
+	it("accepts valid AlphaUSD account", () => {
+		const result = createAccountSchema.safeParse({
+			name: "Savings",
+			tokenSymbol: "AlphaUSD",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts valid BetaUSD account", () => {
+		const result = createAccountSchema.safeParse({
+			name: "Operations",
+			tokenSymbol: "BetaUSD",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects invalid token symbol", () => {
+		const result = createAccountSchema.safeParse({
+			name: "Test",
+			tokenSymbol: "pathUSD",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects ThetaUSD", () => {
+		const result = createAccountSchema.safeParse({
+			name: "Test",
+			tokenSymbol: "ThetaUSD",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects empty name", () => {
+		const result = createAccountSchema.safeParse({
+			name: "",
+			tokenSymbol: "AlphaUSD",
+		});
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("renameAccountSchema", () => {
+	it("accepts valid rename", () => {
+		const result = renameAccountSchema.safeParse({
+			accountId: "550e8400-e29b-41d4-a716-446655440000",
+			name: "New Name",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects invalid UUID", () => {
+		const result = renameAccountSchema.safeParse({
+			accountId: "not-a-uuid",
+			name: "New Name",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects empty name", () => {
+		const result = renameAccountSchema.safeParse({
+			accountId: "550e8400-e29b-41d4-a716-446655440000",
+			name: "",
+		});
 		expect(result.success).toBe(false);
 	});
 });

@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import z from "zod";
 
 export const addressSchema = z
 	.string()
@@ -19,4 +19,16 @@ export const sendPaymentSchema = z.object({
 
 export const createTreasurySchema = z.object({
 	name: z.string().min(1).max(100),
+});
+
+export const accountNameSchema = z.string().min(1).max(100);
+
+export const createAccountSchema = z.object({
+	name: accountNameSchema,
+	tokenSymbol: z.enum(["AlphaUSD", "BetaUSD"]),
+});
+
+export const renameAccountSchema = z.object({
+	accountId: z.string().uuid(),
+	name: accountNameSchema,
 });

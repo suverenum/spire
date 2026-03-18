@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+	ACCOUNT_TOKENS,
 	CACHE_KEYS,
+	DEX_ADDRESS,
+	KEYCHAIN_ADDRESS,
 	SESSION_COOKIE_NAME,
 	SESSION_MAX_AGE_MS,
 	SUPPORTED_TOKENS,
@@ -47,6 +50,45 @@ describe("constants", () => {
 	});
 });
 
+describe("ACCOUNT_TOKENS", () => {
+	it("contains exactly AlphaUSD and BetaUSD", () => {
+		expect(ACCOUNT_TOKENS).toHaveLength(2);
+		expect(ACCOUNT_TOKENS[0].name).toBe("AlphaUSD");
+		expect(ACCOUNT_TOKENS[1].name).toBe("BetaUSD");
+	});
+
+	it("references the same objects as SUPPORTED_TOKENS", () => {
+		expect(ACCOUNT_TOKENS[0]).toBe(SUPPORTED_TOKENS.AlphaUSD);
+		expect(ACCOUNT_TOKENS[1]).toBe(SUPPORTED_TOKENS.BetaUSD);
+	});
+
+	it("does not include pathUSD or ThetaUSD", () => {
+		const names = ACCOUNT_TOKENS.map((t) => t.name);
+		expect(names).not.toContain("pathUSD");
+		expect(names).not.toContain("ThetaUSD");
+	});
+});
+
+describe("DEX_ADDRESS", () => {
+	it("is a valid hex address", () => {
+		expect(DEX_ADDRESS).toMatch(/^0x[a-fA-F0-9]{40}$/);
+	});
+
+	it("matches the Tempo DEX precompile address", () => {
+		expect(DEX_ADDRESS).toBe("0xDEc0000000000000000000000000000000000000");
+	});
+});
+
+describe("KEYCHAIN_ADDRESS", () => {
+	it("is a valid hex address", () => {
+		expect(KEYCHAIN_ADDRESS).toMatch(/^0x[a-fA-F0-9]{40}$/);
+	});
+
+	it("matches the Tempo Account Keychain precompile address", () => {
+		expect(KEYCHAIN_ADDRESS).toBe("0xAAAAAAAA00000000000000000000000000000000");
+	});
+});
+
 describe("CACHE_KEYS", () => {
 	it("generates balances key", () => {
 		expect(CACHE_KEYS.balances("0x123")).toEqual(["balances", "0x123"]);
@@ -54,5 +96,17 @@ describe("CACHE_KEYS", () => {
 
 	it("generates transactions key", () => {
 		expect(CACHE_KEYS.transactions("0x123")).toEqual(["transactions", "0x123"]);
+	});
+
+	it("generates accounts key", () => {
+		expect(CACHE_KEYS.accounts("t-1")).toEqual(["accounts", "t-1"]);
+	});
+
+	it("generates accountBalance key", () => {
+		expect(CACHE_KEYS.accountBalance("0xwallet", "0xtoken")).toEqual([
+			"accountBalance",
+			"0xwallet",
+			"0xtoken",
+		]);
 	});
 });

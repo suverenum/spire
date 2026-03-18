@@ -12,7 +12,7 @@ const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export async function createTreasuryAction(
 	formData: FormData,
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; success?: boolean; treasuryId?: string }> {
 	const raw = { name: formData.get("name") };
 	const parsed = createTreasurySchema.safeParse(raw);
 
@@ -73,7 +73,7 @@ export async function createTreasuryAction(
 		treasuryName: row.name,
 	});
 
-	return { success: true };
+	return { success: true, treasuryId: row.id };
 }
 
 export async function updateTreasuryNameAction(formData: FormData): Promise<{ error?: string }> {
