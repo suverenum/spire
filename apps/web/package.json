@@ -1,6 +1,7 @@
 {
 	"name": "@goldhord/web",
 	"version": "0.0.0",
+	"type": "module",
 	"private": true,
 	"scripts": {
 		"dev": "next dev --turbopack",
@@ -25,6 +26,7 @@
 		"@serwist/next": "^9.5.7",
 		"@tanstack/react-query": "^5.90.21",
 		"@tanstack/react-query-persist-client": "^5.90.24",
+		"@vercel/analytics": "^2.0.1",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"drizzle-orm": "^0.45.1",
@@ -58,7 +60,8 @@
 		"@vitest/coverage-v8": "^4.1.0",
 		"babel-plugin-react-compiler": "^1.0.0",
 		"drizzle-kit": "^0.31.9",
-		"jsdom": "^29.0.0",
+		"happy-dom": "^20.8.4",
+		"jsdom": "28",
 		"pg": "^8.20.0",
 		"postcss": "^8.5.8",
 		"tailwindcss": "^4.2.1",

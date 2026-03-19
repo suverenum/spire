@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ViewTransition } from "react";
@@ -27,6 +28,7 @@ export default function RootLayout({
 				<Providers>
 					<ViewTransition name="main-content">{children}</ViewTransition>
 				</Providers>
+				<Analytics />
 			</body>
 		</html>
 	);

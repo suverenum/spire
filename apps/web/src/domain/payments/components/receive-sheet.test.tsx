@@ -15,10 +15,10 @@ describe("ReceiveSheet", () => {
 	const addr = "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`;
 
 	beforeEach(() => {
-		Object.assign(navigator, {
-			clipboard: {
-				writeText: vi.fn().mockResolvedValue(undefined),
-			},
+		Object.defineProperty(navigator, "clipboard", {
+			value: { writeText: vi.fn().mockResolvedValue(undefined) },
+			writable: true,
+			configurable: true,
 		});
 	});
 

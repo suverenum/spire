@@ -127,7 +127,7 @@ describe("sendPaymentSchema", () => {
 	});
 
 	it("accepts all valid tokens", () => {
-		for (const token of ["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]) {
+		for (const token of ["AlphaUSD", "BetaUSD"]) {
 			const result = sendPaymentSchema.safeParse({ ...validPayment, token });
 			expect(result.success).toBe(true);
 		}

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/toast";
 import { finalizeAccountCreate } from "@/domain/accounts/actions/create-account";
 import { CACHE_KEYS, DEFAULT_ACCOUNTS, TEMPO_RPC_URL } from "@/lib/constants";
+import { IS_TESTNET } from "@/lib/env";
 
 interface SetupDefaultAccountsParams {
 	treasuryId: string;
@@ -45,19 +46,19 @@ export function useSetupDefaultAccounts() {
 						continue;
 					}
 
-					// Fund via faucet (fire-and-forget)
-					fetch(TEMPO_RPC_URL, {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							jsonrpc: "2.0",
-							method: "tempo_fundAddress",
-							params: [walletAddress],
-							id: 1,
-						}),
-					}).catch(() => {
-						// Faucet failure is non-fatal on testnet
-					});
+					// Fund via faucet (fire-and-forget, testnet only)
+					if (IS_TESTNET) {
+						fetch(TEMPO_RPC_URL, {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+								jsonrpc: "2.0",
+								method: "tempo_fundAddress",
+								params: [walletAddress],
+								id: 1,
+							}),
+						}).catch(() => {});
+					}
 
 					results.push({ name: defaultAccount.name, success: true });
 				} catch (err) {
@@ -130,17 +131,19 @@ export function useRetryDefaultAccountSetup() {
 						continue;
 					}
 
-					// Fund via faucet
-					fetch(TEMPO_RPC_URL, {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							jsonrpc: "2.0",
-							method: "tempo_fundAddress",
-							params: [walletAddress],
-							id: 1,
-						}),
-					}).catch(() => {});
+					// Fund via faucet (testnet only)
+					if (IS_TESTNET) {
+						fetch(TEMPO_RPC_URL, {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+								jsonrpc: "2.0",
+								method: "tempo_fundAddress",
+								params: [walletAddress],
+								id: 1,
+							}),
+						}).catch(() => {});
+					}
 
 					results.push({ name: defaultAccount.name, success: true });
 				} catch {

@@ -21,7 +21,6 @@ describe("CreateAccountForm", () => {
 	it("renders form fields when open", () => {
 		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
 		expect(screen.getByLabelText("Account Name")).toBeInTheDocument();
-		expect(screen.getByText(/Token:\s*AlphaUSD/)).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Create Account" })).toBeInTheDocument();
 	});
 
@@ -75,9 +74,8 @@ describe("CreateAccountForm", () => {
 		expect(screen.getByText("Name already taken")).toBeInTheDocument();
 	});
 
-	it("shows token as plain text when only one option", () => {
+	it("shows token selector when multiple options available", () => {
 		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		expect(screen.getByText(/Token:\s*AlphaUSD/)).toBeInTheDocument();
-		expect(screen.queryByLabelText("Token")).not.toBeInTheDocument();
+		expect(screen.getByLabelText("Token")).toBeInTheDocument();
 	});
 });

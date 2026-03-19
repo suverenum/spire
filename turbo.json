@@ -8,6 +8,19 @@
 		"build:deploy": {
 			"outputs": [".next/**", "dist/**"],
 			"dependsOn": ["^build"],
+			"env": [
+				"NEXT_PUBLIC_TEMPO_CHAIN_ID",
+				"NEXT_PUBLIC_TEMPO_RPC_HTTP",
+				"NEXT_PUBLIC_TEMPO_RPC_WS",
+				"NEXT_PUBLIC_TEMPO_SPONSOR_URL",
+				"NEXT_PUBLIC_TEMPO_EXPLORER_URL",
+				"NEXT_PUBLIC_TOKENS",
+				"NEXT_PUBLIC_DEFAULT_TOKEN",
+				"NEXT_PUBLIC_MULTISIG_FACTORY",
+				"NEXT_PUBLIC_GUARD_FACTORY",
+				"NEXT_PUBLIC_APP_ENV",
+				"NEXT_PUBLIC_APP_URL"
+			],
 			"passThroughEnv": [
 				"DATABASE_URL",
 				"DATABASE_URL_UNPOOLED",
@@ -37,6 +50,19 @@
 		"build": {
 			"outputs": [".next/**", "dist/**"],
 			"dependsOn": ["^build"],
+			"env": [
+				"NEXT_PUBLIC_TEMPO_CHAIN_ID",
+				"NEXT_PUBLIC_TEMPO_RPC_HTTP",
+				"NEXT_PUBLIC_TEMPO_RPC_WS",
+				"NEXT_PUBLIC_TEMPO_SPONSOR_URL",
+				"NEXT_PUBLIC_TEMPO_EXPLORER_URL",
+				"NEXT_PUBLIC_TOKENS",
+				"NEXT_PUBLIC_DEFAULT_TOKEN",
+				"NEXT_PUBLIC_MULTISIG_FACTORY",
+				"NEXT_PUBLIC_GUARD_FACTORY",
+				"NEXT_PUBLIC_APP_ENV",
+				"NEXT_PUBLIC_APP_URL"
+			],
 			"passThroughEnv": [
 				"DATABASE_URL",
 				"DATABASE_URL_UNPOOLED",
