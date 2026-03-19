@@ -20,11 +20,6 @@ function getSecret(): string {
 	return secret;
 }
 
-export interface EncryptedData {
-	/** Base64-encoded: salt (16) + iv (12) + ciphertext + authTag (16) */
-	data: string;
-}
-
 /**
  * Encrypts plaintext using AES-256-GCM with a key derived from SESSION_SECRET.
  * Returns a single base64 string containing salt + iv + ciphertext + authTag.

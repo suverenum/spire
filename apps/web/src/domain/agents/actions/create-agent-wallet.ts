@@ -2,7 +2,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { privateKeyToAccount } from "viem/accounts";
 import { db } from "@/db";
 import { accounts, agentWallets } from "@/db/schema";
 import { ACCOUNT_TOKENS } from "@/lib/constants";
@@ -82,6 +82,7 @@ export async function finalizeAgentWalletCreate({
 	spendingCap,
 	dailyLimit,
 	maxPerTx,
+	agentPrivateKey,
 }: {
 	treasuryId: string;
 	label: string;
@@ -91,6 +92,8 @@ export async function finalizeAgentWalletCreate({
 	spendingCap: string;
 	dailyLimit: string;
 	maxPerTx: string;
+	/** The agent's private key, generated client-side and used for Guardian deployment */
+	agentPrivateKey: `0x${string}`;
 }): Promise<{ error?: string; account?: { id: string }; rawPrivateKey?: string }> {
 	const session = await getSession();
 	if (!session) return { error: "Not authenticated" };
@@ -100,8 +103,8 @@ export async function finalizeAgentWalletCreate({
 	if (!token) return { error: "Invalid token" };
 	if (!ADDRESS_RE.test(guardianAddress)) return { error: "Invalid guardian address" };
 
-	// Generate agent key pair
-	const privateKey = generatePrivateKey();
+	// Encrypt the agent key (same key used for Guardian deployment)
+	const privateKey = agentPrivateKey;
 	const agentAccount = privateKeyToAccount(privateKey);
 	const encryptedKey = encrypt(privateKey);
 
