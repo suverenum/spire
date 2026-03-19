@@ -13,10 +13,10 @@ export default function Home() {
 
 function HomeSkeleton() {
 	return (
-		<div className="flex min-h-screen flex-col items-center justify-center bg-background">
+		<div className="bg-background flex min-h-screen flex-col items-center justify-center">
 			<div className="w-full max-w-sm text-center">
 				<h1 className="text-4xl font-semibold tracking-tight">Goldhord</h1>
-				<p className="mt-2 text-muted-foreground">Treasury management on Tempo blockchain</p>
+				<p className="text-muted-foreground mt-2">Treasury management on Tempo blockchain</p>
 			</div>
 		</div>
 	);

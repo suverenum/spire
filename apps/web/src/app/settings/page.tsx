@@ -5,7 +5,7 @@ import { SettingsContent } from "./settings-content";
 
 export default function SettingsPage() {
 	return (
-		<Suspense fallback={<div className="min-h-screen bg-background" />}>
+		<Suspense fallback={<div className="bg-background min-h-screen" />}>
 			<SettingsLoader />
 		</Suspense>
 	);

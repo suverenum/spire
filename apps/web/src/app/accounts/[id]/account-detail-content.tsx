@@ -249,22 +249,22 @@ export function AccountDetailContent({
 			<SidebarLayout treasuryName={treasuryName}>
 				<div className="mb-6">
 					<h1 className="text-2xl font-semibold">{account.name}</h1>
-					<p className="text-sm text-muted-foreground">{account.tokenSymbol}</p>
+					<p className="text-muted-foreground text-sm">{account.tokenSymbol}</p>
 				</div>
 
 				<div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<Card>
-						<p className="text-sm text-muted-foreground">Balance</p>
+						<p className="text-muted-foreground text-sm">Balance</p>
 						<p className="text-2xl font-semibold">{account.balanceFormatted}</p>
 					</Card>
 					<Card>
-						<p className="mb-1 text-sm text-muted-foreground">Wallet Address</p>
+						<p className="text-muted-foreground mb-1 text-sm">Wallet Address</p>
 						<div className="flex items-center gap-2">
 							<code className="min-w-0 flex-1 truncate text-xs">{account.walletAddress}</code>
 							<button
 								type="button"
 								onClick={handleCopy}
-								className="shrink-0 text-muted-foreground hover:text-muted-foreground"
+								className="text-muted-foreground hover:text-muted-foreground shrink-0"
 							>
 								<Copy className="h-4 w-4" />
 							</button>
@@ -273,7 +273,7 @@ export function AccountDetailContent({
 				</div>
 
 				<div className="mb-6 flex justify-center">
-					<div className="rounded-xl border border-border bg-muted p-4">
+					<div className="border-border bg-muted rounded-xl border p-4">
 						<QRCodeSVG value={account.walletAddress} size={160} level="M" />
 					</div>
 				</div>
@@ -289,18 +289,18 @@ export function AccountDetailContent({
 								</div>
 								<div className="space-y-2">
 									<div>
-										<p className="text-xs text-muted-foreground">Agent Address</p>
-										<p className="font-mono text-xs text-muted-foreground">
+										<p className="text-muted-foreground text-xs">Agent Address</p>
+										<p className="text-muted-foreground font-mono text-xs">
 											{multisigConfig.agentAddress}
 										</p>
 									</div>
 									{multisigConfig.agentPrivateKey && (
 										<div>
-											<p className="text-xs text-muted-foreground">
+											<p className="text-muted-foreground text-xs">
 												<Key className="mr-1 inline h-3 w-3" />
 												Agent Private Key
 											</p>
-											<p className="break-all rounded-md bg-background px-2 py-1 font-mono text-xs text-muted-foreground">
+											<p className="bg-background text-muted-foreground rounded-md px-2 py-1 font-mono text-xs break-all">
 												{multisigConfig.agentPrivateKey}
 											</p>
 										</div>
@@ -312,12 +312,12 @@ export function AccountDetailContent({
 						{/* Signers */}
 						<Card>
 							<div className="mb-2 flex items-center gap-2">
-								<Users className="h-4 w-4 text-muted-foreground" />
+								<Users className="text-muted-foreground h-4 w-4" />
 								<p className="text-sm font-medium">Signers ({multisigConfig.owners.length})</p>
 							</div>
 							<div className="space-y-1">
 								{multisigConfig.owners.map((owner) => (
-									<p key={owner} className="font-mono text-xs text-muted-foreground">
+									<p key={owner} className="text-muted-foreground font-mono text-xs">
 										{truncateAddress(owner)}
 										{owner.toLowerCase() === tempoAddress.toLowerCase() && " (you)"}
 										{owner.toLowerCase() === multisigConfig.agentAddress?.toLowerCase() &&
@@ -333,7 +333,7 @@ export function AccountDetailContent({
 								<Shield className="h-4 w-4 text-blue-600" />
 								<p className="text-sm font-medium">Approval Policy</p>
 							</div>
-							<div className="space-y-1 text-sm text-muted-foreground">
+							<div className="text-muted-foreground space-y-1 text-sm">
 								{multisigConfig.tiersJson.map((tier) => (
 									<p key={tier.maxValue}>
 										Up to {(Number(tier.maxValue) / 1e6).toLocaleString()} AlphaUSD:{" "}
@@ -378,7 +378,7 @@ export function AccountDetailContent({
 				<Sheet open={transferOpen} onClose={() => setTransferOpen(false)} title="Internal Transfer">
 					<div className="space-y-4">
 						<div>
-							<p className="text-sm text-muted-foreground">
+							<p className="text-muted-foreground text-sm">
 								From: {account.name} ($
 								{formatBalance(account.balance, 6)})
 							</p>

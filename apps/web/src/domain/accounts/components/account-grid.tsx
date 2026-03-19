@@ -37,7 +37,7 @@ export function AccountGrid({
 			</div>
 			{showViewAll && hasMore && (
 				<div className="mt-3 text-center">
-					<Link href="/accounts" className="text-sm text-muted-foreground hover:text-foreground">
+					<Link href="/accounts" className="text-muted-foreground hover:text-foreground text-sm">
 						View all accounts &rarr;
 					</Link>
 				</div>

@@ -68,7 +68,7 @@ export function WelcomeScreen() {
 						<Image src="/icon.svg" alt="Goldhord" width={62} height={62} priority />
 					</div>
 					<h1 className="text-2xl font-semibold">Goldhord</h1>
-					<p className="mt-2 text-sm text-muted-foreground">Home for your AI agent wallets</p>
+					<p className="text-muted-foreground mt-2 text-sm">Home for your AI agent wallets</p>
 				</div>
 
 				{error && (
@@ -82,7 +82,7 @@ export function WelcomeScreen() {
 						type="button"
 						onClick={handleUnlock}
 						disabled={isPending}
-						className="w-full cursor-pointer rounded-lg bg-primary px-4 py-2.5 text-[13px] font-medium text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
+						className="bg-primary text-primary-foreground w-full cursor-pointer rounded-lg px-4 py-2.5 text-[13px] font-medium transition-all hover:opacity-90 disabled:opacity-50"
 					>
 						<span className="flex items-center justify-center gap-2">
 							<PasskeyIcon className="h-5 w-5" />
