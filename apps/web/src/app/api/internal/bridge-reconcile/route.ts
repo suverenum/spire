@@ -18,6 +18,11 @@ export async function GET(request: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const result = await reconcilePendingBridgeDeposits();
-	return NextResponse.json(result);
+	try {
+		const result = await reconcilePendingBridgeDeposits();
+		return NextResponse.json(result);
+	} catch (err) {
+		console.error("Bridge reconciler failed:", err);
+		return NextResponse.json({ error: "Reconciliation failed" }, { status: 500 });
+	}
 }

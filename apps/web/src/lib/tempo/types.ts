@@ -109,6 +109,7 @@ export interface BridgeDepositTransaction extends BaseGroupedTransaction {
 	accountId: string;
 	accountName: string;
 	sourceChain: string;
+	sourceTxHash: string;
 	amount: bigint;
 	token: string;
 	bridgeStatus: "pending" | "bridging" | "completed" | "failed";

@@ -202,6 +202,7 @@ function BridgeDepositDetail({ tx }: { tx: GroupedTransaction & { kind: "bridgeD
 					<p className="text-sm text-gray-500">Date</p>
 					<p className="text-sm">{formatDate(tx.timestamp)}</p>
 				</div>
+				<CopyableField label={`${chainLabel} Tx Hash`} value={tx.sourceTxHash} />
 				{tx.txHashes.length > 0 && <CopyableField label="Tempo Tx Hash" value={tx.txHashes[0]} />}
 				<div className="flex items-center justify-between py-2">
 					<p className="text-sm text-gray-500">Bridge</p>

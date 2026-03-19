@@ -1,9 +1,11 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
+import { CACHE_KEYS } from "@/lib/constants";
 import { createBridgeDeposit } from "../actions/track-deposit";
 
 interface BridgeTrackFormProps {
@@ -12,6 +14,7 @@ interface BridgeTrackFormProps {
 }
 
 export function BridgeTrackForm({ accountId, sourceChain }: BridgeTrackFormProps) {
+	const queryClient = useQueryClient();
 	const [sourceTxHash, setSourceTxHash] = useState("");
 	const [amount, setAmount] = useState("");
 	const [isPending, setIsPending] = useState(false);
@@ -31,6 +34,7 @@ export function BridgeTrackForm({ accountId, sourceChain }: BridgeTrackFormProps
 			toast("Deposit tracked! We'll monitor its progress.", "success");
 			setSourceTxHash("");
 			setAmount("");
+			queryClient.invalidateQueries({ queryKey: CACHE_KEYS.bridgeDeposits(accountId) });
 		} catch (err) {
 			toast(err instanceof Error ? err.message : "Failed to track deposit", "error");
 		} finally {

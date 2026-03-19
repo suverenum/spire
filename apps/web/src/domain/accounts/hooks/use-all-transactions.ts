@@ -77,6 +77,7 @@ export function useAllTransactions(accounts: AccountRecord[]) {
 				accountId: account.id,
 				accountName: account.name,
 				sourceChain: deposit.sourceChain,
+				sourceTxHash: deposit.sourceTxHash,
 				amount: parseDecimalToMicroUnits(deposit.amount),
 				token: "USDC",
 				bridgeStatus,

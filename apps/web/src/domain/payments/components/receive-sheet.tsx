@@ -31,7 +31,10 @@ export function ReceiveSheet({
 }: ReceiveSheetProps) {
 	const [selectedChain, setSelectedChain] = useState<ChainId>("tempo");
 
-	const selectedAccount = accounts?.find((a) => a.id === selectedAccountId);
+	const selectedAccount =
+		accounts?.find((a) => a.id === selectedAccountId) ??
+		(accounts?.length === 1 ? accounts[0] : undefined);
+	const effectiveAccountId = selectedAccount?.id ?? selectedAccountId;
 	const displayAddress = selectedAccount
 		? (selectedAccount.walletAddress as `0x${string}`)
 		: address;
@@ -107,9 +110,9 @@ export function ReceiveSheet({
 				) : (
 					<div className="w-full">
 						<StargateDeposit chain={selectedChain} destAddress={displayAddress} />
-						{selectedAccountId && (
+						{effectiveAccountId && (
 							<div className="mt-4">
-								<BridgeTrackForm accountId={selectedAccountId} sourceChain={selectedChain} />
+								<BridgeTrackForm accountId={effectiveAccountId} sourceChain={selectedChain} />
 							</div>
 						)}
 					</div>
