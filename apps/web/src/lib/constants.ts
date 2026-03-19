@@ -3,7 +3,7 @@ export const TEMPO_WS_URL = TEMPO_RPC_URL.replace(/^https:\/\//, "wss://");
 export const TEMPO_CHAIN_ID = 42431;
 export const TEMPO_EXPLORER_URL = "https://explore.tempo.xyz";
 export const GUARDIAN_FACTORY_ADDRESS =
-	"0x1b8D9a51220bE1038e62C8d128C8Be597306Df9D" as `0x${string}`;
+	"0xeffb75d8e4e4622c523bd0b4f2b3ca9e3954b131" as `0x${string}`;
 
 export const SUPPORTED_TOKENS = {
 	AlphaUSD: {
