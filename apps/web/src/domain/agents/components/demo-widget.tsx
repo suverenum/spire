@@ -58,15 +58,18 @@ export function DemoWidget() {
 	};
 
 	return (
-		<div className="rounded-lg border border-gray-200 bg-white p-6" data-testid="demo-widget">
+		<div className="border-border bg-card rounded-lg border p-6" data-testid="demo-widget">
 			<h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-				<Bot className="h-5 w-5 text-emerald-600" />
+				<Bot className="h-5 w-5 text-emerald-400" />
 				Try it live
 			</h3>
 
 			<div className="space-y-3">
 				<div>
-					<label htmlFor="demo-key" className="mb-1 block text-xs font-medium text-gray-500">
+					<label
+						htmlFor="demo-key"
+						className="text-muted-foreground mb-1 block text-xs font-medium"
+					>
 						Agent Private Key
 					</label>
 					<Input
@@ -80,7 +83,10 @@ export function DemoWidget() {
 				</div>
 
 				<div>
-					<label htmlFor="demo-guardian" className="mb-1 block text-xs font-medium text-gray-500">
+					<label
+						htmlFor="demo-guardian"
+						className="text-muted-foreground mb-1 block text-xs font-medium"
+					>
 						Guardian Address
 					</label>
 					<Input
@@ -93,7 +99,10 @@ export function DemoWidget() {
 				</div>
 
 				<div>
-					<label htmlFor="demo-prompt" className="mb-1 block text-xs font-medium text-gray-500">
+					<label
+						htmlFor="demo-prompt"
+						className="text-muted-foreground mb-1 block text-xs font-medium"
+					>
 						Image Prompt
 					</label>
 					<Input
@@ -122,9 +131,9 @@ export function DemoWidget() {
 			</div>
 
 			{result && (
-				<div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+				<div className="border-border mt-4 space-y-3 border-t pt-4">
 					{result.error ? (
-						<div className="rounded bg-red-50 p-3 text-sm text-red-700">{result.error}</div>
+						<div className="rounded bg-red-500/10 p-3 text-sm text-red-400">{result.error}</div>
 					) : (
 						<>
 							{result.imageUrl && (
@@ -139,8 +148,8 @@ export function DemoWidget() {
 							)}
 
 							{result.txHash && (
-								<div className="rounded bg-emerald-50 p-3">
-									<p className="text-xs text-emerald-600">Payment receipt</p>
+								<div className="rounded bg-emerald-500/10 p-3">
+									<p className="text-xs text-emerald-400">Payment receipt</p>
 									<div className="mt-1 flex items-center gap-2">
 										<span className="font-mono text-sm">{result.txHash.slice(0, 18)}...</span>
 										<a
@@ -153,7 +162,7 @@ export function DemoWidget() {
 										</a>
 									</div>
 									{result.amount && (
-										<p className="mt-1 text-xs text-gray-500">
+										<p className="text-muted-foreground mt-1 text-xs">
 											Paid ${result.amount} to {result.vendor}
 										</p>
 									)}

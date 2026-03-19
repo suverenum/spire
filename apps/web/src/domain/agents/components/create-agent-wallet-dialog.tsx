@@ -100,23 +100,23 @@ export function CreateAgentWalletDialog({
 		return (
 			<Sheet open={open} onClose={onClose} title="Agent Wallet Created!">
 				<div className="space-y-4" data-testid="agent-key-success">
-					<div className="flex items-center gap-2 text-emerald-600">
+					<div className="flex items-center gap-2 text-emerald-400">
 						<Check className="h-5 w-5" />
 						<span className="font-medium">Guardian deployed successfully</span>
 					</div>
 
 					{guardianAddr && (
 						<div>
-							<p className="text-xs text-gray-500">Guardian address</p>
+							<p className="text-muted-foreground text-xs">Guardian address</p>
 							<p className="font-mono text-sm">{guardianAddr}</p>
 						</div>
 					)}
 
-					<div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-4">
-						<p className="mb-2 text-sm font-semibold text-amber-800">
+					<div className="border-border bg-muted rounded-lg border p-4">
+						<p className="mb-2 text-sm font-semibold text-amber-400">
 							Save this key now — you won&apos;t see it in full again
 						</p>
-						<div className="mb-2 rounded bg-white p-3 font-mono text-xs break-all">
+						<div className="bg-muted mb-2 rounded p-3 font-mono text-xs break-all">
 							{createdKey}
 						</div>
 						<Button onClick={handleCopyKey} variant="outline" size="sm">
@@ -133,7 +133,7 @@ export function CreateAgentWalletDialog({
 	}
 
 	return (
-		<Sheet open={open} onClose={onClose} title="Create Agent Wallet">
+		<Sheet open={open} onClose={onClose} title="Create agent wallet">
 			<div className="space-y-4" data-testid="create-agent-form">
 				<div>
 					<label htmlFor="agent-label" className="mb-1 block text-sm font-medium">
@@ -154,7 +154,7 @@ export function CreateAgentWalletDialog({
 					</label>
 					<select
 						id="agent-token"
-						className="w-full rounded border border-gray-200 px-3 py-2 text-sm"
+						className="border-border bg-background text-foreground w-full rounded border px-3 py-2 text-sm"
 						value={tokenSymbol}
 						onChange={(e) => setTokenSymbol(e.target.value)}
 						disabled={isPending}
@@ -230,8 +230,8 @@ export function CreateAgentWalletDialog({
 								disabled={isPending}
 								className={`rounded-full border px-3 py-1 text-xs transition ${
 									selectedVendors.includes(vendor.address)
-										? "border-blue-500 bg-blue-50 text-blue-700"
-										: "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+										? "border-blue-500/30 bg-blue-500/10 text-blue-400"
+										: "border-border bg-background text-muted-foreground hover:bg-muted"
 								}`}
 							>
 								{vendor.name}
@@ -241,7 +241,7 @@ export function CreateAgentWalletDialog({
 				</div>
 
 				{step !== "idle" && step !== "complete" && step !== "error" && (
-					<div className="flex items-center gap-2 text-sm text-blue-600">
+					<div className="flex items-center gap-2 text-sm text-blue-400">
 						<Bot className="h-4 w-4 animate-pulse" />
 						{STEP_LABELS[step]}
 					</div>
@@ -253,7 +253,7 @@ export function CreateAgentWalletDialog({
 					className="w-full"
 					data-testid="create-agent-submit"
 				>
-					{isPending ? "Creating..." : "Create Agent Wallet"}
+					{isPending ? "Creating..." : "Create agent wallet"}
 				</Button>
 			</div>
 		</Sheet>

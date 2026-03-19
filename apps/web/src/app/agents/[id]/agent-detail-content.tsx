@@ -4,7 +4,6 @@ import {
 	AlertTriangle,
 	ArrowLeft,
 	Bot,
-	Check,
 	ClipboardList,
 	DollarSign,
 	Eye,
@@ -13,7 +12,6 @@ import {
 	ShieldOff,
 	Upload,
 	Users,
-	X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -35,10 +33,10 @@ import {
 	useTopUpAgent,
 	useUpdateGuardianLimits,
 } from "@/domain/agents/hooks/use-agent-actions";
-import { SUPPORTED_TOKENS } from "@/lib/constants";
-import { useGuardianState } from "@/domain/agents/hooks/use-guardian-state";
 import { useAgentWallets } from "@/domain/agents/hooks/use-agent-wallets";
+import { useGuardianState } from "@/domain/agents/hooks/use-guardian-state";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
+import { SUPPORTED_TOKENS } from "@/lib/constants";
 import { getVendorByAddress, VENDOR_LIST } from "@/lib/vendors";
 
 interface AgentDetailContentProps {
@@ -81,8 +79,8 @@ export function AgentDetailContent({
 	);
 
 	const topUpMutation = useTopUpAgent(treasuryId);
-	const approveMutation = useApprovePay(treasuryId);
-	const rejectMutation = useRejectPay(treasuryId);
+	const _approveMutation = useApprovePay(treasuryId);
+	const _rejectMutation = useRejectPay(treasuryId);
 	const addTokenMutation = useAddToken(treasuryId);
 	const withdrawMutation = useEmergencyWithdraw(treasuryId);
 	const updateLimitsMutation = useUpdateGuardianLimits(treasuryId);
@@ -174,30 +172,30 @@ export function AgentDetailContent({
 				<div className="space-y-6">
 					<Link
 						href="/agents"
-						className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+						className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
 					>
-						<ArrowLeft className="h-4 w-4" /> Back to Agent Wallets
+						<ArrowLeft className="h-4 w-4" /> Back to Agent wallets
 					</Link>
 
 					{!wallet ? (
-						<p className="text-gray-500">Agent wallet not found.</p>
+						<p className="text-muted-foreground">Agent wallet not found.</p>
 					) : (
 						<>
 							{/* Header */}
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-3">
 									<div
-										className={`flex h-12 w-12 items-center justify-center rounded-lg ${isActive ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400"}`}
+										className={`flex h-12 w-12 items-center justify-center rounded-lg ${isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-muted text-muted-foreground"}`}
 									>
 										<Bot className="h-6 w-6" />
 									</div>
 									<div>
-										<h1 className="text-2xl font-bold text-gray-900">{wallet.label}</h1>
-										<p className="text-sm text-gray-500">{wallet.guardianAddress}</p>
+										<h1 className="text-2xl font-semibold">{wallet.label}</h1>
+										<p className="text-muted-foreground text-sm">{wallet.guardianAddress}</p>
 									</div>
 								</div>
 								<span
-									className={`rounded-full px-3 py-1 text-sm font-medium ${isActive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
+									className={`rounded-full px-3 py-1 text-sm font-medium ${isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}
 								>
 									{wallet.status}
 								</span>
@@ -225,12 +223,12 @@ export function AgentDetailContent({
 									)}
 								</div>
 								{editingLimits ? (
-									<div className="space-y-3 border-t border-gray-100 p-4">
+									<div className="border-border space-y-3 border-t p-4">
 										<div className="grid grid-cols-2 gap-4">
 											<div>
 												<label
 													htmlFor="edit-max-per-tx"
-													className="mb-1 block text-xs font-medium text-gray-500"
+													className="text-muted-foreground mb-1 block text-xs font-medium"
 												>
 													Per-tx cap ($)
 												</label>
@@ -244,7 +242,7 @@ export function AgentDetailContent({
 											<div>
 												<label
 													htmlFor="edit-daily-limit"
-													className="mb-1 block text-xs font-medium text-gray-500"
+													className="text-muted-foreground mb-1 block text-xs font-medium"
 												>
 													Daily limit ($)
 												</label>
@@ -272,17 +270,17 @@ export function AgentDetailContent({
 										</div>
 									</div>
 								) : (
-									<div className="grid grid-cols-3 gap-4 border-t border-gray-100 p-4 text-center">
+									<div className="border-border grid grid-cols-3 gap-4 border-t p-4 text-center">
 										<div>
-											<p className="text-xs text-gray-500">Per-tx cap</p>
+											<p className="text-muted-foreground text-xs">Per-tx cap</p>
 											<p className="text-lg font-semibold">${formatAmount(wallet.maxPerTx)}</p>
 										</div>
 										<div>
-											<p className="text-xs text-gray-500">Daily limit</p>
+											<p className="text-muted-foreground text-xs">Daily limit</p>
 											<p className="text-lg font-semibold">${formatAmount(wallet.dailyLimit)}</p>
 										</div>
 										<div>
-											<p className="text-xs text-gray-500">Total cap</p>
+											<p className="text-muted-foreground text-xs">Total cap</p>
 											<p className="text-lg font-semibold">${formatAmount(wallet.spendingCap)}</p>
 										</div>
 									</div>
@@ -306,21 +304,21 @@ export function AgentDetailContent({
 										</Button>
 									)}
 								</div>
-								<div className="border-t border-gray-100 p-4">
+								<div className="border-border border-t p-4">
 									<div className="flex flex-wrap gap-2">
 										{wallet.allowedVendors.map((addr) => {
 											const vendor = getVendorByAddress(addr);
 											return (
 												<span
 													key={addr}
-													className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-700"
+													className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-sm text-blue-400"
 												>
 													{vendor?.name ?? truncateAddress(addr)}
 													{isActive && (
 														<button
 															type="button"
 															onClick={() => handleRemoveVendor(addr)}
-															className="ml-1 text-blue-400 hover:text-red-500"
+															className="ml-1 text-blue-400/60 hover:text-red-400"
 															title="Remove vendor"
 														>
 															<Minus className="h-3 w-3" />
@@ -331,8 +329,8 @@ export function AgentDetailContent({
 										})}
 									</div>
 									{addingVendor && (
-										<div className="mt-3 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
-											<p className="mb-1 w-full text-xs text-gray-500">Add a vendor:</p>
+										<div className="border-border mt-3 flex flex-wrap gap-2 border-t pt-3">
+											<p className="text-muted-foreground mb-1 w-full text-xs">Add a vendor:</p>
 											{VENDOR_LIST.filter(
 												(v) => !wallet.allowedVendors.includes(v.address.toLowerCase()),
 											).map((vendor) => (
@@ -340,7 +338,7 @@ export function AgentDetailContent({
 													key={vendor.id}
 													type="button"
 													onClick={() => handleAddVendor(vendor.address)}
-													className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700"
+													className="border-border text-muted-foreground rounded-full border px-3 py-1 text-xs hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-400"
 												>
 													+ {vendor.name}
 												</button>
@@ -356,15 +354,15 @@ export function AgentDetailContent({
 									<h2 className="mb-3 font-semibold">Agent Details</h2>
 									<div className="space-y-2 text-sm">
 										<div className="flex justify-between">
-											<span className="text-gray-500">Agent address</span>
+											<span className="text-muted-foreground">Agent address</span>
 											<span className="font-mono">{truncateAddress(wallet.agentKeyAddress)}</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-gray-500">Token</span>
+											<span className="text-muted-foreground">Token</span>
 											<span>{wallet.tokenSymbol}</span>
 										</div>
 										<div className="flex justify-between">
-											<span className="text-gray-500">Deployed</span>
+											<span className="text-muted-foreground">Deployed</span>
 											<span>{new Date(wallet.deployedAt).toLocaleDateString()}</span>
 										</div>
 									</div>
@@ -375,11 +373,9 @@ export function AgentDetailContent({
 							{isActive && (
 								<Card>
 									<div className="flex items-center justify-between p-4">
-										<h2 className="flex items-center gap-2 font-semibold">
-											Allowed Tokens
-										</h2>
+										<h2 className="flex items-center gap-2 font-semibold">Allowed Tokens</h2>
 									</div>
-									<div className="border-t border-gray-100 p-4">
+									<div className="border-border border-t p-4">
 										<div className="flex flex-wrap gap-2">
 											{Object.values(SUPPORTED_TOKENS).map((token) => (
 												<Button
@@ -398,7 +394,7 @@ export function AgentDetailContent({
 												</Button>
 											))}
 										</div>
-										<p className="mt-2 text-xs text-gray-400">
+										<p className="text-muted-foreground mt-2 text-xs">
 											Click a token to add it to the Guardian&apos;s on-chain allowlist.
 										</p>
 									</div>
@@ -418,7 +414,7 @@ export function AgentDetailContent({
 													<div>
 														<label
 															htmlFor="top-up-amount"
-															className="mb-1 block text-xs text-gray-500"
+															className="text-muted-foreground mb-1 block text-xs"
 														>
 															Amount ($)
 														</label>
@@ -453,9 +449,9 @@ export function AgentDetailContent({
 											)}
 
 											{showWithdrawConfirm ? (
-												<div className="flex items-center gap-2 rounded-lg border-2 border-red-200 bg-red-50 p-3">
-													<AlertTriangle className="h-5 w-5 text-red-500" />
-													<span className="text-sm text-red-700">Pull ALL funds back?</span>
+												<div className="border-border bg-muted flex items-center gap-2 rounded-lg border p-3">
+													<AlertTriangle className="h-5 w-5 text-red-400" />
+													<span className="text-sm text-red-400">Pull ALL funds back?</span>
 													<Button
 														size="sm"
 														onClick={handleWithdraw}
@@ -476,7 +472,7 @@ export function AgentDetailContent({
 												<Button
 													variant="outline"
 													onClick={() => setShowWithdrawConfirm(true)}
-													className="text-red-600 hover:bg-red-50"
+													className="text-red-400 hover:bg-red-500/10"
 													data-testid="emergency-withdraw-btn"
 												>
 													<AlertTriangle className="mr-1 h-4 w-4" /> Emergency Withdraw
@@ -493,33 +489,38 @@ export function AgentDetailContent({
 									<div className="p-4">
 										<h2 className="flex items-center gap-2 font-semibold">
 											<ClipboardList className="h-4 w-4" /> Over-limit Transactions
-											<span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+											<span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400">
 												{onChainState.proposals.filter((p) => p.status === 0).length} rejected
 											</span>
 										</h2>
-										<p className="mt-1 text-xs text-gray-500">
-											Transactions exceeding spending limits are automatically rejected. Approvals coming soon.
+										<p className="text-muted-foreground mt-1 text-xs">
+											Transactions exceeding spending limits are automatically rejected. Approvals
+											coming soon.
 										</p>
 									</div>
-									<div className="border-t border-gray-100">
+									<div className="border-border border-t">
 										{onChainState.proposals.map((proposal) => (
 											<div
 												key={proposal.id}
-												className="flex items-center justify-between border-b border-gray-50 px-4 py-3 last:border-b-0"
+												className="border-border flex items-center justify-between border-b px-4 py-3 last:border-b-0"
 											>
 												<div className="flex items-center gap-3">
-													<span className="text-xs font-mono text-gray-400">#{proposal.id}</span>
+													<span className="text-muted-foreground font-mono text-xs">
+														#{proposal.id}
+													</span>
 													<div>
 														<p className="text-sm font-medium">
 															${(Number(proposal.amount) / 1_000_000).toFixed(2)}{" "}
 															{wallet?.tokenSymbol ?? ""}
 														</p>
-														<p className="text-xs text-gray-500">
-															To: {getVendorByAddress(proposal.to)?.name ?? `${proposal.to.slice(0, 8)}...${proposal.to.slice(-4)}`}
+														<p className="text-muted-foreground text-xs">
+															To:{" "}
+															{getVendorByAddress(proposal.to)?.name ??
+																`${proposal.to.slice(0, 8)}...${proposal.to.slice(-4)}`}
 														</p>
 													</div>
 												</div>
-												<span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
+												<span className="rounded-full bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400">
 													rejected
 												</span>
 											</div>
@@ -537,7 +538,7 @@ export function AgentDetailContent({
 									variant="outline"
 									onClick={handleRevoke}
 									disabled={!isActive}
-									className="text-red-600 hover:bg-red-50"
+									className="text-red-400 hover:bg-red-500/10"
 								>
 									<ShieldOff className="mr-1 h-4 w-4" /> Revoke
 								</Button>

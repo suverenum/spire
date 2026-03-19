@@ -36,31 +36,33 @@ export function AgentsContent({ treasuryName, authenticatedAt, treasuryId }: Age
 				<div className="space-y-6">
 					<div className="flex items-center justify-between">
 						<div>
-							<h1 className="text-2xl font-bold text-gray-900">Agent Wallets</h1>
-							<p className="text-sm text-gray-500">Create guardrailed wallets for your AI agents</p>
+							<h1 className="text-2xl font-semibold">Agent wallets</h1>
+							<p className="text-muted-foreground text-sm">
+								Create guardrailed wallets for your AI agents
+							</p>
 						</div>
 						<Button onClick={() => setCreateOpen(true)} data-testid="create-agent-btn">
-							<Plus className="mr-1 h-4 w-4" /> Create Agent Wallet
+							<Plus className="mr-1 h-4 w-4" /> Create
 						</Button>
 					</div>
 
 					{isLoading && (
 						<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 							{[1, 2, 3].map((i) => (
-								<div key={i} className="h-48 animate-pulse rounded-lg bg-gray-100" />
+								<div key={i} className="bg-muted h-48 animate-pulse rounded-lg" />
 							))}
 						</div>
 					)}
 
 					{!isLoading && wallets.length === 0 && (
-						<div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-16">
-							<Bot className="mb-3 h-12 w-12 text-gray-300" />
-							<h3 className="text-lg font-medium text-gray-600">No agent wallets yet</h3>
-							<p className="mt-1 text-sm text-gray-400">
+						<div className="border-border flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-16">
+							<Bot className="text-muted-foreground mb-3 h-12 w-12" />
+							<h3 className="text-foreground text-lg font-medium">No agent wallets yet</h3>
+							<p className="text-muted-foreground mt-1 text-sm">
 								Create your first agent wallet with on-chain spending guardrails
 							</p>
 							<Button onClick={() => setCreateOpen(true)} className="mt-4" variant="outline">
-								<Plus className="mr-1 h-4 w-4" /> Create Agent Wallet
+								<Plus className="mr-1 h-4 w-4" /> Create
 							</Button>
 						</div>
 					)}

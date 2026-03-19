@@ -50,20 +50,24 @@ export function RevealKeyDialog({ walletId, onClose }: RevealKeyDialogProps) {
 			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
 			data-testid="reveal-key-dialog"
 		>
-			<div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+			<div className="bg-card border-border w-full max-w-md rounded-lg border p-6 shadow-xl">
 				<div className="mb-4 flex items-center justify-between">
 					<h3 className="text-lg font-semibold">Agent Private Key</h3>
-					<button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
+					<button
+						type="button"
+						onClick={onClose}
+						className="text-muted-foreground hover:text-foreground"
+					>
 						<X className="h-5 w-5" />
 					</button>
 				</div>
 
-				{loading && <p className="text-sm text-gray-500">Decrypting key...</p>}
-				{error && <p className="text-sm text-red-600">{error}</p>}
+				{loading && <p className="text-muted-foreground text-sm">Decrypting key...</p>}
+				{error && <p className="text-sm text-red-400">{error}</p>}
 
 				{privateKey && (
 					<>
-						<div className="mb-3 rounded bg-gray-50 p-3 font-mono text-xs break-all">
+						<div className="bg-muted mb-3 rounded p-3 font-mono text-xs break-all">
 							{showFull ? privateKey : maskedKey}
 						</div>
 
@@ -84,7 +88,7 @@ export function RevealKeyDialog({ walletId, onClose }: RevealKeyDialogProps) {
 							</Button>
 						</div>
 
-						<p className="mt-3 text-xs text-amber-600">
+						<p className="mt-3 text-xs text-amber-400">
 							Auto-hides in 30 seconds. Keep this key secure.
 						</p>
 					</>
