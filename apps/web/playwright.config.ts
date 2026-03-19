@@ -18,15 +18,17 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
-			use: { ...devices["Desktop Chrome"] },
+			use: { ...devices["Desktop Chrome"], headless: true },
 		},
 	],
 	webServer: {
 		command: `DATABASE_URL="${TEST_DB_URL}" bun run dev`,
 		url: "http://localhost:3000",
 		reuseExistingServer: !process.env.CI,
+		timeout: 60_000,
 		env: {
 			DATABASE_URL: TEST_DB_URL,
+			SESSION_SECRET: "dev-secret-change-in-production",
 		},
 	},
 });
