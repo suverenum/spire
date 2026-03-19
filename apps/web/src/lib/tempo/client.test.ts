@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockReadContract = vi.fn();
 const mockGetContractEvents = vi.fn();
+const mockGetBlockNumber = vi.fn();
 
 // Mock viem before importing the client
 vi.mock("viem", () => ({
 	createPublicClient: vi.fn(() => ({
 		readContract: mockReadContract,
 		getContractEvents: mockGetContractEvents,
+		getBlockNumber: mockGetBlockNumber,
 	})),
 	http: vi.fn(),
 }));
@@ -18,9 +20,11 @@ describe("tempo client", () => {
 	beforeEach(() => {
 		mockReadContract.mockReset();
 		mockGetContractEvents.mockReset();
+		mockGetBlockNumber.mockReset();
 		// Default: successful responses
 		mockReadContract.mockResolvedValue(1000000n);
 		mockGetContractEvents.mockResolvedValue([]);
+		mockGetBlockNumber.mockResolvedValue(200_000n);
 	});
 
 	it("exports fetchBalances function", async () => {

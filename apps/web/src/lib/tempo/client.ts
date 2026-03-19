@@ -62,9 +62,14 @@ export async function fetchBalances(address: `0x${string}`): Promise<BalancesRes
 	return { balances, partial: failures.length > 0 };
 }
 
+const MAX_BLOCK_RANGE = 99_000n;
+
 export async function fetchTransactions(address: `0x${string}`): Promise<Payment[]> {
 	const client = getTempoClient();
 	const tokens = Object.values(SUPPORTED_TOKENS);
+
+	const latestBlock = await client.getBlockNumber();
+	const fromBlock = latestBlock > MAX_BLOCK_RANGE ? latestBlock - MAX_BLOCK_RANGE : 0n;
 
 	// Fetch sent and received events per token using indexed topic filters
 	// so the RPC node filters by address instead of returning all chain events
@@ -76,16 +81,16 @@ export async function fetchTransactions(address: `0x${string}`): Promise<Payment
 					abi: tip20Abi,
 					eventName: "Transfer",
 					args: { from: address },
-					fromBlock: "earliest",
-					toBlock: "latest",
+					fromBlock,
+					toBlock: latestBlock,
 				}),
 				client.getContractEvents({
 					address: token.address,
 					abi: tip20Abi,
 					eventName: "Transfer",
 					args: { to: address },
-					fromBlock: "earliest",
-					toBlock: "latest",
+					fromBlock,
+					toBlock: latestBlock,
 				}),
 			]);
 			// Deduplicate self-transfers that appear in both queries
@@ -100,8 +105,13 @@ export async function fetchTransactions(address: `0x${string}`): Promise<Payment
 		}),
 	);
 
-	const failures = tokenResults.filter((r) => r.status === "rejected").length;
-	if (failures === tokens.length) {
+	const rejections = tokenResults.filter((r) => r.status === "rejected");
+	if (rejections.length > 0) {
+		for (const r of rejections) {
+			console.error("RPC call failed:", (r as PromiseRejectedResult).reason);
+		}
+	}
+	if (rejections.length === tokens.length) {
 		throw new Error("Failed to fetch transactions: all RPC calls failed");
 	}
 
