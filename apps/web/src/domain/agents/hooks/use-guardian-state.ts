@@ -10,6 +10,8 @@ const GuardianReadAbi = parseAbi([
 	"function dailyLimit() external view returns (uint256)",
 	"function maxPerTx() external view returns (uint256)",
 	"function lastResetDay() external view returns (uint256)",
+	"function proposalCount() external view returns (uint256)",
+	"function proposals(uint256) external view returns (address token, address to, uint256 amount, uint8 status, uint256 createdAt)",
 ]);
 
 const Tip20ReadAbi = parseAbi(["function balanceOf(address) external view returns (uint256)"]);
@@ -19,14 +21,24 @@ const publicClient = createPublicClient({
 	transport: http(TEMPO_RPC_URL),
 });
 
+export interface Proposal {
+	id: number;
+	token: string;
+	to: string;
+	amount: bigint;
+	status: number; // 0=pending, 1=approved, 2=rejected
+	createdAt: bigint;
+}
+
 export interface GuardianOnChainState {
 	spentToday: bigint;
 	dailyLimit: bigint;
 	balance: bigint;
+	proposals: Proposal[];
 }
 
 /**
- * Reads on-chain Guardian state: spentToday, dailyLimit, and token balance.
+ * Reads on-chain Guardian state: spentToday, dailyLimit, token balance, and proposals.
  */
 export function useGuardianState(
 	guardianAddress: `0x${string}` | undefined,
@@ -38,7 +50,7 @@ export function useGuardianState(
 			if (!guardianAddress || !tokenAddress) return null;
 
 			try {
-				const [spentToday, dailyLimit, balance] = await Promise.all([
+				const [spentToday, dailyLimit, balance, proposalCount] = await Promise.all([
 					publicClient.readContract({
 						address: guardianAddress,
 						abi: GuardianReadAbi,
@@ -55,9 +67,38 @@ export function useGuardianState(
 						functionName: "balanceOf",
 						args: [guardianAddress],
 					}),
+					publicClient.readContract({
+						address: guardianAddress,
+						abi: GuardianReadAbi,
+						functionName: "proposalCount",
+					}),
 				]);
 
-				return { spentToday, dailyLimit, balance };
+				// Read each proposal
+				const proposals: Proposal[] = [];
+				const count = Number(proposalCount);
+				for (let i = 1; i <= count; i++) {
+					try {
+						const [token, to, amount, status, createdAt] = await publicClient.readContract({
+							address: guardianAddress,
+							abi: GuardianReadAbi,
+							functionName: "proposals",
+							args: [BigInt(i)],
+						});
+						proposals.push({
+							id: i,
+							token,
+							to,
+							amount,
+							status,
+							createdAt,
+						});
+					} catch {
+						// Skip unreadable proposals
+					}
+				}
+
+				return { spentToday, dailyLimit, balance, proposals };
 			} catch {
 				return null;
 			}

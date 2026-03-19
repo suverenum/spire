@@ -4,6 +4,8 @@ import {
 	AlertTriangle,
 	ArrowLeft,
 	Bot,
+	Check,
+	ClipboardList,
 	DollarSign,
 	Eye,
 	Minus,
@@ -11,6 +13,7 @@ import {
 	ShieldOff,
 	Upload,
 	Users,
+	X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -25,10 +28,13 @@ import { revokeAgentKey } from "@/domain/agents/actions/revoke-agent-key";
 import { updateAgentLimits } from "@/domain/agents/actions/update-agent-limits";
 import { RevealKeyDialog } from "@/domain/agents/components/reveal-key-dialog";
 import {
+	useApprovePay,
 	useEmergencyWithdraw,
+	useRejectPay,
 	useTopUpAgent,
 	useUpdateGuardianLimits,
 } from "@/domain/agents/hooks/use-agent-actions";
+import { useGuardianState } from "@/domain/agents/hooks/use-guardian-state";
 import { useAgentWallets } from "@/domain/agents/hooks/use-agent-wallets";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
 import { getVendorByAddress, VENDOR_LIST } from "@/lib/vendors";
@@ -67,7 +73,14 @@ export function AgentDetailContent({
 	const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
 	const [addingVendor, setAddingVendor] = useState(false);
 
+	const { data: onChainState } = useGuardianState(
+		wallet?.guardianAddress as `0x${string}` | undefined,
+		wallet?.tokenAddress as `0x${string}` | undefined,
+	);
+
 	const topUpMutation = useTopUpAgent(treasuryId);
+	const approveMutation = useApprovePay(treasuryId);
+	const rejectMutation = useRejectPay(treasuryId);
 	const withdrawMutation = useEmergencyWithdraw(treasuryId);
 	const updateLimitsMutation = useUpdateGuardianLimits(treasuryId);
 
@@ -433,6 +446,93 @@ export function AgentDetailContent({
 												</Button>
 											)}
 										</div>
+									</div>
+								</Card>
+							)}
+
+							{/* Pending Approvals */}
+							{onChainState && onChainState.proposals.length > 0 && (
+								<Card>
+									<div className="p-4">
+										<h2 className="flex items-center gap-2 font-semibold">
+											<ClipboardList className="h-4 w-4" /> Pending Approvals
+											<span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+												{onChainState.proposals.filter((p) => p.status === 0).length} pending
+											</span>
+										</h2>
+									</div>
+									<div className="border-t border-gray-100">
+										{onChainState.proposals.map((proposal) => (
+											<div
+												key={proposal.id}
+												className="flex items-center justify-between border-b border-gray-50 px-4 py-3 last:border-b-0"
+											>
+												<div className="flex items-center gap-3">
+													<span className="text-xs font-mono text-gray-400">#{proposal.id}</span>
+													<div>
+														<p className="text-sm font-medium">
+															${(Number(proposal.amount) / 1_000_000).toFixed(2)}{" "}
+															{wallet?.tokenSymbol ?? ""}
+														</p>
+														<p className="text-xs text-gray-500">
+															To: {getVendorByAddress(proposal.to)?.name ?? `${proposal.to.slice(0, 8)}...${proposal.to.slice(-4)}`}
+														</p>
+													</div>
+												</div>
+												<div className="flex items-center gap-2">
+													{proposal.status === 0 && (
+														<>
+															<span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+																pending
+															</span>
+															{isActive && (
+																<>
+																	<Button
+																		size="sm"
+																		onClick={() =>
+																			approveMutation.mutate({
+																				guardianAddress: wallet!.guardianAddress as `0x${string}`,
+																				proposalId: BigInt(proposal.id),
+																			})
+																		}
+																		disabled={approveMutation.isPending}
+																		className="bg-emerald-600 hover:bg-emerald-700"
+																		data-testid={`approve-${proposal.id}`}
+																	>
+																		{approveMutation.isPending ? "..." : <><Check className="mr-1 h-3 w-3" /> Approve</>}
+																	</Button>
+																	<Button
+																		size="sm"
+																		variant="outline"
+																		onClick={() =>
+																			rejectMutation.mutate({
+																				guardianAddress: wallet!.guardianAddress as `0x${string}`,
+																				proposalId: BigInt(proposal.id),
+																			})
+																		}
+																		disabled={rejectMutation.isPending}
+																		className="text-red-600 hover:bg-red-50"
+																		data-testid={`reject-${proposal.id}`}
+																	>
+																		{rejectMutation.isPending ? "..." : <><X className="mr-1 h-3 w-3" /> Reject</>}
+																	</Button>
+																</>
+															)}
+														</>
+													)}
+													{proposal.status === 1 && (
+														<span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+															approved
+														</span>
+													)}
+													{proposal.status === 2 && (
+														<span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
+															rejected
+														</span>
+													)}
+												</div>
+											</div>
+										))}
 									</div>
 								</Card>
 							)}
