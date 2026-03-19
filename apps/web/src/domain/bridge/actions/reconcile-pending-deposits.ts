@@ -4,6 +4,7 @@ import { bridgeDeposits } from "@/db/schema";
 
 const LZ_SCAN_API = "https://scan.layerzero-api.com/v1";
 const BATCH_SIZE = 50;
+const STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface LzMessage {
 	guid?: string;
@@ -22,6 +23,7 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 }> {
 	const pending = await db.query.bridgeDeposits.findMany({
 		where: inArray(bridgeDeposits.status, ["pending", "bridging"]),
+		orderBy: (deposits, { asc }) => [asc(deposits.initiatedAt)],
 		limit: BATCH_SIZE,
 	});
 
@@ -35,7 +37,17 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 
 			const data: LzScanResponse = await res.json();
 			const message = data.data?.[0];
-			if (!message) continue;
+			if (!message) {
+				const age = Date.now() - new Date(deposit.initiatedAt).getTime();
+				if (age > STALE_THRESHOLD_MS) {
+					await db
+						.update(bridgeDeposits)
+						.set({ status: "failed" })
+						.where(eq(bridgeDeposits.id, deposit.id));
+					failed++;
+				}
+				continue;
+			}
 
 			if (message.status?.name === "DELIVERED") {
 				await db

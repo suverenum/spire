@@ -14,9 +14,13 @@ import { groupTransactions } from "../utils/group-transactions";
 
 /** Parse a decimal USDC string (e.g. "100.50") into micro-units bigint without floating-point. */
 function parseDecimalToMicroUnits(value: string): bigint {
-	const [whole = "0", frac = ""] = value.split(".");
-	const paddedFrac = frac.padEnd(6, "0").slice(0, 6);
-	return BigInt(whole) * 1_000_000n + BigInt(paddedFrac);
+	try {
+		const [whole = "0", frac = ""] = value.split(".");
+		const paddedFrac = frac.padEnd(6, "0").slice(0, 6);
+		return BigInt(whole) * 1_000_000n + BigInt(paddedFrac);
+	} catch {
+		return 0n;
+	}
 }
 
 export function useAllTransactions(accounts: AccountRecord[]) {
