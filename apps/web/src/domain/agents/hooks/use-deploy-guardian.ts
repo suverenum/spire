@@ -23,6 +23,7 @@ const GuardianFactoryAbi = [
 			{ name: "agent", type: "address" },
 			{ name: "maxPerTx", type: "uint256" },
 			{ name: "dailyLimit", type: "uint256" },
+			{ name: "spendingCap", type: "uint256" },
 			{ name: "salt", type: "bytes32" },
 		],
 		outputs: [{ name: "guardian", type: "address" }],
@@ -37,6 +38,7 @@ const GuardianFactoryAbi = [
 			{ name: "agent", type: "address", indexed: true },
 			{ name: "maxPerTx", type: "uint256", indexed: false },
 			{ name: "dailyLimit", type: "uint256", indexed: false },
+			{ name: "spendingCap", type: "uint256", indexed: false },
 		],
 	},
 ] as const;
@@ -116,7 +118,13 @@ export function useDeployGuardian() {
 				address: GUARDIAN_FACTORY_ADDRESS,
 				abi: GuardianFactoryAbi,
 				functionName: "createGuardian",
-				args: [params.agentAddress, BigInt(params.maxPerTx), BigInt(params.dailyLimit), salt],
+				args: [
+					params.agentAddress,
+					BigInt(params.maxPerTx),
+					BigInt(params.dailyLimit),
+					BigInt(params.spendingCap),
+					salt,
+				],
 			});
 
 			const deployReceipt = await publicClient.waitForTransactionReceipt({
