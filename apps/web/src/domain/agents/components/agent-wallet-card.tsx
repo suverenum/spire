@@ -1,10 +1,11 @@
 "use client";
 
-import { Bot, Eye, ShieldOff } from "lucide-react";
+import { Bot, Eye, ShieldOff, Wallet } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getVendorByAddress } from "@/lib/vendors";
+import { useGuardianState } from "../hooks/use-guardian-state";
 import type { AgentWalletData } from "../queries/get-agents";
 import { RevealKeyDialog } from "./reveal-key-dialog";
 
@@ -22,8 +23,17 @@ function truncateAddress(addr: string): string {
 	return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
 
+function formatBigint(val: bigint, decimals = 6): string {
+	const n = Number(val) / 10 ** decimals;
+	return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function AgentWalletCard({ wallet, onRevoke }: AgentWalletCardProps) {
 	const [showReveal, setShowReveal] = useState(false);
+	const { data: onChainState } = useGuardianState(
+		wallet.guardianAddress as `0x${string}`,
+		wallet.tokenAddress as `0x${string}`,
+	);
 
 	const isActive = wallet.status === "active";
 	const vendorNames = wallet.allowedVendors
@@ -70,6 +80,30 @@ export function AgentWalletCard({ wallet, onRevoke }: AgentWalletCardProps) {
 						</div>
 					</div>
 				</div>
+
+				{/* Spending progress + balance */}
+				{onChainState && (
+					<div className="border-t border-gray-100 px-4 py-2" data-testid="spending-progress">
+						<div className="mb-1 flex items-center justify-between text-xs">
+							<span className="text-gray-500">Daily spending</span>
+							<span className="font-medium">
+								${formatBigint(onChainState.spentToday)} / ${formatBigint(onChainState.dailyLimit)}
+							</span>
+						</div>
+						<div className="h-2 w-full rounded-full bg-gray-100">
+							<div
+								className="h-2 rounded-full bg-blue-500 transition-all"
+								style={{
+									width: `${Math.min(100, onChainState.dailyLimit > 0n ? Number((onChainState.spentToday * 100n) / onChainState.dailyLimit) : 0)}%`,
+								}}
+							/>
+						</div>
+						<div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+							<Wallet className="h-3 w-3" />
+							Balance: ${formatBigint(onChainState.balance)}
+						</div>
+					</div>
+				)}
 
 				{/* Vendor tags */}
 				<div className="border-t border-gray-100 px-4 py-2">
