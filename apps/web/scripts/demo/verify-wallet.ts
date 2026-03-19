@@ -1,4 +1,5 @@
 #!/usr/bin/env npx tsx
+
 // @ts-nocheck
 /**
  * Verify an Agent Bank wallet — tests all edge cases on-chain.
@@ -6,14 +7,14 @@
  * Usage: npx tsx verify-wallet.ts
  */
 
-import { Credential } from "./src/index.js";
-import { Mppx as Mppx_client, tempo as tempo_client } from "./src/client/index.js";
-import { Mppx as Mppx_server, tempo as tempo_server } from "./src/server/index.js";
 import http from "node:http";
 import { createPublicClient, createWalletClient, parseAbi, http as viemHttp } from "viem";
-import { readContract, waitForTransactionReceipt } from "viem/actions";
 import { privateKeyToAccount } from "viem/accounts";
+import { readContract, waitForTransactionReceipt } from "viem/actions";
 import { tempoModerato } from "viem/chains";
+import { Mppx as Mppx_client, tempo as tempo_client } from "./src/client/index.js";
+import { Credential } from "./src/index.js";
+import { Mppx as Mppx_server, tempo as tempo_server } from "./src/server/index.js";
 
 // ─── CONFIG ───────────────────────────────────────────────────────
 const AGENT_KEY = "0x4d36f122c42947023c04e3b0cb1c6bfbed7b2f47064d2ad15382b293f62e72c7";
@@ -30,16 +31,24 @@ const BLOCKED_VENDOR = "0x000000000000000000000000000000000000dead";
 
 const GREEN = "\x1b[32m";
 const RED = "\x1b[31m";
-const YELLOW = "\x1b[33m";
+const _YELLOW = "\x1b[33m";
 const CYAN = "\x1b[36m";
 const DIM = "\x1b[2m";
 const BOLD = "\x1b[1m";
 const RESET = "\x1b[0m";
 
-function ok(msg) { console.log(`  ${GREEN}✓${RESET} ${msg}`); }
-function fail(msg) { console.log(`  ${RED}✗${RESET} ${msg}`); }
-function info(msg) { console.log(`  ${DIM}${msg}${RESET}`); }
-function step(n, title) { console.log(`\n${BOLD}${CYAN}━━━ Test ${n}: ${title} ━━━${RESET}`); }
+function ok(msg) {
+	console.log(`  ${GREEN}✓${RESET} ${msg}`);
+}
+function fail(msg) {
+	console.log(`  ${RED}✗${RESET} ${msg}`);
+}
+function info(msg) {
+	console.log(`  ${DIM}${msg}${RESET}`);
+}
+function step(n, title) {
+	console.log(`\n${BOLD}${CYAN}━━━ Test ${n}: ${title} ━━━${RESET}`);
+}
 
 const GuardianAbi = parseAbi([
 	"function pay(address token, address to, uint256 amount) external",
@@ -54,11 +63,11 @@ const GuardianAbi = parseAbi([
 	"function allowedTokens(address) external view returns (bool)",
 ]);
 
-const Tip20Abi = parseAbi([
-	"function balanceOf(address) external view returns (uint256)",
-]);
+const Tip20Abi = parseAbi(["function balanceOf(address) external view returns (uint256)"]);
 
-function fmt(raw) { return (Number(raw) / 1_000_000).toFixed(2); }
+function fmt(raw) {
+	return (Number(raw) / 1_000_000).toFixed(2);
+}
 
 async function main() {
 	console.log(`\n${BOLD}${GREEN}╔═══════════════════════════════════════════════════╗${RESET}`);
@@ -67,7 +76,11 @@ async function main() {
 
 	const agentAccount = privateKeyToAccount(AGENT_KEY);
 	const publicClient = createPublicClient({ chain: tempoModerato, transport: viemHttp(RPC) });
-	const agentWallet = createWalletClient({ account: agentAccount, chain: tempoModerato, transport: viemHttp(RPC) });
+	const agentWallet = createWalletClient({
+		account: agentAccount,
+		chain: tempoModerato,
+		transport: viemHttp(RPC),
+	});
 
 	info(`Guardian: ${GUARDIAN}`);
 	info(`Agent:    ${agentAccount.address}`);
@@ -75,17 +88,52 @@ async function main() {
 	// ─── Test 1: Read on-chain state ──────────────────────────────
 	step(1, "Read Guardian on-chain state");
 
-	const owner = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "owner" });
-	const agent = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "agent" });
-	const maxPerTx = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "maxPerTx" });
-	const dailyLimit = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "dailyLimit" });
-	const spendingCap = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "spendingCap" });
-	const spentToday = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "spentToday" });
-	const totalSpent = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "totalSpent" });
-	const balance = await readContract(publicClient, { address: ALPHAUSD, abi: Tip20Abi, functionName: "balanceOf", args: [GUARDIAN] });
+	const owner = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "owner",
+	});
+	const agent = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "agent",
+	});
+	const maxPerTx = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "maxPerTx",
+	});
+	const dailyLimit = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "dailyLimit",
+	});
+	const spendingCap = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "spendingCap",
+	});
+	const spentToday = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "spentToday",
+	});
+	const totalSpent = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "totalSpent",
+	});
+	const balance = await readContract(publicClient, {
+		address: ALPHAUSD,
+		abi: Tip20Abi,
+		functionName: "balanceOf",
+		args: [GUARDIAN],
+	});
 
 	ok(`Owner: ${owner}`);
-	ok(`Agent: ${agent} ${agent.toLowerCase() === agentAccount.address.toLowerCase() ? GREEN + "(matches key)" + RESET : RED + "(MISMATCH!)" + RESET}`);
+	ok(
+		`Agent: ${agent} ${agent.toLowerCase() === agentAccount.address.toLowerCase() ? `${GREEN}(matches key)${RESET}` : `${RED}(MISMATCH!)${RESET}`}`,
+	);
 	ok(`Per-tx cap: $${fmt(maxPerTx)}`);
 	ok(`Daily limit: $${fmt(dailyLimit)}`);
 	ok(`Spending cap: $${fmt(spendingCap)}`);
@@ -94,13 +142,30 @@ async function main() {
 	ok(`Balance: $${fmt(balance)} pathUSD`);
 
 	// Check allowlists
-	const vendorAllowed = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "allowedRecipients", args: [ALLOWED_VENDOR] });
-	const blockedAllowed = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "allowedRecipients", args: [BLOCKED_VENDOR] });
-	const alphaAllowed = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "allowedTokens", args: [ALPHAUSD] });
+	const vendorAllowed = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "allowedRecipients",
+		args: [ALLOWED_VENDOR],
+	});
+	const blockedAllowed = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "allowedRecipients",
+		args: [BLOCKED_VENDOR],
+	});
+	const alphaAllowed = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "allowedTokens",
+		args: [ALPHAUSD],
+	});
 
-	ok(`Vendor 0x...0001 allowed: ${vendorAllowed ? GREEN + "yes" : RED + "no"}${RESET}`);
-	ok(`Vendor 0x...dead allowed: ${blockedAllowed ? RED + "yes (BAD!)" : GREEN + "no (correct)"}${RESET}`);
-	ok(`pathUSD allowed: ${alphaAllowed ? GREEN + "yes" : RED + "no"}${RESET}`);
+	ok(`Vendor 0x...0001 allowed: ${vendorAllowed ? `${GREEN}yes` : `${RED}no`}${RESET}`);
+	ok(
+		`Vendor 0x...dead allowed: ${blockedAllowed ? `${RED}yes (BAD!)` : `${GREEN}no (correct)`}${RESET}`,
+	);
+	ok(`pathUSD allowed: ${alphaAllowed ? `${GREEN}yes` : `${RED}no`}${RESET}`);
 
 	// ─── Test 2: Happy path — pay allowed vendor via MPP ──────────
 	step(2, "Happy path — agent pays allowed vendor via local MPP server");
@@ -108,11 +173,13 @@ async function main() {
 	// Use the allowlisted vendor address as recipient
 	const localServer = await new Promise((resolve) => {
 		const server = Mppx_server.create({
-			methods: [tempo_server.charge({
-				getClient: () => publicClient,
-				currency: ALPHAUSD,
-				account: ALLOWED_VENDOR,
-			})],
+			methods: [
+				tempo_server.charge({
+					getClient: () => publicClient,
+					currency: ALPHAUSD,
+					account: ALLOWED_VENDOR,
+				}),
+			],
 			realm: "verify-test.agentbank.xyz",
 			secretKey: "verify-secret",
 		});
@@ -146,11 +213,13 @@ async function main() {
 			});
 			await waitForTransactionReceipt(publicClient, { hash });
 			ok(`  Guardian approved → ${EXPLORER}/tx/${hash}`);
-			return Credential.serialize(Credential.from({
-				challenge,
-				payload: { hash, type: "hash" },
-				source: `did:pkh:eip155:42431:${agentAccount.address}`,
-			}));
+			return Credential.serialize(
+				Credential.from({
+					challenge,
+					payload: { hash, type: "hash" },
+					source: `did:pkh:eip155:42431:${agentAccount.address}`,
+				}),
+			);
 		},
 	});
 
@@ -210,7 +279,12 @@ async function main() {
 	// ─── Test 5: Wrong token ──────────────────────────────────────
 	step(5, "Edge case — agent tries to pay with wrong token (pathUSD not in allowlist)");
 
-	const pathAllowed = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "allowedTokens", args: [PATHUSD] });
+	const pathAllowed = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "allowedTokens",
+		args: [PATHUSD],
+	});
 	if (pathAllowed) {
 		info("pathUSD IS in allowlist — skipping this test");
 	} else {
@@ -237,7 +311,11 @@ async function main() {
 
 	const randomKey = "0x0000000000000000000000000000000000000000000000000000000000000099";
 	const randomAccount = privateKeyToAccount(randomKey);
-	const randomWallet = createWalletClient({ account: randomAccount, chain: tempoModerato, transport: viemHttp(RPC) });
+	const randomWallet = createWalletClient({
+		account: randomAccount,
+		chain: tempoModerato,
+		transport: viemHttp(RPC),
+	});
 
 	try {
 		await randomWallet.writeContract({
@@ -259,9 +337,22 @@ async function main() {
 	// ─── Final state ──────────────────────────────────────────────
 	step(7, "Final on-chain state after tests");
 
-	const finalSpent = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "spentToday" });
-	const finalTotal = await readContract(publicClient, { address: GUARDIAN, abi: GuardianAbi, functionName: "totalSpent" });
-	const finalBalance = await readContract(publicClient, { address: ALPHAUSD, abi: Tip20Abi, functionName: "balanceOf", args: [GUARDIAN] });
+	const finalSpent = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "spentToday",
+	});
+	const finalTotal = await readContract(publicClient, {
+		address: GUARDIAN,
+		abi: GuardianAbi,
+		functionName: "totalSpent",
+	});
+	const finalBalance = await readContract(publicClient, {
+		address: ALPHAUSD,
+		abi: Tip20Abi,
+		functionName: "balanceOf",
+		args: [GUARDIAN],
+	});
 
 	ok(`Spent today: $${fmt(finalSpent)} / $${fmt(dailyLimit)}`);
 	ok(`Total spent: $${fmt(finalTotal)} / $${fmt(spendingCap)}`);

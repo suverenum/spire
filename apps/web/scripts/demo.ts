@@ -20,14 +20,14 @@
  */
 
 import http from "node:http";
-import { Credential } from "./src/index.js";
-import { Mppx as Mppx_client, tempo as tempo_client } from "./src/client/index.js";
-import { Mppx as Mppx_server, tempo as tempo_server } from "./src/server/index.js";
 import { createPublicClient, createWalletClient, parseAbi, http as viemHttp } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { readContract, waitForTransactionReceipt } from "viem/actions";
 import { tempoModerato } from "viem/chains";
 import { Actions } from "viem/tempo";
+import { Mppx as Mppx_client, tempo as tempo_client } from "./src/client/index.js";
+import { Credential } from "./src/index.js";
+import { Mppx as Mppx_server, tempo as tempo_server } from "./src/server/index.js";
 
 // ─── ANSI Colors ──────────────────────────────────────────────────
 const GREEN = "\x1b[32m";
@@ -410,7 +410,13 @@ async function main() {
 		functionName: "totalSpent",
 	});
 	spending(
-		fmt(await readContract(publicClient, { address: guardianAddr, abi: GuardianAbi, functionName: "spentToday" })),
+		fmt(
+			await readContract(publicClient, {
+				address: guardianAddr,
+				abi: GuardianAbi,
+				functionName: "spentToday",
+			}),
+		),
 		fmt(DAILY_LIMIT),
 		fmt(finalSpent),
 		fmt(SPENDING_CAP),
