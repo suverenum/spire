@@ -28,12 +28,14 @@ import { revokeAgentKey } from "@/domain/agents/actions/revoke-agent-key";
 import { updateAgentLimits } from "@/domain/agents/actions/update-agent-limits";
 import { RevealKeyDialog } from "@/domain/agents/components/reveal-key-dialog";
 import {
+	useAddToken,
 	useApprovePay,
 	useEmergencyWithdraw,
 	useRejectPay,
 	useTopUpAgent,
 	useUpdateGuardianLimits,
 } from "@/domain/agents/hooks/use-agent-actions";
+import { SUPPORTED_TOKENS } from "@/lib/constants";
 import { useGuardianState } from "@/domain/agents/hooks/use-guardian-state";
 import { useAgentWallets } from "@/domain/agents/hooks/use-agent-wallets";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
@@ -81,6 +83,7 @@ export function AgentDetailContent({
 	const topUpMutation = useTopUpAgent(treasuryId);
 	const approveMutation = useApprovePay(treasuryId);
 	const rejectMutation = useRejectPay(treasuryId);
+	const addTokenMutation = useAddToken(treasuryId);
 	const withdrawMutation = useEmergencyWithdraw(treasuryId);
 	const updateLimitsMutation = useUpdateGuardianLimits(treasuryId);
 
@@ -367,6 +370,40 @@ export function AgentDetailContent({
 									</div>
 								</div>
 							</Card>
+
+							{/* Allowed Tokens */}
+							{isActive && (
+								<Card>
+									<div className="flex items-center justify-between p-4">
+										<h2 className="flex items-center gap-2 font-semibold">
+											Allowed Tokens
+										</h2>
+									</div>
+									<div className="border-t border-gray-100 p-4">
+										<div className="flex flex-wrap gap-2">
+											{Object.values(SUPPORTED_TOKENS).map((token) => (
+												<Button
+													key={token.address}
+													size="sm"
+													variant="outline"
+													onClick={() =>
+														addTokenMutation.mutate({
+															guardianAddress: wallet!.guardianAddress as `0x${string}`,
+															tokenAddress: token.address as `0x${string}`,
+														})
+													}
+													disabled={addTokenMutation.isPending}
+												>
+													{addTokenMutation.isPending ? "..." : `+ ${token.name}`}
+												</Button>
+											))}
+										</div>
+										<p className="mt-2 text-xs text-gray-400">
+											Click a token to add it to the Guardian&apos;s on-chain allowlist.
+										</p>
+									</div>
+								</Card>
+							)}
 
 							{/* Fund management */}
 							{isActive && (

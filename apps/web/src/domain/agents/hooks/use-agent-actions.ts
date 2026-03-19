@@ -36,6 +36,13 @@ const GuardianOwnerAbi = [
 	},
 	{
 		type: "function",
+		name: "addToken",
+		inputs: [{ name: "t", type: "address" }],
+		outputs: [],
+		stateMutability: "nonpayable",
+	},
+	{
+		type: "function",
 		name: "withdraw",
 		inputs: [{ name: "token", type: "address" }],
 		outputs: [],
@@ -292,6 +299,44 @@ export function useRejectPay(treasuryId: string) {
 			queryClient.invalidateQueries({ queryKey: CACHE_KEYS.agentWallets(treasuryId) });
 			queryClient.invalidateQueries({ queryKey: ["guardian-state"] });
 			toast("Payment rejected", "success");
+		},
+		onError: (error: Error) => toast(error.message, "error"),
+	});
+}
+
+/**
+ * Hook for adding a token to the Guardian's allowlist on-chain.
+ */
+export function useAddToken(treasuryId: string) {
+	const config = useConfig();
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			guardianAddress,
+			tokenAddress,
+		}: {
+			guardianAddress: Address;
+			tokenAddress: Address;
+		}) => {
+			const walletClient = await getWalletClient(config);
+			const publicClient = await getPublicClient(config);
+			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
+
+			const hash = await walletClient.writeContract({
+				address: guardianAddress,
+				abi: GuardianOwnerAbi,
+				functionName: "addToken",
+				args: [tokenAddress],
+			});
+
+			await publicClient.waitForTransactionReceipt({ hash });
+			return hash;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: CACHE_KEYS.agentWallets(treasuryId) });
+			queryClient.invalidateQueries({ queryKey: ["guardian-state"] });
+			toast("Token added to allowlist", "success");
 		},
 		onError: (error: Error) => toast(error.message, "error"),
 	});
