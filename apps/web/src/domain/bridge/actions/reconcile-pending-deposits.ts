@@ -32,7 +32,9 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 
 	for (const deposit of pending) {
 		try {
-			const res = await fetch(`${LZ_SCAN_API}/messages/tx/${deposit.sourceTxHash}`);
+			const res = await fetch(`${LZ_SCAN_API}/messages/tx/${deposit.sourceTxHash}`, {
+				signal: AbortSignal.timeout(5000),
+			});
 			if (!res.ok) continue;
 
 			const data: LzScanResponse = await res.json();
@@ -57,8 +59,8 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 					.update(bridgeDeposits)
 					.set({
 						status: "completed",
-						lzMessageHash: message.guid,
-						tempoTxHash: message.destination?.tx?.txHash,
+						lzMessageHash: message.guid ?? deposit.lzMessageHash,
+						tempoTxHash: message.destination?.tx?.txHash ?? deposit.tempoTxHash,
 						completedAt: new Date(),
 					})
 					.where(

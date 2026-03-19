@@ -35,6 +35,9 @@ export async function createBridgeDeposit(params: {
 	}
 
 	// Validate amount is a positive decimal number (max 6 decimal places, matching USDC precision)
+	if (params.amount.length > 30) {
+		throw new Error("Amount is too large");
+	}
 	const decimalRe = /^(0|[1-9]\d*)(\.\d{1,6})?$/;
 	if (!decimalRe.test(params.amount)) {
 		throw new Error("Amount must be a positive decimal number (up to 6 decimal places)");
@@ -61,9 +64,15 @@ export async function createBridgeDeposit(params: {
 
 		return deposit;
 	} catch (err) {
-		if (err instanceof Error && err.message.includes("unique")) {
+		const isUniqueViolation =
+			(err instanceof Error && err.message.includes("unique")) ||
+			(typeof err === "object" &&
+				err !== null &&
+				"code" in err &&
+				(err as { code: string }).code === "23505");
+		if (isUniqueViolation) {
 			throw new Error("This transaction is already being tracked");
 		}
-		throw err;
+		throw new Error("Failed to track deposit");
 	}
 }
