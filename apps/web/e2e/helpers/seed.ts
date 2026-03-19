@@ -20,6 +20,15 @@ export const TEST_GUARD_ADDRESS = "0x3333333333333333333333333333333333333333";
 export const TEST_SIGNER_1 = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 export const TEST_SIGNER_2 = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
+// Agent wallet test data
+export const TEST_AGENT_ACCOUNT_ID = "00000000-0000-0000-0000-000000000030";
+export const TEST_AGENT_WALLET_ID = "00000000-0000-0000-0000-000000000031";
+export const TEST_AGENT_GUARDIAN = "0x5555555555555555555555555555555555555555";
+export const TEST_AGENT_KEY_ADDRESS = "0x6666666666666666666666666666666666666666";
+export const TEST_AGENT_REVOKED_ACCOUNT_ID = "00000000-0000-0000-0000-000000000040";
+export const TEST_AGENT_REVOKED_WALLET_ID = "00000000-0000-0000-0000-000000000041";
+export const TEST_AGENT_REVOKED_GUARDIAN = "0x7777777777777777777777777777777777777777";
+
 /**
  * Seed the test database with treasury, EOA account, and multisig account.
  */
@@ -29,6 +38,7 @@ export async function seedTestData(): Promise<void> {
 
 	try {
 		// Clean slate
+		await client.query("DELETE FROM agent_wallets");
 		await client.query("DELETE FROM multisig_confirmations");
 		await client.query("DELETE FROM multisig_transactions");
 		await client.query("DELETE FROM multisig_configs");
@@ -132,6 +142,76 @@ export async function seedTestData(): Promise<void> {
 				[txResult.rows[0].id, TEST_TEMPO_ADDRESS],
 			);
 		}
+		// Insert active agent wallet account
+		await client.query(
+			`INSERT INTO accounts (id, treasury_id, name, token_symbol, token_address, wallet_address, wallet_type, is_default)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			[
+				TEST_AGENT_ACCOUNT_ID,
+				TEST_TREASURY_ID,
+				"Marketing Bot",
+				"AlphaUSD",
+				"0x20c0000000000000000000000000000000000001",
+				TEST_AGENT_GUARDIAN,
+				"guardian",
+				false,
+			],
+		);
+
+		await client.query(
+			`INSERT INTO agent_wallets (id, account_id, label, guardian_address, agent_key_address, encrypted_key, spending_cap, daily_limit, max_per_tx, allowed_vendors, status)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+			[
+				TEST_AGENT_WALLET_ID,
+				TEST_AGENT_ACCOUNT_ID,
+				"Marketing Bot",
+				TEST_AGENT_GUARDIAN,
+				TEST_AGENT_KEY_ADDRESS,
+				"dGVzdC1lbmNyeXB0ZWQta2V5", // base64 placeholder
+				50000000, // 50 USDC
+				10000000, // 10 USDC daily
+				2000000, // 2 USDC per-tx
+				JSON.stringify([
+					"0x0000000000000000000000000000000000000001",
+					"0x0000000000000000000000000000000000000003",
+				]),
+				"active",
+			],
+		);
+
+		// Insert revoked agent wallet account
+		await client.query(
+			`INSERT INTO accounts (id, treasury_id, name, token_symbol, token_address, wallet_address, wallet_type, is_default)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			[
+				TEST_AGENT_REVOKED_ACCOUNT_ID,
+				TEST_TREASURY_ID,
+				"Deprecated Bot",
+				"AlphaUSD",
+				"0x20c0000000000000000000000000000000000001",
+				TEST_AGENT_REVOKED_GUARDIAN,
+				"guardian",
+				false,
+			],
+		);
+
+		await client.query(
+			`INSERT INTO agent_wallets (id, account_id, label, guardian_address, agent_key_address, encrypted_key, spending_cap, daily_limit, max_per_tx, allowed_vendors, status)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+			[
+				TEST_AGENT_REVOKED_WALLET_ID,
+				TEST_AGENT_REVOKED_ACCOUNT_ID,
+				"Deprecated Bot",
+				TEST_AGENT_REVOKED_GUARDIAN,
+				"0x8888888888888888888888888888888888888888",
+				"dGVzdC1lbmNyeXB0ZWQta2V5LTI=",
+				20000000,
+				5000000,
+				1000000,
+				JSON.stringify(["0x0000000000000000000000000000000000000002"]),
+				"revoked",
+			],
+		);
 	} finally {
 		await client.end();
 	}
@@ -144,6 +224,7 @@ export async function cleanTestData(): Promise<void> {
 	const client = new pg.Client(TEST_DB_URL);
 	await client.connect();
 	try {
+		await client.query("DELETE FROM agent_wallets");
 		await client.query("DELETE FROM multisig_confirmations");
 		await client.query("DELETE FROM multisig_transactions");
 		await client.query("DELETE FROM multisig_configs");

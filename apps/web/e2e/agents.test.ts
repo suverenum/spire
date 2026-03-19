@@ -1,0 +1,214 @@
+import { expect, test } from "@playwright/test";
+import { authenticateContext } from "./helpers/auth";
+import { TEST_TEMPO_ADDRESS, TEST_TREASURY_ID, TEST_TREASURY_NAME } from "./helpers/seed";
+
+test.beforeEach(async ({ context, page }) => {
+	await authenticateContext(context, {
+		treasuryId: TEST_TREASURY_ID,
+		tempoAddress: TEST_TEMPO_ADDRESS,
+		treasuryName: TEST_TREASURY_NAME,
+	});
+
+	// Mock Tempo RPC calls to prevent real chain interactions
+	await page.route("**/rpc.moderato.tempo.xyz**", async (route) => {
+		const body = route.request().postDataJSON?.();
+		if (body?.method === "eth_call") {
+			await route.fulfill({
+				status: 200,
+				contentType: "application/json",
+				body: JSON.stringify({
+					jsonrpc: "2.0",
+					id: body.id,
+					result: "0x0000000000000000000000000000000000000000000000000000000000000000",
+				}),
+			});
+		} else if (body?.method === "eth_getTransactionCount") {
+			await route.fulfill({
+				status: 200,
+				contentType: "application/json",
+				body: JSON.stringify({ jsonrpc: "2.0", id: body.id, result: "0x0" }),
+			});
+		} else {
+			await route.continue();
+		}
+	});
+
+	await page.route("**/sponsor.moderato.tempo.xyz**", async (route) => {
+		await route.continue();
+	});
+});
+
+test.describe("Agent Wallets E2E", () => {
+	// ─── Agent Wallets Page ─────────────────────────────────────────
+
+	test.describe("Agent Wallets Page", () => {
+		test("shows agent wallet cards", async ({ page }) => {
+			await page.goto("/agents");
+			await expect(page.getByText("Agent Wallets").first()).toBeVisible({ timeout: 15000 });
+			await expect(page.getByText("Marketing Bot").first()).toBeVisible({ timeout: 15000 });
+		});
+
+		test("shows Create Agent Wallet button", async ({ page }) => {
+			await page.goto("/agents");
+			await expect(page.getByTestId("create-agent-btn")).toBeVisible({ timeout: 15000 });
+		});
+
+		test("shows both active and revoked wallets", async ({ page }) => {
+			await page.goto("/agents");
+			await expect(page.getByText("Marketing Bot").first()).toBeVisible({ timeout: 15000 });
+			await expect(page.getByText("Deprecated Bot").first()).toBeVisible({ timeout: 15000 });
+		});
+
+		test("shows status badges on wallet cards", async ({ page }) => {
+			await page.goto("/agents");
+			const badges = page.getByTestId("agent-status-badge");
+			await expect(badges.first()).toBeVisible({ timeout: 15000 });
+			await expect(page.getByText("active").first()).toBeVisible();
+			await expect(page.getByText("revoked").first()).toBeVisible();
+		});
+	});
+
+	// ─── Create Agent Wallet Dialog ─────────────────────────────────
+
+	test.describe("Create Agent Wallet Dialog", () => {
+		test("opens create dialog on button click", async ({ page }) => {
+			await page.goto("/agents");
+			await page.getByTestId("create-agent-btn").click();
+			await expect(page.getByTestId("create-agent-form")).toBeVisible({ timeout: 10000 });
+		});
+
+		test("dialog has all required form fields", async ({ page }) => {
+			await page.goto("/agents");
+			await page.getByTestId("create-agent-btn").click();
+			await expect(page.getByTestId("create-agent-form")).toBeVisible({ timeout: 10000 });
+
+			// Label input
+			await expect(page.locator("#agent-label")).toBeVisible();
+			// Token select
+			await expect(page.locator("#agent-token")).toBeVisible();
+			// Spending limits
+			await expect(page.locator("#spending-cap")).toBeVisible();
+			await expect(page.locator("#daily-limit")).toBeVisible();
+			await expect(page.locator("#per-tx")).toBeVisible();
+			// Funding
+			await expect(page.locator("#funding")).toBeVisible();
+			// Submit button
+			await expect(page.getByTestId("create-agent-submit")).toBeVisible();
+		});
+
+		test("shows vendor selection buttons", async ({ page }) => {
+			await page.goto("/agents");
+			await page.getByTestId("create-agent-btn").click();
+			await expect(page.getByTestId("create-agent-form")).toBeVisible({ timeout: 10000 });
+
+			// Check vendor buttons exist
+			await expect(page.getByText("OpenAI")).toBeVisible();
+			await expect(page.getByText("Anthropic")).toBeVisible();
+			await expect(page.getByText("Stability AI")).toBeVisible();
+			await expect(page.getByText("fal.ai")).toBeVisible();
+			await expect(page.getByText("Perplexity")).toBeVisible();
+		});
+
+		test("vendor buttons toggle selection", async ({ page }) => {
+			await page.goto("/agents");
+			await page.getByTestId("create-agent-btn").click();
+			await expect(page.getByTestId("create-agent-form")).toBeVisible({ timeout: 10000 });
+
+			const openaiBtn = page.getByRole("button", { name: "OpenAI" });
+			// Click to select
+			await openaiBtn.click();
+			await expect(openaiBtn).toHaveClass(/border-blue-500/);
+			// Click to deselect
+			await openaiBtn.click();
+			await expect(openaiBtn).not.toHaveClass(/border-blue-500/);
+		});
+	});
+
+	// ─── Agent Wallet Card Details ──────────────────────────────────
+
+	test.describe("Agent Wallet Card", () => {
+		test("card shows spending limits", async ({ page }) => {
+			await page.goto("/agents");
+			const card = page.getByTestId("agent-wallet-card").first();
+			await expect(card).toBeVisible({ timeout: 15000 });
+
+			// Check limits are displayed
+			await expect(card.getByText("Per-tx cap")).toBeVisible();
+			await expect(card.getByText("Daily limit")).toBeVisible();
+			await expect(card.getByText("Total cap")).toBeVisible();
+		});
+
+		test("card shows vendor tags", async ({ page }) => {
+			await page.goto("/agents");
+			const card = page.getByTestId("agent-wallet-card").first();
+			await expect(card).toBeVisible({ timeout: 15000 });
+
+			// Active wallet has OpenAI and Stability AI
+			await expect(card.getByText("OpenAI")).toBeVisible();
+			await expect(card.getByText("Stability AI")).toBeVisible();
+		});
+
+		test("revoked wallet disables action buttons", async ({ page }) => {
+			await page.goto("/agents");
+			// Find the revoked card
+			const revokedCard = page
+				.getByText("Deprecated Bot")
+				.locator("..")
+				.locator("..")
+				.locator("..");
+			await expect(revokedCard).toBeVisible({ timeout: 15000 });
+
+			// Check Reveal Key and Revoke buttons are disabled
+			const revealBtn = revokedCard.getByTestId("reveal-key-btn");
+			const revokeBtn = revokedCard.getByTestId("revoke-btn");
+			await expect(revealBtn).toBeDisabled();
+			await expect(revokeBtn).toBeDisabled();
+		});
+	});
+
+	// ─── Key Reveal ─────────────────────────────────────────────────
+
+	test.describe("Key Reveal", () => {
+		test("reveal key button opens dialog", async ({ page }) => {
+			await page.goto("/agents");
+			const card = page.getByTestId("agent-wallet-card").first();
+			await expect(card).toBeVisible({ timeout: 15000 });
+
+			await card.getByTestId("reveal-key-btn").click();
+			await expect(page.getByTestId("reveal-key-dialog")).toBeVisible({ timeout: 10000 });
+		});
+
+		test("dialog shows key management UI", async ({ page }) => {
+			await page.goto("/agents");
+			const card = page.getByTestId("agent-wallet-card").first();
+			await expect(card).toBeVisible({ timeout: 15000 });
+
+			await card.getByTestId("reveal-key-btn").click();
+			const dialog = page.getByTestId("reveal-key-dialog");
+			await expect(dialog).toBeVisible({ timeout: 10000 });
+
+			// Should show title
+			await expect(dialog.getByText("Agent Private Key")).toBeVisible();
+		});
+	});
+
+	// ─── Sidebar Navigation ─────────────────────────────────────────
+
+	test.describe("Sidebar", () => {
+		test("sidebar shows Agent Wallets nav item", async ({ page }) => {
+			await page.goto("/agents");
+			await expect(page.getByRole("link", { name: /Agent Wallets/ })).toBeVisible({
+				timeout: 15000,
+			});
+		});
+
+		test("Agent Wallets link navigates to /agents", async ({ page }) => {
+			await page.goto("/dashboard");
+			await expect(page.getByRole("link", { name: /Agent Wallets/ })).toBeVisible({
+				timeout: 15000,
+			});
+			await page.getByRole("link", { name: /Agent Wallets/ }).click();
+			await expect(page).toHaveURL(/\/agents/);
+		});
+	});
+});
