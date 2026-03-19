@@ -65,8 +65,8 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 					lzMessageHash: message.guid ?? deposit.lzMessageHash,
 				})
 				.where(eq(bridgeDeposits.id, deposit.id));
-		} catch {
-			// Skip individual deposit errors; continue with next
+		} catch (err) {
+			console.error(`Bridge reconciler: failed to process deposit ${deposit.id}:`, err);
 		}
 	}
 

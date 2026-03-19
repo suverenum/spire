@@ -34,25 +34,36 @@ export async function createBridgeDeposit(params: {
 		throw new Error("Invalid Solana transaction signature");
 	}
 
-	// Validate amount is a positive number
+	// Validate amount is a positive decimal number (max 6 decimal places, matching USDC precision)
+	const decimalRe = /^(0|[1-9]\d*)(\.\d{1,6})?$/;
+	if (!decimalRe.test(params.amount)) {
+		throw new Error("Amount must be a positive decimal number (up to 6 decimal places)");
+	}
 	const parsedAmount = Number.parseFloat(params.amount);
 	if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
 		throw new Error("Amount must be a positive number");
 	}
 
-	const [deposit] = await db
-		.insert(bridgeDeposits)
-		.values({
-			accountId: params.accountId,
-			sourceChain: params.sourceChain,
-			amount: params.amount,
-			sourceTxHash: params.sourceTxHash,
-			status: "pending",
-		})
-		.returning({ id: bridgeDeposits.id });
+	try {
+		const [deposit] = await db
+			.insert(bridgeDeposits)
+			.values({
+				accountId: params.accountId,
+				sourceChain: params.sourceChain,
+				amount: params.amount,
+				sourceTxHash: params.sourceTxHash,
+				status: "pending",
+			})
+			.returning({ id: bridgeDeposits.id });
 
-	revalidatePath("/dashboard");
-	revalidatePath("/transactions");
+		revalidatePath("/dashboard");
+		revalidatePath("/transactions");
 
-	return deposit;
+		return deposit;
+	} catch (err) {
+		if (err instanceof Error && err.message.includes("unique")) {
+			throw new Error("This transaction is already being tracked");
+		}
+		throw err;
+	}
 }
