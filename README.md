@@ -1,7 +1,7 @@
 <p align="center">
   <img src=".github/logo.png" width="300" alt="Goldhord" />
   <br /><br />
-  <strong>Wallets for your AI agents. Secure, simple, controllable.</strong>
+  <strong>Home for your AI agent wallets</strong>
 </p>
 
 <p align="center">
@@ -10,14 +10,12 @@
 </p>
 
 <p align="center">
-  <a href="https://goldhord.xyz">goldhord.xyz</a> (mainnet) · <a href="https://goldhord.dev">goldhord.dev</a> (testnet)
+  <a href="https://goldhord.xyz">goldhord.xyz</a> (Tempo mainnet) · <a href="https://goldhord.dev">goldhord.dev</a> (Tempo testnet)
 </p>
 
 ---
 
-Many people use OpenAI, Claude, and other AI agents today. They have wallets and bank accounts — but their agents don't.
-
-Goldhord gives every agent its own on-chain wallet so you stay in control of what they spend, where, and how much.
+Many people use OpenAI, Claude, and other AI agents today. They have wallets and bank accounts — but their agents don't. Goldhord gives every agent its own on-chain wallet so you stay in control of what they spend, where, and how much.
 
 ## Key Features
 
