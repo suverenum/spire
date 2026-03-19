@@ -3,14 +3,18 @@ import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { tempo } from "viem/chains";
 
-const DEPLOYER_KEY = "0x35fd9abab43a71403557b4078265c0b7be019b52766d74060d8738a05576c635";
+const DEPLOYER_KEY = process.env.DEPLOYER_KEY;
+if (!DEPLOYER_KEY) {
+	console.error("Set DEPLOYER_KEY env var");
+	process.exit(1);
+}
 const RPC = "https://rpc.tempo.xyz";
 const USDC_E = "0x20c000000000000000000000b9537d11c60e8b50" as `0x${string}`;
 
 // Set feeToken on chain so all transactions pay gas in USDC.e
 const chain = { ...tempo, feeToken: USDC_E };
 
-const deployer = privateKeyToAccount(DEPLOYER_KEY);
+const deployer = privateKeyToAccount(DEPLOYER_KEY as `0x${string}`);
 const pub = createPublicClient({ chain, transport: http(RPC) });
 const wallet = createWalletClient({ account: deployer, chain, transport: http(RPC) });
 
