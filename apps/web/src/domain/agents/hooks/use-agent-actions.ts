@@ -252,6 +252,7 @@ export function useApprovePay(treasuryId: string) {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: CACHE_KEYS.agentWallets(treasuryId) });
+			queryClient.invalidateQueries({ queryKey: ["guardian-state"] });
 			toast("Payment approved and executed on-chain", "success");
 		},
 		onError: (error: Error) => toast(error.message, "error"),
@@ -289,6 +290,7 @@ export function useRejectPay(treasuryId: string) {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: CACHE_KEYS.agentWallets(treasuryId) });
+			queryClient.invalidateQueries({ queryKey: ["guardian-state"] });
 			toast("Payment rejected", "success");
 		},
 		onError: (error: Error) => toast(error.message, "error"),
