@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, Bot, Copy, Key, Shield, Users } from "lucide-react";
+import { ArrowLeftRight, Bot, Copy, Shield, Users } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
 import { useConfig } from "wagmi";
@@ -292,17 +292,6 @@ export function AccountDetailContent({
 										<p className="text-xs text-gray-500">Agent Address</p>
 										<p className="font-mono text-xs text-gray-600">{multisigConfig.agentAddress}</p>
 									</div>
-									{multisigConfig.agentPrivateKey && (
-										<div>
-											<p className="text-xs text-gray-500">
-												<Key className="mr-1 inline h-3 w-3" />
-												Agent Private Key
-											</p>
-											<p className="break-all rounded-md bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600">
-												{multisigConfig.agentPrivateKey}
-											</p>
-										</div>
-									)}
 								</div>
 							</Card>
 						)}

@@ -2,7 +2,8 @@
 
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { multisigConfirmations, multisigTransactions } from "@/db/schema";
+import { accounts, multisigConfirmations, multisigTransactions } from "@/db/schema";
+import { getSession } from "@/lib/session";
 
 /**
  * Upsert a multisig transaction record from on-chain state.
@@ -27,6 +28,15 @@ export async function upsertMultisigTransaction({
 	currentConfirmations: number;
 	executed: boolean;
 }): Promise<{ id: string }> {
+	const session = await getSession();
+	if (!session) throw new Error("Not authenticated");
+
+	// Verify account belongs to the session's treasury
+	const account = await db.query.accounts.findFirst({
+		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
+	});
+	if (!account) throw new Error("Account not found");
+
 	const existing = await db.query.multisigTransactions.findFirst({
 		where: and(
 			eq(multisigTransactions.accountId, accountId),
@@ -73,6 +83,20 @@ export async function addMultisigConfirmation({
 	multisigTransactionId: string;
 	signerAddress: string;
 }): Promise<void> {
+	const session = await getSession();
+	if (!session) throw new Error("Not authenticated");
+
+	// Verify the transaction belongs to an account in the session's treasury
+	const tx = await db.query.multisigTransactions.findFirst({
+		where: eq(multisigTransactions.id, multisigTransactionId),
+	});
+	if (!tx) throw new Error("Transaction not found");
+
+	const account = await db.query.accounts.findFirst({
+		where: and(eq(accounts.id, tx.accountId), eq(accounts.treasuryId, session.treasuryId)),
+	});
+	if (!account) throw new Error("Account not found");
+
 	try {
 		await db.insert(multisigConfirmations).values({
 			multisigTransactionId,

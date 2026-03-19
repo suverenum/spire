@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
+import { consumeAuthChallenge, verifyWalletSignature } from "@/lib/auth-verify";
 import { createSession, getSession } from "@/lib/session";
 import { createTreasurySchema } from "@/lib/validations";
 
@@ -24,6 +25,24 @@ export async function createTreasuryAction(
 		return { error: "Invalid Tempo address from passkey." };
 	}
 	const tempoAddress = rawAddress.toLowerCase();
+
+	// Verify wallet ownership via challenge-response signature
+	const rawSignature = formData.get("signature") as string;
+	if (!rawSignature) {
+		return { error: "Wallet verification required." };
+	}
+	const challenge = await consumeAuthChallenge("create");
+	if (!challenge) {
+		return { error: "Session expired. Please try again." };
+	}
+	try {
+		const isValid = await verifyWalletSignature(rawAddress, rawSignature, challenge);
+		if (!isValid) {
+			return { error: "Wallet verification failed." };
+		}
+	} catch {
+		return { error: "Wallet verification failed." };
+	}
 
 	let row: { id: string; name: string; tempoAddress: string };
 	try {

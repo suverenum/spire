@@ -3,9 +3,10 @@
 import { Fingerprint } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { useConfig, useConnect, useDisconnect } from "wagmi";
+import { useConfig, useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCreateChallenge } from "@/domain/auth/actions/auth-actions";
 import { createTreasuryAction } from "@/domain/treasury/actions/treasury-actions";
 import { useSetupDefaultAccounts } from "@/domain/treasury/hooks/use-setup-default-accounts";
 import { AnalyticsEvents, trackEvent } from "@/lib/posthog";
@@ -17,6 +18,7 @@ export default function CreateTreasuryPage() {
 	const config = useConfig();
 	const { connectAsync, connectors } = useConnect();
 	const { disconnectAsync } = useDisconnect();
+	const { signMessageAsync } = useSignMessage();
 	const setupDefaults = useSetupDefaultAccounts();
 
 	function handleSubmit(formData: FormData) {
@@ -42,7 +44,12 @@ export default function CreateTreasuryPage() {
 				}
 				const address = typeof account === "string" ? account : account.address;
 
+				// Sign a server-issued challenge to prove wallet ownership
+				const challenge = await getCreateChallenge();
+				const signature = await signMessageAsync({ message: challenge });
+
 				formData.set("tempoAddress", address);
+				formData.set("signature", signature);
 				const actionResult = await createTreasuryAction(formData);
 				if (actionResult?.error) {
 					setError(actionResult.error);

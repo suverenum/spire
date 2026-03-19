@@ -5,6 +5,7 @@ const mockFindMany = vi.fn();
 const mockUpdate = vi.fn();
 const mockSet = vi.fn();
 const mockWhere = vi.fn();
+const mockReturning = vi.fn();
 
 vi.mock("@/db", () => ({
 	db: {
@@ -19,7 +20,12 @@ vi.mock("@/db", () => ({
 				set: (...setArgs: unknown[]) => {
 					mockSet(...setArgs);
 					return {
-						where: (...whereArgs: unknown[]) => mockWhere(...whereArgs),
+						where: (...whereArgs: unknown[]) => {
+							mockWhere(...whereArgs);
+							return {
+								returning: (...retArgs: unknown[]) => mockReturning(...retArgs),
+							};
+						},
 					};
 				},
 			};
@@ -68,7 +74,7 @@ describe("reconcilePendingBridgeDeposits", () => {
 					],
 				}),
 		});
-		mockWhere.mockResolvedValue(undefined);
+		mockReturning.mockResolvedValue([{ id: "dep-1" }]);
 
 		const result = await reconcilePendingBridgeDeposits();
 
@@ -95,7 +101,7 @@ describe("reconcilePendingBridgeDeposits", () => {
 					data: [{ guid: "lz-2", status: { name: "FAILED" } }],
 				}),
 		});
-		mockWhere.mockResolvedValue(undefined);
+		mockReturning.mockResolvedValue([{ id: "dep-2" }]);
 
 		const result = await reconcilePendingBridgeDeposits();
 
@@ -114,8 +120,6 @@ describe("reconcilePendingBridgeDeposits", () => {
 					data: [{ guid: "lz-3", status: { name: "INFLIGHT" } }],
 				}),
 		});
-		mockWhere.mockResolvedValue(undefined);
-
 		const result = await reconcilePendingBridgeDeposits();
 
 		expect(result.completed).toBe(0);

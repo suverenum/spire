@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { bridgeDeposits } from "@/db/schema";
 
@@ -40,17 +40,20 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 			if (!message) {
 				const age = Date.now() - new Date(deposit.initiatedAt).getTime();
 				if (age > STALE_THRESHOLD_MS) {
-					await db
+					const staleResult = await db
 						.update(bridgeDeposits)
 						.set({ status: "failed" })
-						.where(eq(bridgeDeposits.id, deposit.id));
-					failed++;
+						.where(
+							and(eq(bridgeDeposits.id, deposit.id), eq(bridgeDeposits.status, deposit.status)),
+						)
+						.returning({ id: bridgeDeposits.id });
+					if (staleResult.length > 0) failed++;
 				}
 				continue;
 			}
 
 			if (message.status?.name === "DELIVERED") {
-				await db
+				const deliveredResult = await db
 					.update(bridgeDeposits)
 					.set({
 						status: "completed",
@@ -58,17 +61,29 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 						tempoTxHash: message.destination?.tx?.txHash,
 						completedAt: new Date(),
 					})
-					.where(eq(bridgeDeposits.id, deposit.id));
-				completed++;
+					.where(
+						and(
+							eq(bridgeDeposits.id, deposit.id),
+							inArray(bridgeDeposits.status, ["pending", "bridging"]),
+						),
+					)
+					.returning({ id: bridgeDeposits.id });
+				if (deliveredResult.length > 0) completed++;
 				continue;
 			}
 
 			if (message.status?.name === "FAILED") {
-				await db
+				const failedResult = await db
 					.update(bridgeDeposits)
 					.set({ status: "failed" })
-					.where(eq(bridgeDeposits.id, deposit.id));
-				failed++;
+					.where(
+						and(
+							eq(bridgeDeposits.id, deposit.id),
+							inArray(bridgeDeposits.status, ["pending", "bridging"]),
+						),
+					)
+					.returning({ id: bridgeDeposits.id });
+				if (failedResult.length > 0) failed++;
 				continue;
 			}
 
@@ -78,7 +93,12 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 					status: "bridging",
 					lzMessageHash: message.guid ?? deposit.lzMessageHash,
 				})
-				.where(eq(bridgeDeposits.id, deposit.id));
+				.where(
+					and(
+						eq(bridgeDeposits.id, deposit.id),
+						inArray(bridgeDeposits.status, ["pending", "bridging"]),
+					),
+				);
 		} catch (err) {
 			console.error(`Bridge reconciler: failed to process deposit ${deposit.id}:`, err);
 		}

@@ -1,8 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { multisigConfigs } from "@/db/schema";
+import { accounts, multisigConfigs } from "@/db/schema";
+import { getSession } from "@/lib/session";
 
 export interface MultisigConfigData {
 	id: string;
@@ -12,7 +13,6 @@ export interface MultisigConfigData {
 	tiersJson: Array<{ maxValue: string; requiredConfirmations: number }>;
 	defaultConfirmations: number;
 	allowlistEnabled: boolean;
-	agentPrivateKey: string | null;
 	agentAddress: string | null;
 }
 
@@ -21,6 +21,15 @@ export interface MultisigConfigData {
  * Returns null for EOA accounts.
  */
 export async function getMultisigConfig(accountId: string): Promise<MultisigConfigData | null> {
+	const session = await getSession();
+	if (!session) return null;
+
+	// Verify account belongs to the session's treasury
+	const account = await db.query.accounts.findFirst({
+		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
+	});
+	if (!account) return null;
+
 	const config = await db.query.multisigConfigs.findFirst({
 		where: eq(multisigConfigs.accountId, accountId),
 	});
@@ -38,7 +47,6 @@ export async function getMultisigConfig(accountId: string): Promise<MultisigConf
 		}>,
 		defaultConfirmations: config.defaultConfirmations,
 		allowlistEnabled: config.allowlistEnabled,
-		agentPrivateKey: config.agentPrivateKey,
 		agentAddress: config.agentAddress,
 	};
 }

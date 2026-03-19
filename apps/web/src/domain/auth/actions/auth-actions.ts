@@ -4,15 +4,44 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
+import {
+	consumeAuthChallenge,
+	createAuthChallenge,
+	verifyWalletSignature,
+} from "@/lib/auth-verify";
 import { createSession, destroySession, getSession } from "@/lib/session";
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 
+export async function getLoginChallenge(): Promise<string> {
+	return createAuthChallenge("login");
+}
+
+export async function getCreateChallenge(): Promise<string> {
+	return createAuthChallenge("create");
+}
+
 export async function loginAction(
 	connectedAddress: string,
+	signature: string,
 ): Promise<{ error?: string; tempoAddress?: string; treasuryName?: string }> {
 	if (!ADDRESS_RE.test(connectedAddress)) {
 		return { error: "Invalid wallet address" };
+	}
+
+	// Verify challenge-response: the client must have signed a server-issued nonce
+	const challenge = await consumeAuthChallenge("login");
+	if (!challenge) {
+		return { error: "Login session expired. Please try again." };
+	}
+
+	try {
+		const isValid = await verifyWalletSignature(connectedAddress, signature, challenge);
+		if (!isValid) {
+			return { error: "Wallet verification failed" };
+		}
+	} catch {
+		return { error: "Wallet verification failed" };
 	}
 
 	const result = await db

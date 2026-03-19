@@ -2,7 +2,8 @@
 
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { multisigConfirmations, multisigTransactions } from "@/db/schema";
+import { accounts, multisigConfirmations, multisigTransactions } from "@/db/schema";
+import { getSession } from "@/lib/session";
 
 export interface PendingTransactionData {
 	id: string;
@@ -27,6 +28,15 @@ export interface PendingTransactionData {
  * Fetches confirmations in a single batched query (no N+1).
  */
 export async function getPendingTransactions(accountId: string): Promise<PendingTransactionData[]> {
+	const session = await getSession();
+	if (!session) return [];
+
+	// Verify account belongs to the session's treasury
+	const account = await db.query.accounts.findFirst({
+		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
+	});
+	if (!account) return [];
+
 	const txs = await db.query.multisigTransactions.findMany({
 		where: and(
 			eq(multisigTransactions.accountId, accountId),

@@ -6,11 +6,14 @@ import { wagmiConfig } from "@/lib/wagmi";
 import { WelcomeScreen } from "./welcome-screen";
 
 const mockLoginAction = vi.fn();
+const mockGetLoginChallenge = vi.fn();
 const mockConnectAsync = vi.fn();
+const mockSignMessageAsync = vi.fn();
 const mockPush = vi.fn();
 
 vi.mock("../actions/auth-actions", () => ({
 	loginAction: (...args: unknown[]) => mockLoginAction(...args),
+	getLoginChallenge: (...args: unknown[]) => mockGetLoginChallenge(...args),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -28,6 +31,9 @@ vi.mock("wagmi", async (importOriginal) => {
 		useConnect: () => ({
 			connectAsync: mockConnectAsync,
 			connectors: [{ id: "webAuthn", name: "WebAuthn" }],
+		}),
+		useSignMessage: () => ({
+			signMessageAsync: mockSignMessageAsync,
 		}),
 	};
 });
@@ -53,10 +59,14 @@ describe("WelcomeScreen", () => {
 			tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
 			treasuryName: "My Treasury",
 		});
+		mockGetLoginChallenge.mockReset();
+		mockGetLoginChallenge.mockResolvedValue("test-challenge-nonce");
 		mockConnectAsync.mockReset();
 		mockConnectAsync.mockResolvedValue({
 			accounts: ["0x1234567890abcdef1234567890abcdef12345678"],
 		});
+		mockSignMessageAsync.mockReset();
+		mockSignMessageAsync.mockResolvedValue("0xmocksignature");
 		mockPush.mockReset();
 	});
 
@@ -81,7 +91,7 @@ describe("WelcomeScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/create");
 	});
 
-	it("calls loginAction with address on unlock and navigates", async () => {
+	it("calls loginAction with address and signature on unlock and navigates", async () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
 		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
 
@@ -90,7 +100,12 @@ describe("WelcomeScreen", () => {
 		});
 
 		expect(mockConnectAsync).toHaveBeenCalled();
-		expect(mockLoginAction).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
+		expect(mockGetLoginChallenge).toHaveBeenCalled();
+		expect(mockSignMessageAsync).toHaveBeenCalledWith({ message: "test-challenge-nonce" });
+		expect(mockLoginAction).toHaveBeenCalledWith(
+			"0x1234567890abcdef1234567890abcdef12345678",
+			"0xmocksignature",
+		);
 		expect(mockPush).toHaveBeenCalledWith("/dashboard");
 	});
 
@@ -149,5 +164,17 @@ describe("WelcomeScreen", () => {
 			fireEvent.click(button);
 		});
 		expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+	});
+
+	it("shows error when signature signing fails", async () => {
+		mockSignMessageAsync.mockRejectedValue(new Error("User rejected signing"));
+		render(<WelcomeScreen />, { wrapper: Wrapper });
+		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
+
+		await act(async () => {
+			fireEvent.click(button);
+		});
+
+		expect(screen.getByRole("alert")).toHaveTextContent("User rejected signing");
 	});
 });

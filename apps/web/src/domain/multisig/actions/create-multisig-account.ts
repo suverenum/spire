@@ -128,30 +128,33 @@ export async function finalizeMultisigAccountCreate({
 	if (!ADDRESS_RE.test(guardAddress)) return { error: "Invalid guard address" };
 
 	try {
-		// Create account with walletType="multisig"
-		const [inserted] = await db
-			.insert(accounts)
-			.values({
-				treasuryId,
-				name: name.trim(),
-				tokenSymbol,
-				tokenAddress: token.address,
-				walletAddress: walletAddress.toLowerCase(),
-				walletType: "multisig",
-				isDefault: false,
-			})
-			.returning({ id: accounts.id });
+		// Create account and multisig config atomically
+		const inserted = await db.transaction(async (tx) => {
+			const [accountRow] = await tx
+				.insert(accounts)
+				.values({
+					treasuryId,
+					name: name.trim(),
+					tokenSymbol,
+					tokenAddress: token.address,
+					walletAddress: walletAddress.toLowerCase(),
+					walletType: "multisig",
+					isDefault: false,
+				})
+				.returning({ id: accounts.id });
 
-		// Create multisig config
-		await db.insert(multisigConfigs).values({
-			accountId: inserted.id,
-			guardAddress: guardAddress.toLowerCase(),
-			owners: owners.map((o) => o.toLowerCase()),
-			tiersJson: tiers,
-			defaultConfirmations,
-			allowlistEnabled,
-			agentPrivateKey: agentPrivateKey ?? null,
-			agentAddress: agentAddress?.toLowerCase() ?? null,
+			await tx.insert(multisigConfigs).values({
+				accountId: accountRow.id,
+				guardAddress: guardAddress.toLowerCase(),
+				owners: owners.map((o) => o.toLowerCase()),
+				tiersJson: tiers,
+				defaultConfirmations,
+				allowlistEnabled,
+				agentPrivateKey: agentPrivateKey ?? null,
+				agentAddress: agentAddress?.toLowerCase() ?? null,
+			});
+
+			return accountRow;
 		});
 
 		revalidatePath("/dashboard");

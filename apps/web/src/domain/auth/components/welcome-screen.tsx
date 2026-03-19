@@ -4,18 +4,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Fingerprint, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { useConnect, useDisconnect } from "wagmi";
+import { useConnect, useDisconnect, useSignMessage } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { fetchBalancesClient } from "@/domain/payments/hooks/use-balances";
 import { fetchTransactionsClient } from "@/domain/payments/hooks/use-transactions";
 import { CACHE_KEYS } from "@/lib/constants";
-import { loginAction } from "../actions/auth-actions";
+import { getLoginChallenge, loginAction } from "../actions/auth-actions";
 
 export function WelcomeScreen() {
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
 	const { connectAsync, connectors } = useConnect();
 	const { disconnectAsync } = useDisconnect();
+	const { signMessageAsync } = useSignMessage();
 	const queryClient = useQueryClient();
 	const router = useRouter();
 
@@ -35,7 +36,11 @@ export function WelcomeScreen() {
 					return;
 				}
 
-				const loginResult = await loginAction(address);
+				// Sign a server-issued challenge to prove wallet ownership
+				const challenge = await getLoginChallenge();
+				const signature = await signMessageAsync({ message: challenge });
+
+				const loginResult = await loginAction(address, signature);
 				if (loginResult?.error) {
 					setError(loginResult.error);
 					return;
