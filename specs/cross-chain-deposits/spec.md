@@ -535,7 +535,7 @@ Show active bridge deposits at the top of the dashboard or in the transaction fe
 - [x] TypeScript compiles cleanly (`bun run typecheck`)
 - [x] Biome lint passes (`bun run lint`)
 - [x] Database migration is clean (`bun run db:generate` produces no diff)
-- [ ] CI passes on PR
+- [x] CI passes on PR
 
 ### Feature-Specific
 
