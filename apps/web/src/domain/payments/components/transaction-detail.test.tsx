@@ -86,7 +86,7 @@ describe("TransactionDetail", () => {
 	it("shows block explorer link", () => {
 		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
 		const link = screen.getByText("View on Explorer").closest("a");
-		expect(link).toHaveAttribute("href", `https://explore.moderato.tempo.xyz/tx/${mockTx.txHash}`);
+		expect(link).toHaveAttribute("href", `https://explore.tempo.xyz/tx/${mockTx.txHash}`);
 		expect(link).toHaveAttribute("target", "_blank");
 		expect(link).toHaveAttribute("rel", "noopener noreferrer");
 	});
