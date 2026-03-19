@@ -37,7 +37,7 @@ const nextConfig = {
 							"style-src 'self' 'unsafe-inline'",
 							"img-src 'self' data: blob:",
 							"font-src 'self'",
-							`connect-src 'self' ${process.env.NEXT_PUBLIC_TEMPO_RPC_HTTP} ${process.env.NEXT_PUBLIC_TEMPO_RPC_WS} ${process.env.NEXT_PUBLIC_TEMPO_SPONSOR_URL ?? ""} https://*.ingest.sentry.io https://us.i.posthog.com`,
+							`connect-src 'self' ${[process.env.NEXT_PUBLIC_TEMPO_RPC_HTTP, process.env.NEXT_PUBLIC_TEMPO_RPC_WS, process.env.NEXT_PUBLIC_TEMPO_SPONSOR_URL, "https://*.ingest.sentry.io", "https://us.i.posthog.com"].filter(Boolean).join(" ")}`,
 							"frame-src https://vercel.live",
 							"frame-ancestors 'none'",
 						].join("; "),
