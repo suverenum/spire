@@ -50,6 +50,13 @@
       "when": 1773914964338,
       "tag": "0006_unknown_wilson_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773946071763,
+      "tag": "0007_fine_switch",
+      "breakpoints": true
     }
   ]
 }

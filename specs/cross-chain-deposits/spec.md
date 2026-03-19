@@ -531,10 +531,10 @@ Show active bridge deposits at the top of the dashboard or in the transaction fe
 
 ### Universal
 
-- [ ] Unit tests pass (`bun run test`)
-- [ ] TypeScript compiles cleanly (`bun run typecheck`)
-- [ ] Biome lint passes (`bun run lint`)
-- [ ] Database migration is clean (`bun run db:generate` produces no diff)
+- [x] Unit tests pass (`bun run test`)
+- [x] TypeScript compiles cleanly (`bun run typecheck`)
+- [x] Biome lint passes (`bun run lint`)
+- [x] Database migration is clean (`bun run db:generate` produces no diff)
 - [ ] CI passes on PR
 
 ### Feature-Specific
