@@ -22,7 +22,7 @@ describe("constants", () => {
 	});
 
 	it("has correct explorer URL", () => {
-		expect(TEMPO_EXPLORER_URL).toBe("https://explore.tempo.xyz");
+		expect(TEMPO_EXPLORER_URL).toBe("https://explore.moderato.tempo.xyz");
 	});
 
 	it("has 15 minute session timeout", () => {

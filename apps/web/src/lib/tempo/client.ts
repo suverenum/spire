@@ -11,7 +11,7 @@ const tempoChain = {
 		default: { http: [TEMPO_RPC_URL] },
 	},
 	blockExplorers: {
-		default: { name: "Tempo Explorer", url: "https://explore.tempo.xyz" },
+		default: { name: "Tempo Explorer", url: "https://explore.moderato.tempo.xyz" },
 	},
 } as const;
 
