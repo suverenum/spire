@@ -42,7 +42,7 @@ describe("Toast", () => {
 			toast("Info message", "info");
 		});
 		const alert = screen.getByRole("alert");
-		expect(alert.className).toContain("bg-gray-900");
+		expect(alert.className).toContain("bg-primary");
 	});
 
 	it("auto-dismisses after timeout", () => {
@@ -117,7 +117,7 @@ describe("Toast", () => {
 			toast("Default type");
 		});
 		const alert = screen.getByRole("alert");
-		expect(alert.className).toContain("bg-gray-900");
+		expect(alert.className).toContain("bg-primary");
 	});
 
 	it("does nothing when toast is called without Toaster mounted", () => {

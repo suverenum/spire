@@ -1,30 +1,50 @@
-# Goldhord
+<p align="center">
+  <img src=".github/logo.png" width="300" alt="Goldhord" />
+  <br /><br />
+  <strong>Wallets for your AI agents. Secure, simple, controllable.</strong>
+</p>
 
-Corporate treasury management on blockchain. Replace NetSuite and Oracle with instant, transparent stablecoin operations.
+<p align="center">
+  <a href="https://github.com/suverenum/spire/actions/workflows/ci.yml"><img src="https://github.com/suverenum/spire/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" /></a>
+</p>
 
-**[goldhord.xyz](https://goldhord.xyz)**
+<p align="center">
+  <a href="https://goldhord.xyz">goldhord.xyz</a> (mainnet) · <a href="https://goldhord.dev">goldhord.dev</a> (testnet)
+</p>
 
-## What is Goldhord?
+---
 
-Large enterprises manage treasury across multiple business entities, countries, and bank accounts. Moving money between them is slow, expensive, and opaque. Traditional tools like NetSuite and Oracle help with visibility but don't solve the underlying banking friction.
+Many people use OpenAI, Claude, and other AI agents today. They have wallets and bank accounts — but their agents don't.
 
-Goldhord replaces this stack with stablecoin-based treasury management built on the [Tempo blockchain](https://tempo.xyz) (infrastructure built by Stripe). Each treasury account is a real on-chain wallet holding stablecoins — USDC, EURC, and more. Enterprises get:
+Goldhord gives every agent its own on-chain wallet so you stay in control of what they spend, where, and how much.
 
-- **Multiple accounts** per treasury, organized by entity, purpose, or currency
-- **Instant transfers** between accounts — no wire delays, no intermediaries
-- **Multi-currency** support with on-chain swaps (USDC <> EURC)
-- **Full visibility** — every transaction is on-chain, auditable, real-time
-- **Security by default** — blockchain guarantees, no custodial risk
-- **Passkey authentication** — biometric sign-in, no seed phrases
-- **Approval policies** — multi-signature, cold wallet (Ledger) integration
+## Key Features
 
-No banking license required. Trust is provided by the chain.
+- **Per-agent wallets** — each agent gets its own on-chain wallet, funded with stablecoins
+- **On-chain policies** — set spending limits, approved vendors, and usage rules enforced by the chain
+- **Approval thresholds** — transactions above a set amount require human approval before execution
+
+<!-- Add screenshot or GIF here: -->
+<!-- ![Goldhord dashboard](docs/screenshot.png) -->
+
+## Quick Start
+
+```bash
+# Prerequisites: Bun (https://bun.sh), Node.js 22+
+
+bun install
+cp apps/web/.env.example apps/web/.env.local   # fill in DATABASE_URL etc.
+bun run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Blockchain | [Tempo](https://tempo.xyz) (L1 for stablecoin payments) |
+| Blockchain | [Tempo](https://tempo.xyz) (L1 for stablecoin payments, built by Stripe) |
 | Frontend | Next.js 16, React 19, TypeScript |
 | Database | Neon serverless Postgres, Drizzle ORM |
 | Auth | WebAuthn passkeys (Tempo Account Keychain) |
@@ -34,24 +54,6 @@ No banking license required. Trust is provided by the chain.
 | Linting | Biome |
 | Testing | Vitest, Playwright |
 | Deploy | Vercel |
-
-## Getting Started
-
-```bash
-# Prerequisites: Bun (https://bun.sh), Node.js 22+
-
-# Install dependencies
-bun install
-
-# Set up environment
-cp apps/web/.env.example apps/web/.env.local
-# Fill in DATABASE_URL and other values
-
-# Start development
-bun run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
 
 ## Project Structure
 
@@ -63,9 +65,6 @@ goldhord/
 │   ├── utils/             # Shared utilities
 │   └── tsconfig/          # Shared TypeScript configs
 ├── specs/                 # Product and technical specs
-├── CLAUDE.md              # AI agent project instructions
-├── AGENTS.md              # AI coding agent guidelines
-├── biome.json             # Linting + formatting
 └── turbo.json             # Build orchestration
 ```
 
@@ -87,8 +86,10 @@ bun run build        # Production build
 - **On-chain truth** — balances read directly from blockchain
 - **Optimistic UI** — instant feedback with background chain confirmation
 
-See [CLAUDE.md](./CLAUDE.md) for detailed architecture documentation.
+## Contributing
+
+Contributions are welcome. Please open an issue first to discuss what you'd like to change.
 
 ## License
 
-Proprietary. All rights reserved.
+[MIT](./LICENSE) — Copyright (c) 2026 Ilya Vorobyev, Dmitry Polishuk

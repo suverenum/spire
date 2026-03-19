@@ -48,16 +48,16 @@ export function Sheet({ open, onClose, children, title }: SheetProps) {
 		>
 			<div
 				className={cn(
-					"w-full max-w-lg rounded-t-xl bg-white p-6 shadow-xl sm:rounded-xl",
+					"w-full max-w-lg rounded-t-xl border border-border bg-muted p-6 shadow-xl sm:rounded-xl",
 					"animate-in slide-in-from-bottom duration-200",
 				)}
 			>
 				<div className="mb-4 flex items-center justify-between">
-					{title && <h2 className="text-lg font-semibold">{title}</h2>}
+					{title && <h2 className="text-lg font-semibold text-foreground">{title}</h2>}
 					<button
 						type="button"
 						onClick={onClose}
-						className="ml-auto cursor-pointer rounded-md p-1 hover:bg-gray-100"
+						className="ml-auto cursor-pointer rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
 						aria-label="Close"
 					>
 						<X className="h-5 w-5" />

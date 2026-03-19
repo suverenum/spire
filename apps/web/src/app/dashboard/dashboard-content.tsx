@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, ArrowUpRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PlusIcon, SendIcon, TransferIcon } from "@/components/icons";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -162,7 +162,7 @@ export function DashboardContent({
 				)}
 
 				<Card className="mb-6">
-					<p className="text-sm text-gray-500">Total Balance</p>
+					<p className="text-sm text-muted-foreground">Total Balance</p>
 					<p className="text-3xl font-semibold">
 						{formatBalance(totalBalance, 6)} {ACCOUNT_TOKENS[0].name}
 					</p>
@@ -170,11 +170,11 @@ export function DashboardContent({
 
 				<div className="mb-6 flex gap-3">
 					<Button onClick={handleReceiveOpen} className="flex-1" size="lg">
-						<Plus className="h-5 w-5" />
+						<PlusIcon className="h-5 w-5" />
 						Deposit
 					</Button>
 					<Button onClick={handleSendOpen} variant="outline" className="flex-1" size="lg">
-						<ArrowUpRight className="h-5 w-5" />
+						<SendIcon className="h-5 w-5" />
 						Withdraw
 					</Button>
 					{accountsWithBalances.length > 1 && (
@@ -184,20 +184,16 @@ export function DashboardContent({
 							className="flex-1"
 							size="lg"
 						>
-							<ArrowLeftRight className="h-5 w-5" />
+							<TransferIcon className="h-5 w-5" />
 							Move
 						</Button>
 					)}
-					<Button onClick={() => setCreateOpen(true)} variant="outline" size="lg">
-						<Plus className="h-5 w-5" />
-						New Account
-					</Button>
 				</div>
 
 				<div className="mb-6">
 					<div className="mb-3 flex items-center justify-between">
-						<h2 className="text-lg font-semibold">Accounts</h2>
-						<Link href="/accounts" className="text-sm text-gray-500 hover:text-gray-700">
+						<h2 className="text-lg font-semibold">Agent wallets</h2>
+						<Link href="/accounts" className="text-sm text-muted-foreground hover:text-foreground">
 							View all &rarr;
 						</Link>
 					</div>
@@ -292,7 +288,7 @@ export function DashboardContent({
 							label="From"
 						/>
 						{transferFromAccount && (
-							<p className="text-xs text-gray-500">
+							<p className="text-xs text-muted-foreground">
 								Available: {formatBalance(transferFromAccount.balance, 6)}{" "}
 								{transferFromAccount.tokenSymbol}
 							</p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, LogOut, Menu, Receipt, Settings, Wallet, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -9,17 +9,23 @@ import { clearPersistedCache } from "@/components/providers";
 import { logoutAction } from "@/domain/auth/actions/auth-actions";
 import { AnalyticsEvents, trackEvent } from "@/lib/posthog";
 import { cn } from "@/lib/utils";
+import { HomeIcon, LogOutIcon, SettingsIcon, TransactionsIcon, WalletIcon } from "./icons";
 
 interface SidebarProps {
 	treasuryName: string;
 }
 
-const NAV_ITEMS = [
-	{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-	{ href: "/transactions", label: "Transactions", icon: Receipt },
-	{ href: "/accounts", label: "Accounts", icon: Wallet },
-	{ href: "/settings", label: "Settings", icon: Settings },
+const MAIN_NAV = [
+	{ href: "/dashboard", label: "Home", icon: HomeIcon },
+	{ href: "/transactions", label: "Transactions", icon: TransactionsIcon },
 ] as const;
+
+const CASH_ACCOUNTS_NAV = [
+	{ href: "/cash-accounts", label: "Cash accounts", icon: WalletIcon },
+	{ href: "/accounts", label: "Agent wallets", icon: WalletIcon },
+] as const;
+
+const BOTTOM_NAV = [{ href: "/settings", label: "Settings", icon: SettingsIcon }] as const;
 
 export function Sidebar({ treasuryName }: SidebarProps) {
 	const pathname = usePathname();
@@ -42,43 +48,119 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 
 	const navContent = (
 		<>
-			<div className="mb-8 px-2">
-				<h2 className="truncate text-lg font-semibold text-gray-900">{treasuryName}</h2>
+			<div className="mb-6 flex items-center gap-2 px-2">
+				<svg
+					aria-hidden="true"
+					className="h-6 w-6 shrink-0"
+					viewBox="0 0 62 62"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<defs>
+						<linearGradient id="hex-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+							<stop offset="0%" stopColor="#8B6FFF" />
+							<stop offset="100%" stopColor="#2DD4BF" />
+						</linearGradient>
+					</defs>
+					<path
+						d="M24,7 L46,20 L46,46 L24,59 L2,46 L2,20 Z"
+						stroke="#8B6FFF"
+						strokeWidth="2"
+						strokeLinejoin="round"
+						fill="none"
+						opacity="0.35"
+					/>
+					<path
+						d="M36,4 L58,17 L58,43 L36,56 L14,43 L14,17 Z"
+						stroke="url(#hex-sidebar)"
+						strokeWidth="2.8"
+						strokeLinejoin="round"
+						fill="none"
+					/>
+				</svg>
+				<span className="truncate text-sm font-medium text-foreground">{treasuryName}</span>
 			</div>
 
-			<nav className="flex-1 space-y-1">
-				{NAV_ITEMS.map((item) => {
-					const isActive =
-						pathname === item.href ||
-						(item.href !== "/dashboard" && pathname.startsWith(item.href));
+			<nav className="flex-1">
+				<div className="space-y-0.5">
+					{MAIN_NAV.map((item) => {
+						const isActive =
+							pathname === item.href ||
+							(item.href !== "/dashboard" && pathname.startsWith(item.href));
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								onClick={() => setMobileOpen(false)}
+								className={cn(
+									"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
+									isActive
+										? "bg-white/[0.08] text-foreground"
+										: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+								)}
+							>
+								<item.icon className="h-4 w-4" />
+								{item.label}
+							</Link>
+						);
+					})}
+				</div>
 
-					return (
-						<Link
-							key={item.href}
-							href={item.href}
-							onClick={() => setMobileOpen(false)}
-							className={cn(
-								"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-								isActive
-									? "bg-gray-100 text-gray-900"
-									: "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-							)}
-						>
-							<item.icon className="h-5 w-5" />
-							{item.label}
-						</Link>
-					);
-				})}
+				<div className="mt-4 space-y-0.5">
+					<div className="space-y-0.5">
+						{CASH_ACCOUNTS_NAV.map((item) => {
+							const isActive = pathname.startsWith(item.href);
+							return (
+								<Link
+									key={item.href}
+									href={item.href}
+									onClick={() => setMobileOpen(false)}
+									className={cn(
+										"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
+										isActive
+											? "bg-white/[0.08] text-foreground"
+											: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+									)}
+								>
+									<item.icon className="h-4 w-4" />
+									{item.label}
+								</Link>
+							);
+						})}
+					</div>
+				</div>
+
+				<div className="mt-6 space-y-0.5">
+					{BOTTOM_NAV.map((item) => {
+						const isActive = pathname.startsWith(item.href);
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								onClick={() => setMobileOpen(false)}
+								className={cn(
+									"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
+									isActive
+										? "bg-white/[0.08] text-foreground"
+										: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+								)}
+							>
+								<item.icon className="h-4 w-4" />
+								{item.label}
+							</Link>
+						);
+					})}
+				</div>
 			</nav>
 
-			<div className="mt-auto pt-4">
+			<div className="mt-auto">
 				<button
 					type="button"
 					onClick={handleLogout}
 					disabled={isLoggingOut}
-					className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50"
+					className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground disabled:opacity-50"
 				>
-					<LogOut className="h-5 w-5" />
+					<LogOutIcon className="h-4 w-4" />
 					{isLoggingOut ? "Logging out..." : "Logout"}
 				</button>
 			</div>
@@ -91,10 +173,10 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 			<button
 				type="button"
 				onClick={() => setMobileOpen(true)}
-				className="fixed top-4 left-4 z-40 rounded-lg bg-white p-2 shadow-md lg:hidden"
+				className="fixed top-4 left-4 z-40 rounded-lg bg-muted p-2 shadow-md lg:hidden"
 				aria-label="Open menu"
 			>
-				<Menu className="h-5 w-5" />
+				<Menu className="h-5 w-5 text-foreground" />
 			</button>
 
 			{/* Mobile overlay */}
@@ -110,14 +192,14 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 			{/* Mobile sidebar */}
 			<aside
 				className={cn(
-					"fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white p-4 transition-transform duration-200 lg:hidden",
+					"fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-border bg-muted p-4 transition-transform duration-200 lg:hidden",
 					mobileOpen ? "translate-x-0" : "-translate-x-full",
 				)}
 			>
 				<button
 					type="button"
 					onClick={() => setMobileOpen(false)}
-					className="mb-4 ml-auto rounded-md p-1 hover:bg-gray-100"
+					className="mb-4 ml-auto rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
 					aria-label="Close menu"
 				>
 					<X className="h-5 w-5" />
@@ -126,7 +208,7 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 			</aside>
 
 			{/* Desktop sidebar */}
-			<aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-white lg:p-4">
+			<aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-56 lg:flex-col lg:border-r lg:border-border lg:bg-muted lg:p-4">
 				{navContent}
 			</aside>
 		</>

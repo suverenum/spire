@@ -1,7 +1,7 @@
 "use client";
 
-import { Plus } from "lucide-react";
 import { useState } from "react";
+import { PlusIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
@@ -73,7 +73,7 @@ export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFo
 							id="account-token"
 							value={tokenSymbol}
 							onChange={(e) => setTokenSymbol(e.target.value)}
-							className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+							className="flex h-10 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
 						>
 							{ACCOUNT_TOKENS.map((t) => (
 								<option key={t.name} value={t.name}>
@@ -83,7 +83,7 @@ export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFo
 						</select>
 					</div>
 				) : (
-					<p className="text-sm text-gray-500">Token: {ACCOUNT_TOKENS[0].name}</p>
+					<p className="text-sm text-muted-foreground">Token: {ACCOUNT_TOKENS[0].name}</p>
 				)}
 
 				{error && <p className="text-sm text-red-600">{error}</p>}
@@ -94,7 +94,7 @@ export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFo
 					className="w-full"
 					size="lg"
 				>
-					<Plus className="h-4 w-4" />
+					<PlusIcon className="h-4 w-4" />
 					{createMutation.isPending ? "Creating..." : "Create Account"}
 				</Button>
 			</div>

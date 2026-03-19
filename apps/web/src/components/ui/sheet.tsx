@@ -48,7 +48,7 @@ export function Sheet({ open, onClose, children, title }: SheetProps) {
 		>
 			<div
 				className={cn(
-					"w-full max-w-lg rounded-t-xl bg-white p-6 shadow-xl sm:rounded-xl",
+					"w-full max-w-lg rounded-t-xl bg-muted p-6 shadow-xl sm:rounded-xl",
 					"animate-in slide-in-from-bottom duration-200",
 				)}
 			>
@@ -57,7 +57,7 @@ export function Sheet({ open, onClose, children, title }: SheetProps) {
 					<button
 						type="button"
 						onClick={onClose}
-						className="ml-auto cursor-pointer rounded-md p-1 hover:bg-gray-100"
+						className="ml-auto cursor-pointer rounded-md p-1 hover:bg-accent"
 						aria-label="Close"
 					>
 						<X className="h-5 w-5" />

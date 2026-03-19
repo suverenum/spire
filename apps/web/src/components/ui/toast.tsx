@@ -48,7 +48,7 @@ export function Toaster() {
 						"flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg",
 						t.type === "success" && "bg-green-600 text-white",
 						t.type === "error" && "bg-red-600 text-white",
-						t.type === "info" && "bg-gray-900 text-white",
+						t.type === "info" && "bg-primary text-white",
 					)}
 				>
 					<span>{t.message}</span>
