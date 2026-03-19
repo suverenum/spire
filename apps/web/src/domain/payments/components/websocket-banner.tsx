@@ -1,18 +1,21 @@
 "use client";
 
-import { WifiOff } from "lucide-react";
+import { useEffect, useState } from "react";
 
-interface WebSocketBannerProps {
-	isConnected: boolean;
+function formatTime(date: Date): string {
+	return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-export function WebSocketBanner({ isConnected }: WebSocketBannerProps) {
-	if (isConnected) return null;
+export function WebSocketBanner({ isConnected }: { isConnected: boolean }) {
+	const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-	return (
-		<div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-2 text-sm text-yellow-800">
-			<WifiOff className="h-4 w-4" />
-			<span>Live updates paused. Refreshing every 15 seconds.</span>
-		</div>
-	);
+	useEffect(() => {
+		setLastUpdated(new Date());
+		const interval = setInterval(() => setLastUpdated(new Date()), isConnected ? 5_000 : 15_000);
+		return () => clearInterval(interval);
+	}, [isConnected]);
+
+	if (!lastUpdated) return null;
+
+	return <p className="mb-4 text-xs text-gray-400">Updated at {formatTime(lastUpdated)}</p>;
 }

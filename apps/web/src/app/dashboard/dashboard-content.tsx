@@ -190,6 +190,7 @@ export function DashboardContent({
 					)}
 					<Button onClick={() => setCreateOpen(true)} variant="outline" size="lg">
 						<Plus className="h-5 w-5" />
+						New Account
 					</Button>
 				</div>
 
