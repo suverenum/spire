@@ -27,6 +27,7 @@ const account: AccountWithBalance = {
 	tokenSymbol: "AlphaUSD",
 	tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
 	walletAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`,
+	walletType: "eoa",
 	isDefault: false,
 	createdAt: new Date("2025-01-01"),
 	balance: 1000000n,

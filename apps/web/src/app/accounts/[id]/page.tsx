@@ -30,6 +30,7 @@ async function AccountDetailLoader({ params }: Props) {
 			treasuryName={session.treasuryName}
 			authenticatedAt={session.authenticatedAt}
 			treasuryId={session.treasuryId}
+			tempoAddress={session.tempoAddress}
 		/>
 	);
 }

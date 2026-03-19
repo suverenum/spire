@@ -65,7 +65,6 @@ describe("Sidebar", () => {
 		expect(screen.getAllByText("Dashboard")).toHaveLength(2); // mobile + desktop
 		expect(screen.getAllByText("Transactions")).toHaveLength(2);
 		expect(screen.getAllByText("Accounts")).toHaveLength(2);
-		expect(screen.getAllByText("Swap")).toHaveLength(2);
 		expect(screen.getAllByText("Settings")).toHaveLength(2);
 	});
 

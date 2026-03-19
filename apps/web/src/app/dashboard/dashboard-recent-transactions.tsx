@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Receipt } from "lucide-react";
 import Link from "next/link";
 import type { GroupedTransaction } from "@/lib/tempo/types";
 import { cn, formatBalance, formatDate, truncateAddress } from "@/lib/utils";
 
 interface DashboardRecentTransactionsProps {
 	transactions: GroupedTransaction[];
+	accountId?: string;
 }
 
 function getLinkId(tx: GroupedTransaction): string {
@@ -44,7 +45,8 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 				</div>
 				<div className="text-right">
 					<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
-						{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
+						{isSent ? "-" : "+"}
+						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 					<p className="text-xs text-gray-400">
 						{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
@@ -71,7 +73,30 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 				</div>
 				<div className="text-right">
 					<p className="text-sm font-medium text-gray-900">
-						${formatBalance(tx.amount, 6)} {tx.token}
+						{formatBalance(tx.amount, 6)} {tx.token}
+					</p>
+					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+				</div>
+			</Link>
+		);
+	}
+
+	if (tx.kind === "fee") {
+		return (
+			<Link
+				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
+				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			>
+				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+					<Receipt className="h-5 w-5 text-gray-500" />
+				</div>
+				<div className="min-w-0 flex-1">
+					<p className="text-sm font-medium">Network Fee</p>
+					<p className="truncate text-xs text-gray-500">{tx.accountName}</p>
+				</div>
+				<div className="text-right">
+					<p className="text-sm font-medium text-gray-500">
+						-{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 				</div>
@@ -95,14 +120,19 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 				</p>
 			</div>
 			<div className="text-right">
-				<p className="text-sm font-medium text-gray-900">${formatBalance(tx.amountIn, 6)}</p>
+				<p className="text-sm font-medium text-gray-900">
+					{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
+				</p>
 				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 			</div>
 		</Link>
 	);
 }
 
-export function DashboardRecentTransactions({ transactions }: DashboardRecentTransactionsProps) {
+export function DashboardRecentTransactions({
+	transactions,
+	accountId,
+}: DashboardRecentTransactionsProps) {
 	const recent = transactions.slice(0, 5);
 
 	if (recent.length === 0) {
@@ -118,7 +148,10 @@ export function DashboardRecentTransactions({ transactions }: DashboardRecentTra
 		<div>
 			<div className="mb-3 flex items-center justify-between">
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
-				<Link href="/transactions" className="text-sm text-gray-500 hover:text-gray-700">
+				<Link
+					href={accountId ? `/transactions?account=${accountId}` : "/transactions"}
+					className="text-sm text-gray-500 hover:text-gray-700"
+				>
 					View all &rarr;
 				</Link>
 			</div>

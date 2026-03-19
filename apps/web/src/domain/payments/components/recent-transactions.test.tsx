@@ -151,12 +151,12 @@ describe("RecentTransactions", () => {
 
 		it("shows negative amount for sent transactions", () => {
 			renderWithQuery(<RecentTransactions address={addr} />);
-			expect(screen.getByText("-$5.00")).toBeInTheDocument();
+			expect(screen.getByText("-5.00 AlphaUSD")).toBeInTheDocument();
 		});
 
 		it("shows positive amount for received transactions", () => {
 			renderWithQuery(<RecentTransactions address={addr} />);
-			expect(screen.getByText("+$10.00")).toBeInTheDocument();
+			expect(screen.getByText("+10.00 BetaUSD")).toBeInTheDocument();
 		});
 
 		it("shows truncated counterparty addresses", () => {

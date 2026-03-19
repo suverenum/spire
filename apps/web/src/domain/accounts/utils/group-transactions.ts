@@ -1,4 +1,4 @@
-import { DEX_ADDRESS } from "@/lib/constants";
+import { DEX_ADDRESS, FEE_MANAGER_ADDRESS } from "@/lib/constants";
 import type {
 	AccountRecord,
 	GroupedTransaction,
@@ -12,6 +12,7 @@ interface TaggedPayment extends Payment {
 }
 
 const DEX_ADDR_LOWER = DEX_ADDRESS.toLowerCase();
+const FEE_ADDR_LOWER = FEE_MANAGER_ADDRESS.toLowerCase();
 
 // Maximum time gap (ms) between a DEX swap and its follow-up transfer
 // to consider them part of the same operation. Tempo settles in seconds,
@@ -34,13 +35,24 @@ export function groupTransactions(
 		walletToAccount.set(account.walletAddress.toLowerCase(), account);
 	}
 
+	// Separate fee transactions (sent to FeeManager) from regular transactions
+	const filtered: TaggedPayment[] = [];
+	const feeTxs: TaggedPayment[] = [];
+	for (const tx of transactions) {
+		if (tx.to.toLowerCase() === FEE_ADDR_LOWER) {
+			feeTxs.push(tx);
+		} else {
+			filtered.push(tx);
+		}
+	}
+
 	const grouped = new Map<string, GroupedTransaction>();
 
 	// First pass: detect swap-related transactions (involving DEX address)
 	const swapTxHashes = new Set<string>();
 	const swapsByKey = new Map<string, { dexTx: TaggedPayment; sourceAccount: AccountRecord }>();
 
-	for (const tx of transactions) {
+	for (const tx of filtered) {
 		const toAddr = tx.to.toLowerCase();
 		const fromAddr = tx.from.toLowerCase();
 
@@ -65,7 +77,7 @@ export function groupTransactions(
 
 	// Collect candidate follow-up transfers grouped by source account ID
 	const candidatesBySource = new Map<string, TaggedPayment[]>();
-	for (const tx of transactions) {
+	for (const tx of filtered) {
 		if (swapTxHashes.has(tx.txHash)) continue;
 
 		const fromAddr = tx.from.toLowerCase();
@@ -174,7 +186,7 @@ export function groupTransactions(
 		}
 	}
 
-	for (const tx of transactions) {
+	for (const tx of filtered) {
 		// Skip transactions already grouped as swaps
 		if (swapTxHashes.has(tx.txHash)) continue;
 
@@ -185,6 +197,12 @@ export function groupTransactions(
 
 		// Internal transfer: both from and to belong to treasury wallets
 		if (fromAccount && toAccount) {
+			// Only show if the token matches at least one account's token
+			const visibleIds = [fromAccount, toAccount]
+				.filter((a) => a.tokenSymbol === tx.token)
+				.map((a) => a.id);
+			if (visibleIds.length === 0) continue;
+
 			const key = `internal-${tx.txHash}`;
 			if (!grouped.has(key)) {
 				grouped.set(key, {
@@ -194,7 +212,7 @@ export function groupTransactions(
 					direction: "internal",
 					status: tx.status,
 					timestamp: tx.timestamp,
-					visibleAccountIds: [fromAccount.id, toAccount.id],
+					visibleAccountIds: visibleIds,
 					fromAccountId: fromAccount.id,
 					fromAccountName: fromAccount.name,
 					toAccountId: toAccount.id,
@@ -213,6 +231,9 @@ export function groupTransactions(
 		const account = fromAccount ?? toAccount;
 		if (!account) continue;
 
+		// Skip transactions whose token doesn't match the account's token
+		if (tx.token !== account.tokenSymbol) continue;
+
 		const key = `payment-${tx.txHash}-${tx.accountId}`;
 		if (!grouped.has(key)) {
 			grouped.set(key, {
@@ -230,6 +251,30 @@ export function groupTransactions(
 				amount: tx.amount,
 				token: tx.token,
 				memo: tx.memo,
+			});
+		}
+	}
+
+	// Group fee transactions
+	for (const tx of feeTxs) {
+		const fromAddr = tx.from.toLowerCase();
+		const account = walletToAccount.get(fromAddr);
+		if (!account) continue;
+		if (tx.token !== account.tokenSymbol) continue;
+
+		const key = `fee-${tx.txHash}-${tx.accountId}`;
+		if (!grouped.has(key)) {
+			grouped.set(key, {
+				groupId: key,
+				kind: "fee",
+				txHashes: [tx.txHash],
+				accountId: account.id,
+				accountName: account.name,
+				status: tx.status,
+				timestamp: tx.timestamp,
+				visibleAccountIds: [account.id],
+				amount: tx.amount,
+				token: tx.token,
 			});
 		}
 	}

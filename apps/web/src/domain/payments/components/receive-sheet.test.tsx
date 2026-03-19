@@ -29,7 +29,7 @@ describe("ReceiveSheet", () => {
 
 	it("renders QR code and title when open", () => {
 		render(<ReceiveSheet open={true} onClose={() => {}} address={addr} />);
-		expect(screen.getByText("Receive Payment")).toBeInTheDocument();
+		expect(screen.getByText("Deposit")).toBeInTheDocument();
 	});
 
 	it("shows wallet address", () => {
@@ -107,6 +107,7 @@ describe("ReceiveSheet", () => {
 				tokenSymbol: "AlphaUSD",
 				tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
 				walletAddress: "0xaaaa000000000000000000000000000000000001" as `0x${string}`,
+				walletType: "eoa",
 				isDefault: true,
 				createdAt: new Date("2025-01-01"),
 				balance: 5000000n,
@@ -119,6 +120,7 @@ describe("ReceiveSheet", () => {
 				tokenSymbol: "BetaUSD",
 				tokenAddress: "0x2222222222222222222222222222222222222222" as `0x${string}`,
 				walletAddress: "0xbbbb000000000000000000000000000000000002" as `0x${string}`,
+				walletType: "eoa",
 				isDefault: true,
 				createdAt: new Date("2025-01-01"),
 				balance: 3000000n,

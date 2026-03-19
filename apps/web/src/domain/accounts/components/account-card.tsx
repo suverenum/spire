@@ -1,7 +1,12 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Wallet } from "lucide-react";
 import Link from "next/link";
+import { MultisigBadge } from "@/domain/multisig/components/multisig-badge";
+import { getMultisigConfig } from "@/domain/multisig/queries/get-multisig-config";
+import { getPendingTransactions } from "@/domain/multisig/queries/get-pending-transactions";
+import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountWithBalance } from "@/lib/tempo/types";
 import { truncateAddress } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
@@ -13,6 +18,20 @@ interface AccountCardProps {
 }
 
 export function AccountCard({ account, onRename, onDelete }: AccountCardProps) {
+	const isMultisig = account.walletType === "multisig";
+
+	const { data: config } = useQuery({
+		queryKey: CACHE_KEYS.multisigConfig(account.id),
+		queryFn: () => getMultisigConfig(account.id),
+		enabled: isMultisig,
+	});
+
+	const { data: pendingTxs } = useQuery({
+		queryKey: CACHE_KEYS.pendingTransactions(account.id),
+		queryFn: () => getPendingTransactions(account.id),
+		enabled: isMultisig,
+	});
+
 	return (
 		<div
 			data-testid="account-card"
@@ -26,6 +45,9 @@ export function AccountCard({ account, onRename, onDelete }: AccountCardProps) {
 					<div>
 						<p className="text-sm font-medium text-gray-900">{account.name}</p>
 						<p className="text-xs text-gray-500">{account.tokenSymbol}</p>
+						{isMultisig && config && (
+							<MultisigBadge ownerCount={config.owners.length} pendingCount={pendingTxs?.length} />
+						)}
 					</div>
 				</Link>
 				<AccountMenu

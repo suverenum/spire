@@ -1,0 +1,155 @@
+import pg from "pg";
+
+const TEST_DB_URL =
+	process.env.TEST_DATABASE_URL || "postgresql://postgres:testpass@localhost:5432/goldhord_test";
+
+// Known test data IDs (deterministic for test assertions)
+export const TEST_TREASURY_ID = "00000000-0000-0000-0000-000000000001";
+export const TEST_TEMPO_ADDRESS = "0x9F3D0d56Aae3bA5a77A57901D356C847CC5157c0";
+export const TEST_TREASURY_NAME = "E2E Test Treasury";
+
+export const TEST_EOA_ACCOUNT_ID = "00000000-0000-0000-0000-000000000010";
+export const TEST_EOA_ACCOUNT2_ID = "00000000-0000-0000-0000-000000000011";
+export const TEST_EOA_WALLET = "0x1111111111111111111111111111111111111111";
+export const TEST_EOA_WALLET2 = "0x4444444444444444444444444444444444444444";
+
+export const TEST_MULTISIG_ACCOUNT_ID = "00000000-0000-0000-0000-000000000020";
+export const TEST_MULTISIG_WALLET = "0x2222222222222222222222222222222222222222";
+export const TEST_GUARD_ADDRESS = "0x3333333333333333333333333333333333333333";
+
+export const TEST_SIGNER_1 = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+export const TEST_SIGNER_2 = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+/**
+ * Seed the test database with treasury, EOA account, and multisig account.
+ */
+export async function seedTestData(): Promise<void> {
+	const client = new pg.Client(TEST_DB_URL);
+	await client.connect();
+
+	try {
+		// Clean slate
+		await client.query("DELETE FROM multisig_confirmations");
+		await client.query("DELETE FROM multisig_transactions");
+		await client.query("DELETE FROM multisig_configs");
+		await client.query("DELETE FROM accounts");
+		await client.query("DELETE FROM treasuries");
+
+		// Insert treasury
+		await client.query(`INSERT INTO treasuries (id, name, tempo_address) VALUES ($1, $2, $3)`, [
+			TEST_TREASURY_ID,
+			TEST_TREASURY_NAME,
+			TEST_TEMPO_ADDRESS,
+		]);
+
+		// Insert EOA account
+		await client.query(
+			`INSERT INTO accounts (id, treasury_id, name, token_symbol, token_address, wallet_address, wallet_type, is_default)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			[
+				TEST_EOA_ACCOUNT_ID,
+				TEST_TREASURY_ID,
+				"Operations AlphaUSD",
+				"AlphaUSD",
+				"0x20c0000000000000000000000000000000000001",
+				TEST_EOA_WALLET,
+				"eoa",
+				true,
+			],
+		);
+
+		// Insert second default EOA account (BetaUSD)
+		await client.query(
+			`INSERT INTO accounts (id, treasury_id, name, token_symbol, token_address, wallet_address, wallet_type, is_default)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			[
+				TEST_EOA_ACCOUNT2_ID,
+				TEST_TREASURY_ID,
+				"Main BetaUSD",
+				"BetaUSD",
+				"0x20c0000000000000000000000000000000000002",
+				TEST_EOA_WALLET2,
+				"eoa",
+				true,
+			],
+		);
+
+		// Insert multisig account
+		await client.query(
+			`INSERT INTO accounts (id, treasury_id, name, token_symbol, token_address, wallet_address, wallet_type, is_default)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			[
+				TEST_MULTISIG_ACCOUNT_ID,
+				TEST_TREASURY_ID,
+				"Treasury Multisig",
+				"AlphaUSD",
+				"0x20c0000000000000000000000000000000000001",
+				TEST_MULTISIG_WALLET,
+				"multisig",
+				false,
+			],
+		);
+
+		// Insert multisig config
+		await client.query(
+			`INSERT INTO multisig_configs (account_id, guard_address, owners, tiers_json, default_confirmations, allowlist_enabled)
+			 VALUES ($1, $2, $3, $4, $5, $6)`,
+			[
+				TEST_MULTISIG_ACCOUNT_ID,
+				TEST_GUARD_ADDRESS,
+				JSON.stringify([TEST_TEMPO_ADDRESS, TEST_SIGNER_1, TEST_SIGNER_2]),
+				JSON.stringify([{ maxValue: "10000000000", requiredConfirmations: 1 }]),
+				3,
+				true,
+			],
+		);
+
+		// Insert a pending multisig transaction
+		await client.query(
+			`INSERT INTO multisig_transactions (account_id, on_chain_tx_id, "to", value, data, required_confirmations, current_confirmations, executed)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			[
+				TEST_MULTISIG_ACCOUNT_ID,
+				0,
+				"0x20c0000000000000000000000000000000000001", // USDC token
+				"0",
+				"0xa9059cbb000000000000000000000000000000000000000000000000000000000000dead00000000000000000000000000000000000000000000000000000002540be400", // transfer(0xdead, 10000e6)
+				3,
+				1,
+				false,
+			],
+		);
+
+		// Insert a confirmation for the pending transaction
+		const txResult = await client.query(
+			`SELECT id FROM multisig_transactions WHERE account_id = $1 AND on_chain_tx_id = 0`,
+			[TEST_MULTISIG_ACCOUNT_ID],
+		);
+		if (txResult.rows[0]) {
+			await client.query(
+				`INSERT INTO multisig_confirmations (multisig_transaction_id, signer_address)
+				 VALUES ($1, $2)`,
+				[txResult.rows[0].id, TEST_TEMPO_ADDRESS],
+			);
+		}
+	} finally {
+		await client.end();
+	}
+}
+
+/**
+ * Clean up test data.
+ */
+export async function cleanTestData(): Promise<void> {
+	const client = new pg.Client(TEST_DB_URL);
+	await client.connect();
+	try {
+		await client.query("DELETE FROM multisig_confirmations");
+		await client.query("DELETE FROM multisig_transactions");
+		await client.query("DELETE FROM multisig_configs");
+		await client.query("DELETE FROM accounts");
+		await client.query("DELETE FROM treasuries");
+	} finally {
+		await client.end();
+	}
+}

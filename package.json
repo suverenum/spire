@@ -17,8 +17,7 @@
 		"prepare": "husky"
 	},
 	"lint-staged": {
-		"*.{ts,tsx,js,jsx,mjs,json}": "biome check --write --no-errors-on-unmatched",
-		"*.{tsx,ts}": "prettier --write --plugin prettier-plugin-tailwindcss"
+		"*.{ts,tsx,js,jsx,mjs,json}": "biome check --write --no-errors-on-unmatched"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.7",

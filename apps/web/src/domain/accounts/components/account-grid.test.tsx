@@ -32,6 +32,7 @@ function makeAccount(
 		tokenSymbol: "AlphaUSD",
 		tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
 		walletAddress: `0x${id.padStart(40, "0")}` as `0x${string}`,
+		walletType: "eoa",
 		isDefault: false,
 		createdAt,
 		balance,

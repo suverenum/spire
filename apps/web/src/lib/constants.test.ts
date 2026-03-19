@@ -51,19 +51,18 @@ describe("constants", () => {
 });
 
 describe("ACCOUNT_TOKENS", () => {
-	it("contains exactly AlphaUSD and BetaUSD", () => {
-		expect(ACCOUNT_TOKENS).toHaveLength(2);
+	it("contains only AlphaUSD", () => {
+		expect(ACCOUNT_TOKENS).toHaveLength(1);
 		expect(ACCOUNT_TOKENS[0].name).toBe("AlphaUSD");
-		expect(ACCOUNT_TOKENS[1].name).toBe("BetaUSD");
 	});
 
-	it("references the same objects as SUPPORTED_TOKENS", () => {
+	it("references the same object as SUPPORTED_TOKENS", () => {
 		expect(ACCOUNT_TOKENS[0]).toBe(SUPPORTED_TOKENS.AlphaUSD);
-		expect(ACCOUNT_TOKENS[1]).toBe(SUPPORTED_TOKENS.BetaUSD);
 	});
 
-	it("does not include pathUSD or ThetaUSD", () => {
+	it("does not include other tokens", () => {
 		const names = ACCOUNT_TOKENS.map((t) => t.name);
+		expect(names).not.toContain("BetaUSD");
 		expect(names).not.toContain("pathUSD");
 		expect(names).not.toContain("ThetaUSD");
 	});

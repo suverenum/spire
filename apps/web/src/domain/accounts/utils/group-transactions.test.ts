@@ -9,6 +9,7 @@ const ACCOUNT_A: AccountRecord = {
 	tokenSymbol: "AlphaUSD",
 	tokenAddress: "0x20c0000000000000000000000000000000000001",
 	walletAddress: "0xaaa0000000000000000000000000000000000001",
+	walletType: "eoa",
 	isDefault: true,
 	createdAt: new Date("2024-01-01"),
 };
@@ -20,6 +21,7 @@ const ACCOUNT_B: AccountRecord = {
 	tokenSymbol: "BetaUSD",
 	tokenAddress: "0x20c0000000000000000000000000000000000002",
 	walletAddress: "0xbbb0000000000000000000000000000000000002",
+	walletType: "eoa",
 	isDefault: true,
 	createdAt: new Date("2024-01-01"),
 };
@@ -98,8 +100,9 @@ describe("groupTransactions", () => {
 		if (result[0].kind === "internalTransfer") {
 			expect(result[0].fromAccountId).toBe(ACCOUNT_A.id);
 			expect(result[0].toAccountId).toBe(ACCOUNT_B.id);
+			// Only ACCOUNT_A visible because tx token (AlphaUSD) matches ACCOUNT_A, not ACCOUNT_B (BetaUSD)
 			expect(result[0].visibleAccountIds).toContain(ACCOUNT_A.id);
-			expect(result[0].visibleAccountIds).toContain(ACCOUNT_B.id);
+			expect(result[0].visibleAccountIds).not.toContain(ACCOUNT_B.id);
 		}
 	});
 
@@ -142,7 +145,8 @@ describe("groupTransactions", () => {
 		];
 
 		const result = groupTransactions(txs, [ACCOUNT_A, ACCOUNT_B]);
-		expect(result[0].visibleAccountIds).toEqual([ACCOUNT_A.id, ACCOUNT_B.id]);
+		// Only ACCOUNT_A is visible because the tx token (AlphaUSD) matches ACCOUNT_A, not ACCOUNT_B (BetaUSD)
+		expect(result[0].visibleAccountIds).toEqual([ACCOUNT_A.id]);
 	});
 
 	it("skips transactions where neither from nor to match treasury wallets", () => {

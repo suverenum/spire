@@ -14,6 +14,7 @@ function makeAccount(isDefault: boolean): AccountWithBalance {
 		tokenSymbol: "AlphaUSD",
 		tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
 		walletAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`,
+		walletType: "eoa",
 		isDefault,
 		createdAt: new Date("2025-01-01"),
 		balance: 1000000n,
@@ -34,11 +35,11 @@ describe("AccountMenu", () => {
 		expect(screen.getByText("Delete")).toBeInTheDocument();
 	});
 
-	it("hides Delete option for default accounts", async () => {
-		render(<AccountMenu account={makeAccount(true)} onRename={vi.fn()} onDelete={vi.fn()} />);
-		await userEvent.click(screen.getByLabelText("Account actions"));
-		expect(screen.getByText("Rename")).toBeInTheDocument();
-		expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+	it("renders nothing for default accounts", () => {
+		const { container } = render(
+			<AccountMenu account={makeAccount(true)} onRename={vi.fn()} onDelete={vi.fn()} />,
+		);
+		expect(container.innerHTML).toBe("");
 	});
 
 	it("calls onRename and closes menu", async () => {

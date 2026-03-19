@@ -12,6 +12,10 @@ vi.mock("next/link", () => ({
 	),
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+	useQuery: () => ({ data: null }),
+}));
+
 vi.mock("./account-menu", () => ({
 	AccountMenu: ({ onRename, onDelete }: { onRename: () => void; onDelete: () => void }) => (
 		<div data-testid="account-menu">
@@ -34,6 +38,7 @@ const account: AccountWithBalance = {
 	tokenSymbol: "AlphaUSD",
 	tokenAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
 	walletAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as `0x${string}`,
+	walletType: "eoa",
 	isDefault: true,
 	createdAt: new Date("2025-01-01"),
 	balance: 1000000n,

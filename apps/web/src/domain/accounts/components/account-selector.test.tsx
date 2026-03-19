@@ -19,6 +19,7 @@ function makeAccount(
 		tokenSymbol,
 		tokenAddress: `0x${id.padStart(40, "1")}` as `0x${string}`,
 		walletAddress: `0x${id.padStart(40, "a")}` as `0x${string}`,
+		walletType: "eoa",
 		isDefault: false,
 		createdAt: new Date("2025-01-01"),
 		balance,

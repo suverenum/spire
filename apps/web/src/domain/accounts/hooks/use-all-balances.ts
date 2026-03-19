@@ -28,7 +28,7 @@ export function useAllBalances(accounts: AccountRecord[]) {
 		return {
 			...account,
 			balance,
-			balanceFormatted: `$${formatBalance(balance, 6)}`,
+			balanceFormatted: `${formatBalance(balance, 6)} ${account.tokenSymbol}`,
 		};
 	});
 

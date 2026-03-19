@@ -40,9 +40,9 @@ export function ReceiveSheet({
 	}
 
 	return (
-		<Sheet open={open} onClose={onClose} title="Receive Payment">
+		<Sheet open={open} onClose={onClose} title="Deposit">
 			<div className="flex flex-col items-center gap-6">
-				{accounts && accounts.length > 0 && (
+				{accounts && accounts.length > 1 && (
 					<div className="w-full">
 						<label htmlFor="receive-account" className="mb-1 block text-sm font-medium">
 							Receive to Account
@@ -55,7 +55,7 @@ export function ReceiveSheet({
 						>
 							{accounts.map((a) => (
 								<option key={a.id} value={a.id}>
-									{a.name} ({a.tokenSymbol}) - ${formatBalance(a.balance, 6)}
+									{a.name} ({a.tokenSymbol}) - {formatBalance(a.balance, 6)}
 								</option>
 							))}
 						</select>
