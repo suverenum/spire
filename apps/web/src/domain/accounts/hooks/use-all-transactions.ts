@@ -12,6 +12,13 @@ import type {
 } from "@/lib/tempo/types";
 import { groupTransactions } from "../utils/group-transactions";
 
+/** Parse a decimal USDC string (e.g. "100.50") into micro-units bigint without floating-point. */
+function parseDecimalToMicroUnits(value: string): bigint {
+	const [whole = "0", frac = ""] = value.split(".");
+	const paddedFrac = frac.padEnd(6, "0").slice(0, 6);
+	return BigInt(whole) * 1_000_000n + BigInt(paddedFrac);
+}
+
 export function useAllTransactions(accounts: AccountRecord[]) {
 	const queries = useQueries({
 		queries: accounts.map((account) => ({
@@ -69,17 +76,26 @@ export function useAllTransactions(accounts: AccountRecord[]) {
 				accountId: account.id,
 				accountName: account.name,
 				sourceChain: deposit.sourceChain,
-				amount: BigInt(Math.round(Number.parseFloat(deposit.amount) * 1e6)),
+				amount: parseDecimalToMicroUnits(deposit.amount),
 				token: "USDC",
 				bridgeStatus,
-				bridgeFee: deposit.bridgeFee
-					? BigInt(Math.round(Number.parseFloat(deposit.bridgeFee) * 1e6))
-					: undefined,
+				bridgeFee: deposit.bridgeFee ? parseDecimalToMicroUnits(deposit.bridgeFee) : undefined,
 			};
 		});
 	});
 
-	const allTransactions = [...grouped, ...bridgeTransactions].sort(
+	// Deduplicate: remove on-chain payments whose tx hash matches a completed bridge deposit's tempoTxHash
+	const bridgeTxHashes = new Set(
+		bridgeTransactions.filter((bt) => bt.bridgeStatus === "completed").flatMap((bt) => bt.txHashes),
+	);
+	const deduplicatedGrouped =
+		bridgeTxHashes.size > 0
+			? grouped.filter(
+					(tx) => tx.kind !== "payment" || !tx.txHashes.some((h) => bridgeTxHashes.has(h)),
+				)
+			: grouped;
+
+	const allTransactions = [...deduplicatedGrouped, ...bridgeTransactions].sort(
 		(a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
 	);
 

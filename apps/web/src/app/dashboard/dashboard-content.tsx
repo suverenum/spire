@@ -227,7 +227,7 @@ export function DashboardContent({
 					open={receiveOpen}
 					onClose={() => setReceiveOpen(false)}
 					address={receiveAddress}
-					accounts={defaultAccount ? [defaultAccount] : []}
+					accounts={accountsWithBalances}
 					selectedAccountId={selectedReceiveAccount?.id}
 					onAccountChange={(id) => {
 						const acct = accountsWithBalances.find((a) => a.id === id);

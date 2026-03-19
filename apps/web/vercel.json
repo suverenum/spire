@@ -1,4 +1,10 @@
 {
 	"installCommand": "cd ../.. && bun install",
-	"buildCommand": "cd ../.. && turbo build:deploy --filter=@goldhord/web"
+	"buildCommand": "cd ../.. && turbo build:deploy --filter=@goldhord/web",
+	"crons": [
+		{
+			"path": "/api/internal/bridge-reconcile",
+			"schedule": "*/5 * * * *"
+		}
+	]
 }

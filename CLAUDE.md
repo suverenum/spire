@@ -22,6 +22,7 @@ Goldhord (goldhord.xyz) is a corporate treasury management platform for large en
 - **Linting:** Biome (replaces ESLint + Prettier)
 - **Testing:** Vitest + React Testing Library + Playwright
 - **Deployment:** Vercel
+- **Bridge:** Stargate (LayerZero) — cross-chain USDC deposits via `@layerzerolabs/stargate-ui` web component
 - **Observability:** Sentry + PostHog
 
 ## Monorepo Structure
@@ -82,7 +83,9 @@ domain/
 ├── payments/       # Send, receive, transaction history
 ├── treasury/       # Treasury CRUD, header, settings
 ├── accounts/       # Multi-account management (create, rename, delete, transfer, grouping)
-└── swap/           # Token swaps via Tempo DEX
+├── swap/           # Token swaps via Tempo DEX
+├── bridge/         # Cross-chain USDC deposits via Stargate (LayerZero)
+└── multisig/       # Multi-signature accounts, approval policies
 ```
 
 ## Key Patterns
@@ -92,16 +95,17 @@ domain/
 - **Internal packages** export raw TypeScript (no build step)
 - **Biome** handles both linting and formatting in one pass
 - **Turborepo** caches and parallelizes across packages
+- **Internal cron routes** (`app/api/internal/`) authenticated with `CRON_SECRET`, triggered by Vercel Cron
 
 ## Environment Variables
 
 ```
 DATABASE_URL          # Neon Postgres connection string
 SESSION_SECRET        # HMAC key for session cookies
+CRON_SECRET           # Bearer token for internal cron endpoints (bridge reconciler)
 NEXT_PUBLIC_SENTRY_DSN # Sentry client DSN
 SENTRY_AUTH_TOKEN     # Sentry source maps (CI)
 NEXT_PUBLIC_POSTHOG_KEY # PostHog analytics
-ANTHROPIC_API_KEY     # Claude code review (CI)
 TURBO_TOKEN           # Turborepo remote cache
 TURBO_TEAM            # Vercel team for remote cache
 ```

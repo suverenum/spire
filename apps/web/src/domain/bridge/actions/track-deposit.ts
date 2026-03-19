@@ -24,6 +24,22 @@ export async function createBridgeDeposit(params: {
 		throw new Error("Cross-chain deposits are available for USDC accounts only");
 	}
 
+	// Validate source transaction hash format
+	const ethTxHashRe = /^0x[a-fA-F0-9]{64}$/;
+	const solanaSigRe = /^[1-9A-HJ-NP-Za-km-z]{86,88}$/;
+	if (params.sourceChain === "ethereum" && !ethTxHashRe.test(params.sourceTxHash)) {
+		throw new Error("Invalid Ethereum transaction hash");
+	}
+	if (params.sourceChain === "solana" && !solanaSigRe.test(params.sourceTxHash)) {
+		throw new Error("Invalid Solana transaction signature");
+	}
+
+	// Validate amount is a positive number
+	const parsedAmount = Number.parseFloat(params.amount);
+	if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+		throw new Error("Amount must be a positive number");
+	}
+
 	const [deposit] = await db
 		.insert(bridgeDeposits)
 		.values({

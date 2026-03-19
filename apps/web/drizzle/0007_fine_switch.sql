@@ -14,4 +14,5 @@ CREATE TABLE "bridge_deposits" (
 --> statement-breakpoint
 ALTER TABLE "bridge_deposits" ADD CONSTRAINT "bridge_deposits_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "bridge_deposits_source_tx_hash_idx" ON "bridge_deposits" USING btree ("source_tx_hash");--> statement-breakpoint
+CREATE UNIQUE INDEX "bridge_deposits_lz_message_hash_idx" ON "bridge_deposits" USING btree ("lz_message_hash");--> statement-breakpoint
 CREATE INDEX "bridge_deposits_account_status_idx" ON "bridge_deposits" USING btree ("account_id","status");

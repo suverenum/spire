@@ -238,6 +238,21 @@
           "method": "btree",
           "with": {}
         },
+        "bridge_deposits_lz_message_hash_idx": {
+          "name": "bridge_deposits_lz_message_hash_idx",
+          "columns": [
+            {
+              "expression": "lz_message_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "bridge_deposits_account_status_idx": {
           "name": "bridge_deposits_account_status_idx",
           "columns": [

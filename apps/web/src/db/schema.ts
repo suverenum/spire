@@ -108,6 +108,7 @@ export const bridgeDeposits = pgTable(
 	},
 	(table) => [
 		uniqueIndex("bridge_deposits_source_tx_hash_idx").on(table.sourceTxHash),
+		uniqueIndex("bridge_deposits_lz_message_hash_idx").on(table.lzMessageHash),
 		index("bridge_deposits_account_status_idx").on(table.accountId, table.status),
 	],
 );
