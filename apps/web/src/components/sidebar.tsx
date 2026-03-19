@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, LogOut, Menu, Receipt, Settings, Wallet, X } from "lucide-react";
+import { Bot, LayoutDashboard, LogOut, Menu, Receipt, Settings, Wallet, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
 	{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 	{ href: "/transactions", label: "Transactions", icon: Receipt },
 	{ href: "/accounts", label: "Accounts", icon: Wallet },
+	{ href: "/agents", label: "Agent Wallets", icon: Bot },
 	{ href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

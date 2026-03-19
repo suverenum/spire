@@ -2,6 +2,8 @@ export const TEMPO_RPC_URL = "https://rpc.moderato.tempo.xyz";
 export const TEMPO_WS_URL = TEMPO_RPC_URL.replace(/^https:\/\//, "wss://");
 export const TEMPO_CHAIN_ID = 42431;
 export const TEMPO_EXPLORER_URL = "https://explore.tempo.xyz";
+export const GUARDIAN_FACTORY_ADDRESS =
+	"0x1b8D9a51220bE1038e62C8d128C8Be597306Df9D" as `0x${string}`;
 
 export const SUPPORTED_TOKENS = {
 	AlphaUSD: {
@@ -53,4 +55,6 @@ export const CACHE_KEYS = {
 		["accountBalance", walletAddress, tokenAddress] as const,
 	multisigConfig: (accountId: string) => ["multisig-config", accountId] as const,
 	pendingTransactions: (accountId: string) => ["pending-transactions", accountId] as const,
+	agentWallets: (treasuryId: string) => ["agent-wallets", treasuryId] as const,
+	agentConfig: (walletId: string) => ["agent-config", walletId] as const,
 } as const;
