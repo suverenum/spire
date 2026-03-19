@@ -1,19 +1,37 @@
 "use client";
 
-import { ArrowLeft, Bot, DollarSign, Eye, ShieldOff, Users } from "lucide-react";
+import {
+	AlertTriangle,
+	ArrowLeft,
+	Bot,
+	DollarSign,
+	Eye,
+	Minus,
+	Plus,
+	ShieldOff,
+	Upload,
+	Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import type { Address } from "viem";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
+import { addVendorToWallet, removeVendorFromWallet } from "@/domain/agents/actions/manage-vendors";
 import { revokeAgentKey } from "@/domain/agents/actions/revoke-agent-key";
 import { updateAgentLimits } from "@/domain/agents/actions/update-agent-limits";
 import { RevealKeyDialog } from "@/domain/agents/components/reveal-key-dialog";
+import {
+	useEmergencyWithdraw,
+	useTopUpAgent,
+	useUpdateGuardianLimits,
+} from "@/domain/agents/hooks/use-agent-actions";
 import { useAgentWallets } from "@/domain/agents/hooks/use-agent-wallets";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
-import { getVendorByAddress } from "@/lib/vendors";
+import { getVendorByAddress, VENDOR_LIST } from "@/lib/vendors";
 
 interface AgentDetailContentProps {
 	walletId: string;
@@ -44,6 +62,16 @@ export function AgentDetailContent({
 	const [editingLimits, setEditingLimits] = useState(false);
 	const [newMaxPerTx, setNewMaxPerTx] = useState("");
 	const [newDailyLimit, setNewDailyLimit] = useState("");
+	const [topUpAmount, setTopUpAmount] = useState("");
+	const [showTopUp, setShowTopUp] = useState(false);
+	const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+	const [addingVendor, setAddingVendor] = useState(false);
+
+	const topUpMutation = useTopUpAgent(treasuryId);
+	const withdrawMutation = useEmergencyWithdraw(treasuryId);
+	const updateLimitsMutation = useUpdateGuardianLimits(treasuryId);
+
+	const isActive = wallet?.status === "active";
 
 	const handleRevoke = async () => {
 		if (!wallet) return;
@@ -54,18 +82,74 @@ export function AgentDetailContent({
 
 	const handleSaveLimits = async () => {
 		if (!wallet) return;
-		const maxPerTx = String(Math.round(Number(newMaxPerTx) * 1_000_000));
-		const dailyLimit = String(Math.round(Number(newDailyLimit) * 1_000_000));
+		const maxPerTxRaw = BigInt(Math.round(Number(newMaxPerTx) * 1_000_000));
+		const dailyLimitRaw = BigInt(Math.round(Number(newDailyLimit) * 1_000_000));
 
-		const result = await updateAgentLimits({ walletId: wallet.id, maxPerTx, dailyLimit });
+		// Update on-chain first
+		updateLimitsMutation.mutate(
+			{
+				guardianAddress: wallet.guardianAddress as Address,
+				maxPerTx: maxPerTxRaw,
+				dailyLimit: dailyLimitRaw,
+			},
+			{
+				onSuccess: async () => {
+					// Then sync to DB
+					await updateAgentLimits({
+						walletId: wallet.id,
+						maxPerTx: maxPerTxRaw.toString(),
+						dailyLimit: dailyLimitRaw.toString(),
+					});
+					setEditingLimits(false);
+				},
+			},
+		);
+	};
+
+	const handleTopUp = () => {
+		if (!wallet || !topUpAmount) return;
+		const amount = BigInt(Math.round(Number(topUpAmount) * 1_000_000));
+		topUpMutation.mutate(
+			{
+				guardianAddress: wallet.guardianAddress as Address,
+				tokenSymbol: wallet.tokenSymbol,
+				amount,
+			},
+			{
+				onSuccess: () => {
+					setShowTopUp(false);
+					setTopUpAmount("");
+				},
+			},
+		);
+	};
+
+	const handleWithdraw = () => {
+		if (!wallet) return;
+		withdrawMutation.mutate(
+			{
+				guardianAddress: wallet.guardianAddress as Address,
+				tokenSymbol: wallet.tokenSymbol,
+			},
+			{ onSuccess: () => setShowWithdrawConfirm(false) },
+		);
+	};
+
+	const handleAddVendor = async (vendorAddress: string) => {
+		if (!wallet) return;
+		// On-chain addRecipient would be called via wagmi hook here
+		// For now, sync to DB
+		const result = await addVendorToWallet({ walletId: wallet.id, vendorAddress });
 		if (result.error) toast(result.error, "error");
-		else {
-			toast(
-				"Limits updated in database. Update on-chain via Guardian.updateLimits() separately.",
-				"success",
-			);
-			setEditingLimits(false);
-		}
+		else toast("Vendor added", "success");
+		setAddingVendor(false);
+	};
+
+	const handleRemoveVendor = async (vendorAddress: string) => {
+		if (!wallet) return;
+		const result = await removeVendorFromWallet({ walletId: wallet.id, vendorAddress });
+		if (result.error) toast(result.error, "error");
+		else toast("Vendor removed", "success");
 	};
 
 	return (
@@ -87,7 +171,7 @@ export function AgentDetailContent({
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-3">
 									<div
-										className={`flex h-12 w-12 items-center justify-center rounded-lg ${wallet.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400"}`}
+										className={`flex h-12 w-12 items-center justify-center rounded-lg ${isActive ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400"}`}
 									>
 										<Bot className="h-6 w-6" />
 									</div>
@@ -97,7 +181,7 @@ export function AgentDetailContent({
 									</div>
 								</div>
 								<span
-									className={`rounded-full px-3 py-1 text-sm font-medium ${wallet.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
+									className={`rounded-full px-3 py-1 text-sm font-medium ${isActive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
 								>
 									{wallet.status}
 								</span>
@@ -109,7 +193,7 @@ export function AgentDetailContent({
 									<h2 className="flex items-center gap-2 font-semibold">
 										<DollarSign className="h-4 w-4" /> Spending Limits
 									</h2>
-									{!editingLimits && wallet.status === "active" && (
+									{!editingLimits && isActive && (
 										<Button
 											variant="outline"
 											size="sm"
@@ -157,8 +241,14 @@ export function AgentDetailContent({
 											</div>
 										</div>
 										<div className="flex gap-2">
-											<Button size="sm" onClick={handleSaveLimits}>
-												Save
+											<Button
+												size="sm"
+												onClick={handleSaveLimits}
+												disabled={updateLimitsMutation.isPending}
+											>
+												{updateLimitsMutation.isPending
+													? "Updating on-chain..."
+													: "Save & Update On-Chain"}
 											</Button>
 											<Button size="sm" variant="outline" onClick={() => setEditingLimits(false)}>
 												Cancel
@@ -185,10 +275,20 @@ export function AgentDetailContent({
 
 							{/* Allowed vendors */}
 							<Card>
-								<div className="p-4">
+								<div className="flex items-center justify-between p-4">
 									<h2 className="flex items-center gap-2 font-semibold">
 										<Users className="h-4 w-4" /> Allowed Vendors
 									</h2>
+									{isActive && (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => setAddingVendor(!addingVendor)}
+											data-testid="manage-vendors-btn"
+										>
+											<Plus className="mr-1 h-3 w-3" /> Add
+										</Button>
+									)}
 								</div>
 								<div className="border-t border-gray-100 p-4">
 									<div className="flex flex-wrap gap-2">
@@ -197,13 +297,40 @@ export function AgentDetailContent({
 											return (
 												<span
 													key={addr}
-													className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-700"
+													className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-700"
 												>
 													{vendor?.name ?? truncateAddress(addr)}
+													{isActive && (
+														<button
+															type="button"
+															onClick={() => handleRemoveVendor(addr)}
+															className="ml-1 text-blue-400 hover:text-red-500"
+															title="Remove vendor"
+														>
+															<Minus className="h-3 w-3" />
+														</button>
+													)}
 												</span>
 											);
 										})}
 									</div>
+									{addingVendor && (
+										<div className="mt-3 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+											<p className="mb-1 w-full text-xs text-gray-500">Add a vendor:</p>
+											{VENDOR_LIST.filter(
+												(v) => !wallet.allowedVendors.includes(v.address.toLowerCase()),
+											).map((vendor) => (
+												<button
+													key={vendor.id}
+													type="button"
+													onClick={() => handleAddVendor(vendor.address)}
+													className="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700"
+												>
+													+ {vendor.name}
+												</button>
+											))}
+										</div>
+									)}
 								</div>
 							</Card>
 
@@ -228,19 +355,97 @@ export function AgentDetailContent({
 								</div>
 							</Card>
 
+							{/* Fund management */}
+							{isActive && (
+								<Card>
+									<div className="p-4">
+										<h2 className="mb-3 flex items-center gap-2 font-semibold">
+											<Upload className="h-4 w-4" /> Fund Management
+										</h2>
+										<div className="flex flex-wrap gap-3">
+											{showTopUp ? (
+												<div className="flex items-end gap-2">
+													<div>
+														<label
+															htmlFor="top-up-amount"
+															className="mb-1 block text-xs text-gray-500"
+														>
+															Amount ($)
+														</label>
+														<Input
+															id="top-up-amount"
+															type="number"
+															placeholder="10.00"
+															value={topUpAmount}
+															onChange={(e) => setTopUpAmount(e.target.value)}
+															className="w-32"
+														/>
+													</div>
+													<Button
+														size="sm"
+														onClick={handleTopUp}
+														disabled={topUpMutation.isPending || !topUpAmount}
+													>
+														{topUpMutation.isPending ? "Sending..." : "Top Up"}
+													</Button>
+													<Button size="sm" variant="outline" onClick={() => setShowTopUp(false)}>
+														Cancel
+													</Button>
+												</div>
+											) : (
+												<Button
+													variant="outline"
+													onClick={() => setShowTopUp(true)}
+													data-testid="top-up-btn"
+												>
+													<Plus className="mr-1 h-4 w-4" /> Top Up
+												</Button>
+											)}
+
+											{showWithdrawConfirm ? (
+												<div className="flex items-center gap-2 rounded-lg border-2 border-red-200 bg-red-50 p-3">
+													<AlertTriangle className="h-5 w-5 text-red-500" />
+													<span className="text-sm text-red-700">Pull ALL funds back?</span>
+													<Button
+														size="sm"
+														onClick={handleWithdraw}
+														disabled={withdrawMutation.isPending}
+														className="bg-red-600 hover:bg-red-700"
+													>
+														{withdrawMutation.isPending ? "Withdrawing..." : "Confirm"}
+													</Button>
+													<Button
+														size="sm"
+														variant="outline"
+														onClick={() => setShowWithdrawConfirm(false)}
+													>
+														Cancel
+													</Button>
+												</div>
+											) : (
+												<Button
+													variant="outline"
+													onClick={() => setShowWithdrawConfirm(true)}
+													className="text-red-600 hover:bg-red-50"
+													data-testid="emergency-withdraw-btn"
+												>
+													<AlertTriangle className="mr-1 h-4 w-4" /> Emergency Withdraw
+												</Button>
+											)}
+										</div>
+									</div>
+								</Card>
+							)}
+
 							{/* Actions */}
 							<div className="flex gap-3">
-								<Button
-									variant="outline"
-									onClick={() => setShowReveal(true)}
-									disabled={wallet.status !== "active"}
-								>
+								<Button variant="outline" onClick={() => setShowReveal(true)} disabled={!isActive}>
 									<Eye className="mr-1 h-4 w-4" /> Reveal Key
 								</Button>
 								<Button
 									variant="outline"
 									onClick={handleRevoke}
-									disabled={wallet.status !== "active"}
+									disabled={!isActive}
 									className="text-red-600 hover:bg-red-50"
 								>
 									<ShieldOff className="mr-1 h-4 w-4" /> Revoke
