@@ -21,7 +21,7 @@ export function PendingTransactions({
 }: PendingTransactionsProps) {
 	if (transactions.length === 0) {
 		return (
-			<div data-testid="no-pending" className="py-8 text-center text-sm text-muted-foreground">
+			<div data-testid="no-pending" className="text-muted-foreground py-8 text-center text-sm">
 				No pending transactions
 			</div>
 		);
@@ -42,12 +42,12 @@ export function PendingTransactions({
 					<div
 						key={tx.id}
 						data-testid={`pending-tx-${tx.onChainTxId}`}
-						className="rounded-lg border border-border bg-muted p-4"
+						className="border-border bg-muted rounded-lg border p-4"
 					>
 						<div className="flex items-start justify-between">
 							<div>
-								<p className="text-sm font-medium text-foreground">{description}</p>
-								<div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+								<p className="text-foreground text-sm font-medium">{description}</p>
+								<div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
 									<Clock className="h-3 w-3" />
 									<span>
 										{tx.currentConfirmations}/{tx.requiredConfirmations} confirmations
@@ -60,7 +60,7 @@ export function PendingTransactions({
 										type="button"
 										data-testid={`confirm-btn-${tx.onChainTxId}`}
 										onClick={() => onConfirm(tx.onChainTxId)}
-										className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+										className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-400 hover:bg-blue-500/20"
 									>
 										<Check className="h-3 w-3" />
 										Confirm
@@ -72,7 +72,7 @@ export function PendingTransactions({
 										data-testid={`execute-btn-${tx.onChainTxId}`}
 										onClick={() => onExecute(tx.onChainTxId)}
 										disabled={!canExecute}
-										className="inline-flex items-center gap-1 rounded-md bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+										className="inline-flex items-center gap-1 rounded-md bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-400 hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-50"
 									>
 										<Play className="h-3 w-3" />
 										Execute
@@ -85,7 +85,7 @@ export function PendingTransactions({
 								{tx.confirmations.map((c) => (
 									<span
 										key={c.signerAddress}
-										className="rounded bg-green-50 px-1.5 py-0.5 text-xs text-green-700"
+										className="rounded bg-green-500/10 px-1.5 py-0.5 text-xs text-green-400"
 									>
 										{c.signerAddress.slice(0, 6)}...{c.signerAddress.slice(-4)}
 									</span>

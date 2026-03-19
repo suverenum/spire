@@ -291,11 +291,11 @@ export function SendPaymentForm({
 		>
 			{multisigResult ? (
 				<div className="space-y-4 text-center">
-					<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-						<Check className="h-6 w-6 text-green-600" />
+					<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+						<Check className="h-6 w-6 text-green-400" />
 					</div>
 					<h3 className="text-lg font-semibold">Transaction Proposed</h3>
-					<p className="text-sm text-muted-foreground">
+					<p className="text-muted-foreground text-sm">
 						Awaiting {multisigResult.requiredConfirmations - 1} more approval
 						{multisigResult.requiredConfirmations - 1 !== 1 ? "s" : ""}
 					</p>
@@ -305,10 +305,10 @@ export function SendPaymentForm({
 							Array.from({ length: multisigResult.totalSigners - 1 }, () => "pending").map(
 								(_status, _idx) => (
 									// biome-ignore lint/suspicious/noArrayIndexKey: static visual dots never reorder
-									<div key={_idx} className="h-3 w-3 rounded-full bg-accent" />
+									<div key={_idx} className="bg-accent h-3 w-3 rounded-full" />
 								),
 							)}
-						<span className="ml-2 text-xs text-muted-foreground">
+						<span className="text-muted-foreground ml-2 text-xs">
 							1/{multisigResult.requiredConfirmations} confirmed
 						</span>
 					</div>
@@ -337,7 +337,7 @@ export function SendPaymentForm({
 								id="send-account"
 								value={selectedAccountId ?? ""}
 								onChange={(e) => onAccountChange?.(e.target.value)}
-								className="flex h-10 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
+								className="border-border bg-muted flex h-10 w-full rounded-lg border px-3 py-2 text-sm"
 							>
 								{accounts.map((a) => (
 									<option key={a.id} value={a.id}>
@@ -349,7 +349,7 @@ export function SendPaymentForm({
 					)}
 
 					{isMultisig && multisigConfig && (
-						<div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+						<div className="rounded-lg bg-blue-500/10 p-3 text-sm text-blue-400">
 							<div className="flex items-center gap-1 font-medium">
 								<Shield className="h-3.5 w-3.5" />
 								Multisig Policy
@@ -398,7 +398,7 @@ export function SendPaymentForm({
 								id="send-token"
 								value={token}
 								onChange={(e) => setToken(e.target.value as TokenName)}
-								className="flex h-10 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
+								className="border-border bg-muted flex h-10 w-full rounded-lg border px-3 py-2 text-sm"
 							>
 								{Object.keys(SUPPORTED_TOKENS).map((t) => (
 									<option key={t} value={t}>
@@ -411,7 +411,7 @@ export function SendPaymentForm({
 
 					{selectedAccount && (
 						<div>
-							<p className="text-sm text-muted-foreground">Token: {selectedAccount.tokenSymbol}</p>
+							<p className="text-muted-foreground text-sm">Token: {selectedAccount.tokenSymbol}</p>
 						</div>
 					)}
 

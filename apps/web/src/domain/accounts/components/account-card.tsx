@@ -39,12 +39,12 @@ export function AccountCard({ account, onRename, onDelete }: AccountCardProps) {
 		>
 			<div className="mb-3 flex items-start justify-between">
 				<Link href={`/accounts/${account.id}`} className="flex items-center gap-2">
-					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
-						<WalletIcon className="h-4 w-4 text-muted-foreground" />
+					<div className="bg-accent flex h-8 w-8 items-center justify-center rounded-full">
+						<WalletIcon className="text-muted-foreground h-4 w-4" />
 					</div>
 					<div>
-						<p className="text-sm font-medium text-foreground">{account.name}</p>
-						<p className="text-xs text-muted-foreground">{account.tokenSymbol}</p>
+						<p className="text-foreground text-sm font-medium">{account.name}</p>
+						<p className="text-muted-foreground text-xs">{account.tokenSymbol}</p>
 					</div>
 				</Link>
 				<div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export function AccountCard({ account, onRename, onDelete }: AccountCardProps) {
 			</div>
 			<Link href={`/accounts/${account.id}`}>
 				<p className="text-xl font-semibold">{account.balanceFormatted}</p>
-				<p className="mt-1 text-xs text-muted-foreground">
+				<p className="text-muted-foreground mt-1 text-xs">
 					{truncateAddress(account.walletAddress)}
 				</p>
 			</Link>

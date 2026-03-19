@@ -73,7 +73,7 @@ export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFo
 							id="account-token"
 							value={tokenSymbol}
 							onChange={(e) => setTokenSymbol(e.target.value)}
-							className="flex h-10 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
+							className="border-border bg-muted flex h-10 w-full rounded-lg border px-3 py-2 text-sm"
 						>
 							{ACCOUNT_TOKENS.map((t) => (
 								<option key={t.name} value={t.name}>
@@ -83,7 +83,7 @@ export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFo
 						</select>
 					</div>
 				) : (
-					<p className="text-sm text-muted-foreground">Token: {ACCOUNT_TOKENS[0].name}</p>
+					<p className="text-muted-foreground text-sm">Token: {ACCOUNT_TOKENS[0].name}</p>
 				)}
 
 				{error && <p className="text-sm text-red-600">{error}</p>}

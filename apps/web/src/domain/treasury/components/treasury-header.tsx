@@ -44,14 +44,14 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
 	}
 
 	return (
-		<header className="border-b border-border bg-muted">
+		<header className="border-border bg-muted border-b">
 			<div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
 				<div>
 					<h1 className="text-xl font-semibold">{name}</h1>
 					<button
 						type="button"
 						onClick={handleCopyAddress}
-						className="flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+						className="text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 text-sm"
 					>
 						{truncateAddress(address)}
 						<Copy className="h-3 w-3" />

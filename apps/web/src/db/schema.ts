@@ -30,7 +30,7 @@ export const accounts = pgTable(
 		tokenSymbol: text("token_symbol").notNull(),
 		tokenAddress: text("token_address").notNull(),
 		walletAddress: text("wallet_address").notNull(),
-		walletType: text("wallet_type").notNull().default("eoa"), // "eoa" | "multisig"
+		walletType: text("wallet_type").notNull().default("eoa"), // "eoa" | "multisig" | "guardian"
 		isDefault: boolean("is_default").default(false).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
@@ -42,6 +42,27 @@ export const accounts = pgTable(
 			.where(sql`${table.isDefault} = true`),
 	],
 );
+
+// ─── Agent Wallet Tables ────────────────────────────────────────────
+
+export const agentWallets = pgTable("agent_wallets", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	accountId: uuid("account_id")
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.notNull()
+		.unique(),
+	label: text("label").notNull(),
+	guardianAddress: text("guardian_address").notNull(),
+	agentKeyAddress: text("agent_key_address").notNull(),
+	encryptedKey: text("encrypted_key").notNull(),
+	spendingCap: bigint("spending_cap", { mode: "bigint" }).notNull(),
+	dailyLimit: bigint("daily_limit", { mode: "bigint" }).notNull(),
+	maxPerTx: bigint("max_per_tx", { mode: "bigint" }).notNull(),
+	allowedVendors: jsonb("allowed_vendors").notNull().$type<string[]>(),
+	status: text("status").notNull().default("active"), // "active" | "revoked"
+	deployedAt: timestamp("deployed_at").defaultNow().notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 // ─── Multisig Tables ────────────────────────────────────────────────
 

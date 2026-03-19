@@ -22,7 +22,7 @@ const MAIN_NAV = [
 
 const CASH_ACCOUNTS_NAV = [
 	{ href: "/cash-accounts", label: "Cash accounts", icon: WalletIcon },
-	{ href: "/accounts", label: "Agent wallets", icon: WalletIcon },
+	{ href: "/agents", label: "Agent wallets", icon: WalletIcon },
 ] as const;
 
 const BOTTOM_NAV = [{ href: "/settings", label: "Settings", icon: SettingsIcon }] as const;
@@ -78,7 +78,7 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 						fill="none"
 					/>
 				</svg>
-				<span className="truncate text-sm font-medium text-foreground">{treasuryName}</span>
+				<span className="text-foreground truncate text-sm font-medium">{treasuryName}</span>
 			</div>
 
 			<nav className="flex-1">
@@ -95,8 +95,8 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 								className={cn(
 									"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
 									isActive
-										? "bg-white/[0.08] text-foreground"
-										: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+										? "text-foreground bg-white/[0.08]"
+										: "text-muted-foreground hover:text-foreground hover:bg-white/[0.05]",
 								)}
 							>
 								<item.icon className="h-4 w-4" />
@@ -118,8 +118,8 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 									className={cn(
 										"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
 										isActive
-											? "bg-white/[0.08] text-foreground"
-											: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+											? "text-foreground bg-white/[0.08]"
+											: "text-muted-foreground hover:text-foreground hover:bg-white/[0.05]",
 									)}
 								>
 									<item.icon className="h-4 w-4" />
@@ -141,8 +141,8 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 								className={cn(
 									"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
 									isActive
-										? "bg-white/[0.08] text-foreground"
-										: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+										? "text-foreground bg-white/[0.08]"
+										: "text-muted-foreground hover:text-foreground hover:bg-white/[0.05]",
 								)}
 							>
 								<item.icon className="h-4 w-4" />
@@ -158,7 +158,7 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 					type="button"
 					onClick={handleLogout}
 					disabled={isLoggingOut}
-					className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground disabled:opacity-50"
+					className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors hover:bg-white/[0.05] disabled:opacity-50"
 				>
 					<LogOutIcon className="h-4 w-4" />
 					{isLoggingOut ? "Logging out..." : "Logout"}
@@ -173,10 +173,10 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 			<button
 				type="button"
 				onClick={() => setMobileOpen(true)}
-				className="fixed top-4 left-4 z-40 rounded-lg bg-muted p-2 shadow-md lg:hidden"
+				className="bg-muted fixed top-4 left-4 z-40 rounded-lg p-2 shadow-md lg:hidden"
 				aria-label="Open menu"
 			>
-				<Menu className="h-5 w-5 text-foreground" />
+				<Menu className="text-foreground h-5 w-5" />
 			</button>
 
 			{/* Mobile overlay */}
@@ -192,14 +192,14 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 			{/* Mobile sidebar */}
 			<aside
 				className={cn(
-					"fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-border bg-muted p-4 transition-transform duration-200 lg:hidden",
+					"border-border bg-muted fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r p-4 transition-transform duration-200 lg:hidden",
 					mobileOpen ? "translate-x-0" : "-translate-x-full",
 				)}
 			>
 				<button
 					type="button"
 					onClick={() => setMobileOpen(false)}
-					className="mb-4 ml-auto rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+					className="text-muted-foreground hover:bg-accent hover:text-foreground mb-4 ml-auto rounded-md p-1"
 					aria-label="Close menu"
 				>
 					<X className="h-5 w-5" />
@@ -208,7 +208,7 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 			</aside>
 
 			{/* Desktop sidebar */}
-			<aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-56 lg:flex-col lg:border-r lg:border-border lg:bg-muted lg:p-4">
+			<aside className="lg:border-border lg:bg-muted hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-56 lg:flex-col lg:border-r lg:p-4">
 				{navContent}
 			</aside>
 		</>

@@ -17,5 +17,5 @@ export function WebSocketBanner({ isConnected }: { isConnected: boolean }) {
 
 	if (!lastUpdated) return null;
 
-	return <p className="mb-4 text-xs text-muted-foreground">Updated at {formatTime(lastUpdated)}</p>;
+	return <p className="text-muted-foreground mb-4 text-xs">Updated at {formatTime(lastUpdated)}</p>;
 }

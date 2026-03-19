@@ -86,7 +86,7 @@ export function CreateMultisigForm({
 	return (
 		<Sheet open={open} onClose={onClose} title="Create Agent Account">
 			<div className="space-y-4">
-				<div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+				<div className="rounded-lg bg-blue-500/10 p-3 text-sm text-blue-400">
 					<p>
 						An agent account is controlled by you and an automated agent. Transfers up to 10,000
 						AlphaUSD require 1 approval. Larger transfers require both you and the agent.
@@ -105,15 +105,15 @@ export function CreateMultisigForm({
 					/>
 				</div>
 
-				<p className="text-sm text-muted-foreground">Token: {ACCOUNT_TOKENS[0].name}</p>
+				<p className="text-muted-foreground text-sm">Token: {ACCOUNT_TOKENS[0].name}</p>
 
-				<div className="text-sm text-muted-foreground">
+				<div className="text-muted-foreground text-sm">
 					<p>Signers:</p>
 					<div className="mt-1 space-y-1">
-						<div className="rounded-md bg-background px-3 py-2 font-mono text-xs">
+						<div className="bg-background rounded-md px-3 py-2 font-mono text-xs">
 							{adminAddress.slice(0, 6)}...{adminAddress.slice(-4)} (you)
 						</div>
-						<div className="rounded-md bg-background px-3 py-2 font-mono text-xs">
+						<div className="bg-background rounded-md px-3 py-2 font-mono text-xs">
 							Auto-generated agent key
 						</div>
 					</div>

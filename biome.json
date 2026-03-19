@@ -61,7 +61,9 @@
 			"!**/bun.lock",
 			"!**/package-lock.json",
 			"!**/.claude",
-			"!**/.beads"
+			"!**/.beads",
+			"!**/scripts/demo",
+			"!**/tests/integration"
 		]
 	}
 }

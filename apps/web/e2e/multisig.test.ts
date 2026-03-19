@@ -52,13 +52,13 @@ test.describe("Multisig E2E", () => {
 			});
 		});
 
-		test("shows dashboard page structure with send/receive buttons", async ({ page }) => {
+		test("shows dashboard page structure with action buttons", async ({ page }) => {
 			await page.goto("/dashboard");
 			// Dashboard renders with action buttons even while accounts load
-			await expect(page.getByRole("button", { name: /Send/ }).first()).toBeVisible({
+			await expect(page.getByRole("button", { name: /Deposit/ }).first()).toBeVisible({
 				timeout: 15000,
 			});
-			await expect(page.getByRole("button", { name: /Receive/ }).first()).toBeVisible({
+			await expect(page.getByRole("button", { name: /Withdraw/ }).first()).toBeVisible({
 				timeout: 15000,
 			});
 		});
@@ -92,16 +92,20 @@ test.describe("Multisig E2E", () => {
 	test.describe("Sidebar Navigation", () => {
 		test("desktop sidebar shows all navigation links", async ({ page }) => {
 			await page.goto("/dashboard");
-			await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
-			await expect(page.getByRole("link", { name: "Transactions" })).toBeVisible();
-			await expect(page.getByRole("link", { name: "Accounts" })).toBeVisible();
-			await expect(page.getByRole("link", { name: "Swap" })).toBeVisible();
-			await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
+			const sidebar = page.locator("aside.hidden.lg\\:flex");
+			await expect(sidebar.getByRole("link", { name: "Dashboard" })).toBeVisible();
+			await expect(sidebar.getByRole("link", { name: "Transactions" })).toBeVisible();
+			await expect(sidebar.getByRole("link", { name: "Accounts" })).toBeVisible();
+			await expect(sidebar.getByRole("link", { name: "Agent Wallets" })).toBeVisible();
+			await expect(sidebar.getByRole("link", { name: "Settings" })).toBeVisible();
 		});
 
 		test("sidebar shows logout button", async ({ page }) => {
 			await page.goto("/dashboard");
-			await expect(page.getByRole("button", { name: /Logout/ })).toBeVisible();
+			const sidebar = page.locator("aside.hidden.lg\\:flex");
+			await expect(sidebar.getByRole("button", { name: /Logout/ })).toBeVisible({
+				timeout: 15000,
+			});
 		});
 	});
 

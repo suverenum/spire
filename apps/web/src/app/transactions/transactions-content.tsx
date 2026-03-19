@@ -58,7 +58,7 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 		const isSent = tx.direction === "sent";
 		return (
 			<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
-				<span className="text-sm text-muted-foreground">
+				<span className="text-muted-foreground text-sm">
 					{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
 				</span>
 				<span className="flex items-center gap-3">
@@ -69,10 +69,10 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 						)}
 					>
 						<SendIcon
-							className={cn("h-4 w-4", isSent ? "text-red-400 rotate-180" : "text-green-400")}
+							className={cn("h-4 w-4", isSent ? "rotate-180 text-red-400" : "text-green-400")}
 						/>
 					</span>
-					<span className="truncate text-sm font-medium text-foreground">
+					<span className="text-foreground truncate text-sm font-medium">
 						{isSent ? `To ${truncateAddress(tx.to)}` : `From ${truncateAddress(tx.from)}`}
 					</span>
 				</span>
@@ -85,7 +85,7 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 					{isSent ? "-" : ""}
 					{formatBalance(tx.amount, 6)}
 				</span>
-				<span className="text-right text-sm text-muted-foreground">{tx.accountName}</span>
+				<span className="text-muted-foreground text-right text-sm">{tx.accountName}</span>
 			</Link>
 		);
 	}
@@ -93,19 +93,19 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 	if (tx.kind === "internalTransfer") {
 		return (
 			<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
-				<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+				<span className="text-muted-foreground text-sm">{formatDate(tx.timestamp)}</span>
 				<span className="flex items-center gap-3">
 					<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
 						<TransferIcon className="h-4 w-4 text-blue-400" />
 					</span>
-					<span className="truncate text-sm font-medium text-foreground">
+					<span className="text-foreground truncate text-sm font-medium">
 						{tx.fromAccountName} &rarr; {tx.toAccountName}
 					</span>
 				</span>
-				<span className="text-right text-sm font-medium text-foreground">
+				<span className="text-foreground text-right text-sm font-medium">
 					{formatBalance(tx.amount, 6)}
 				</span>
-				<span className="text-right text-sm text-muted-foreground">{tx.fromAccountName}</span>
+				<span className="text-muted-foreground text-right text-sm">{tx.fromAccountName}</span>
 			</Link>
 		);
 	}
@@ -113,17 +113,17 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 	if (tx.kind === "fee") {
 		return (
 			<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
-				<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+				<span className="text-muted-foreground text-sm">{formatDate(tx.timestamp)}</span>
 				<span className="flex items-center gap-3">
 					<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
-						<TransactionsIcon className="h-4 w-4 text-muted-foreground" />
+						<TransactionsIcon className="text-muted-foreground h-4 w-4" />
 					</span>
-					<span className="truncate text-sm font-medium text-muted-foreground">Network Fee</span>
+					<span className="text-muted-foreground truncate text-sm font-medium">Network Fee</span>
 				</span>
-				<span className="text-right text-sm font-medium text-muted-foreground">
+				<span className="text-muted-foreground text-right text-sm font-medium">
 					-{formatBalance(tx.amount, 6)}
 				</span>
-				<span className="text-right text-sm text-muted-foreground">{tx.accountName}</span>
+				<span className="text-muted-foreground text-right text-sm">{tx.accountName}</span>
 			</Link>
 		);
 	}
@@ -131,19 +131,19 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 	// Swap
 	return (
 		<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
-			<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+			<span className="text-muted-foreground text-sm">{formatDate(tx.timestamp)}</span>
 			<span className="flex items-center gap-3">
 				<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500/10">
 					<TransferIcon className="h-4 w-4 text-purple-400" />
 				</span>
-				<span className="truncate text-sm font-medium text-foreground">
+				<span className="text-foreground truncate text-sm font-medium">
 					{tx.tokenIn} &rarr; {tx.tokenOut}
 				</span>
 			</span>
-			<span className="text-right text-sm font-medium text-foreground">
+			<span className="text-foreground text-right text-sm font-medium">
 				{formatBalance(tx.amountIn, 6)}
 			</span>
-			<span className="text-right text-sm text-muted-foreground">{tx.fromAccountName}</span>
+			<span className="text-muted-foreground text-right text-sm">{tx.fromAccountName}</span>
 		</Link>
 	);
 }
@@ -243,7 +243,7 @@ export function TransactionsContent({
 							className={cn(
 								"rounded-full px-3 py-1 text-xs font-medium transition-colors",
 								accountFilter === "all"
-									? "bg-white/[0.1] text-foreground"
+									? "text-foreground bg-white/[0.1]"
 									: "bg-accent text-muted-foreground hover:bg-accent",
 							)}
 						>
@@ -257,7 +257,7 @@ export function TransactionsContent({
 								className={cn(
 									"rounded-full px-3 py-1 text-xs font-medium transition-colors",
 									accountFilter === a.id
-										? "bg-white/[0.1] text-foreground"
+										? "text-foreground bg-white/[0.1]"
 										: "bg-accent text-muted-foreground hover:bg-accent",
 								)}
 							>
@@ -268,7 +268,7 @@ export function TransactionsContent({
 
 					<div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
 						<div className="relative col-span-2">
-							<Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+							<Search className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
 							<Input
 								placeholder="Filter by address..."
 								value={addressFilter}
@@ -317,17 +317,17 @@ export function TransactionsContent({
 
 					<TabsContent value={tab}>
 						{isLoading && (
-							<p className="py-8 text-center text-sm text-muted-foreground">
+							<p className="text-muted-foreground py-8 text-center text-sm">
 								Loading transactions...
 							</p>
 						)}
 						{!isLoading && filtered.length === 0 && (
-							<p className="py-8 text-center text-sm text-muted-foreground">
+							<p className="text-muted-foreground py-8 text-center text-sm">
 								No transactions found
 							</p>
 						)}
 						<div>
-							<div className="grid grid-cols-[100px_1fr_120px_100px] gap-x-8 border-b border-white/[0.06] py-2 text-xs text-muted-foreground">
+							<div className="text-muted-foreground grid grid-cols-[100px_1fr_120px_100px] gap-x-8 border-b border-white/[0.06] py-2 text-xs">
 								<span>Date</span>
 								<span>To/From</span>
 								<span className="text-right">Amount</span>

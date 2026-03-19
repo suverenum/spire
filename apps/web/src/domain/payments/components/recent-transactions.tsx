@@ -18,35 +18,35 @@ function TransactionRow({ tx, address }: { tx: Payment; address: string }) {
 	return (
 		<Link
 			href={`/transactions/${encodeURIComponent(tx.id)}`}
-			className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
+			className="border-border hover:bg-background flex items-center gap-4 rounded-lg border p-4 transition-colors"
 		>
 			<div
 				className={cn(
 					"flex h-10 w-10 items-center justify-center rounded-full",
-					isSent ? "bg-red-100" : "bg-green-100",
+					isSent ? "bg-red-500/10" : "bg-green-500/10",
 				)}
 			>
 				{isSent ? (
-					<ArrowUpRight className="h-5 w-5 text-red-600" />
+					<ArrowUpRight className="h-5 w-5 text-red-400" />
 				) : (
-					<ArrowDownLeft className="h-5 w-5 text-green-600" />
+					<ArrowDownLeft className="h-5 w-5 text-green-400" />
 				)}
 			</div>
 			<div className="min-w-0 flex-1">
 				<p className="text-sm font-medium">
 					{isSent ? "Sent" : "Received"} {tx.token}
 				</p>
-				<p className="truncate text-xs text-muted-foreground">
+				<p className="text-muted-foreground truncate text-xs">
 					{isSent ? "To" : "From"}: {truncateAddress(counterparty)}
 				</p>
-				{tx.memo && <p className="truncate text-xs text-muted-foreground">{tx.memo}</p>}
+				{tx.memo && <p className="text-muted-foreground truncate text-xs">{tx.memo}</p>}
 			</div>
 			<div className="text-right">
-				<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
+				<p className={cn("text-sm font-medium", isSent ? "text-red-400" : "text-green-400")}>
 					{isSent ? "-" : "+"}
 					{formatBalance(tx.amount, 6)} {tx.token}
 				</p>
-				<p className="text-xs text-muted-foreground">
+				<p className="text-muted-foreground text-xs">
 					{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
 				</p>
 			</div>
@@ -67,7 +67,7 @@ export function RecentTransactions({ address }: RecentTransactionsProps) {
 		return (
 			<div className="py-12 text-center">
 				<p className="text-muted-foreground">No transactions yet</p>
-				<p className="mt-1 text-sm text-muted-foreground">
+				<p className="text-muted-foreground mt-1 text-sm">
 					Send or receive a payment to get started.
 				</p>
 			</div>
@@ -80,7 +80,7 @@ export function RecentTransactions({ address }: RecentTransactionsProps) {
 		<div>
 			<div className="mb-3 flex items-center justify-between">
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
-				<Link href="/transactions" className="text-sm text-muted-foreground hover:text-foreground">
+				<Link href="/transactions" className="text-muted-foreground hover:text-foreground text-sm">
 					View all &rarr;
 				</Link>
 			</div>

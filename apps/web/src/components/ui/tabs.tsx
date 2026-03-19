@@ -57,7 +57,7 @@ interface TabsListProps {
 export function TabsList({ children, className }: TabsListProps) {
 	return (
 		<div
-			className={cn("inline-flex items-center gap-1 rounded-lg bg-accent p-1", className)}
+			className={cn("bg-accent inline-flex items-center gap-1 rounded-lg p-1", className)}
 			role="tablist"
 		>
 			{children}

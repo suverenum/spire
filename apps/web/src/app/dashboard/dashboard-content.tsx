@@ -138,8 +138,8 @@ export function DashboardContent({
 				<WebSocketBanner isConnected={isConnected} />
 
 				{!hasAllDefaults && (
-					<Card className="mb-4 border-amber-200 bg-amber-50">
-						<p className="text-sm text-amber-800">Some default accounts failed to set up.</p>
+					<Card className="mb-4 border-amber-500/20 bg-amber-500/10">
+						<p className="text-sm text-amber-400">Some default accounts failed to set up.</p>
 						<Button
 							variant="outline"
 							size="sm"
@@ -162,7 +162,7 @@ export function DashboardContent({
 				)}
 
 				<Card className="mb-6">
-					<p className="text-sm text-muted-foreground">Total Balance</p>
+					<p className="text-muted-foreground text-sm">Total Balance</p>
 					<p className="text-3xl font-semibold">
 						{formatBalance(totalBalance, 6)} {ACCOUNT_TOKENS[0].name}
 					</p>
@@ -192,13 +192,32 @@ export function DashboardContent({
 
 				<div className="mb-6">
 					<div className="mb-3 flex items-center justify-between">
-						<h2 className="text-lg font-semibold">Agent wallets</h2>
-						<Link href="/accounts" className="text-sm text-muted-foreground hover:text-foreground">
+						<h2 className="text-lg font-semibold">Cash accounts</h2>
+						<Link
+							href="/cash-accounts"
+							className="text-muted-foreground hover:text-foreground text-sm"
+						>
 							View all &rarr;
 						</Link>
 					</div>
 					<AccountGrid
-						accounts={accountsWithBalances}
+						accounts={accountsWithBalances.filter((a) => a.walletType === "eoa")}
+						maxItems={4}
+						showViewAll
+						onRename={setRenameAccount}
+						onDelete={setDeleteAccount}
+					/>
+				</div>
+
+				<div className="mb-6">
+					<div className="mb-3 flex items-center justify-between">
+						<h2 className="text-lg font-semibold">Agent wallets</h2>
+						<Link href="/agents" className="text-muted-foreground hover:text-foreground text-sm">
+							View all &rarr;
+						</Link>
+					</div>
+					<AccountGrid
+						accounts={accountsWithBalances.filter((a) => a.walletType === "guardian")}
 						maxItems={4}
 						showViewAll
 						onRename={setRenameAccount}
@@ -288,7 +307,7 @@ export function DashboardContent({
 							label="From"
 						/>
 						{transferFromAccount && (
-							<p className="text-xs text-muted-foreground">
+							<p className="text-muted-foreground text-xs">
 								Available: {formatBalance(transferFromAccount.balance, 6)}{" "}
 								{transferFromAccount.tokenSymbol}
 							</p>

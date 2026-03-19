@@ -48,3 +48,9 @@ Thumbs.db
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# Tempo reference repos (cloned locally for development)
+tempo-docs/
+tempo-mpp/
+tempo-mppx/
+tempo-multisig/
