@@ -36,20 +36,18 @@ Vercel supports Production, Preview, and Custom Environments within a single pro
 - Unified settings, headers, redirects
 - Promotion between environments is built-in
 
-### Production Uses Staged Builds with Manual Promotion
+### Production Uses Vercel Staged Builds with Manual Promotion
 
 Rather than auto-deploying `main` to production, we use Vercel's **staged production build** pattern:
 
-1. Pushes to `main` auto-deploy to **Dev** environment (`goldhord.dev`)
-2. Production deployment is triggered via **GitHub Actions manual workflow** (`workflow_dispatch`)
-3. The GitHub Action runs `vercel deploy --prod` with production environment variables
-4. Optionally, a tested Dev deployment can be **promoted to Production** via Vercel dashboard
+1. Push/merge to `main` → auto-deploys to **Dev** (`goldhord.dev`) with testnet vars
+2. Same push creates a **Staged** production build (built with production env vars, but NOT serving on `goldhord.xyz`)
+3. When ready for mainnet → Vercel dashboard → **Deployments** → find the staged build → **"..." → Promote**
+4. `goldhord.xyz` now serves that build
 
-**Why GitHub Action over Vercel auto-deploy for prod:**
-- Explicit human decision to ship to mainnet
-- Can gate on CI checks passing (lint, typecheck, tests)
-- Audit trail in GitHub Actions history
-- Can add approval gates later (GitHub Environments with required reviewers)
+**Setup:** Settings → Environments → Production → Branch Tracking → disable "Auto-assign Custom Production Domains"
+
+**Rollback:** Deployments → select a previous production deployment → "..." → Promote (instant, no rebuild)
 
 ### Dev Environment Uses Vercel Custom Environment with Branch Tracking
 
@@ -173,61 +171,7 @@ Environment-dependent variables must be declared in `turbo.json` so Turborepo in
 4. **Set environment variables** per environment (see table above)
 5. **Enable Skew Protection** — Settings → Advanced → Skew Protection → On
 
-### 6.2 GitHub Actions: Production Deploy Workflow
-
-New workflow file: `.github/workflows/deploy-production.yml`
-
-```yaml
-name: Deploy to Production
-
-on:
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: 'Git ref to deploy (commit SHA, tag, or branch)'
-        required: false
-        default: 'main'
-        type: string
-
-concurrency:
-  group: production-deploy
-  cancel-in-progress: false
-
-jobs:
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    environment: production  # GitHub Environment (optional: add required reviewers)
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
-
-      - uses: oven-sh/setup-bun@v2
-
-      - name: Install Vercel CLI
-        run: bun add -g vercel
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-```
-
-**Required GitHub Secrets:**
-- `VERCEL_TOKEN` — Vercel API token (Settings → Tokens)
-- `VERCEL_ORG_ID` — from `.vercel/project.json` after `vercel link`
-- `VERCEL_PROJECT_ID` — from `.vercel/project.json` after `vercel link`
-
-### 6.3 Deployment Protection
+### 6.2 Deployment Protection
 
 | Environment | Protection |
 |---|---|
@@ -235,7 +179,7 @@ jobs:
 | Dev (`goldhord.dev`) | Vercel Authentication (team members only, free on all plans) |
 | Preview (`*.vercel.app`) | Standard Protection (default, free) |
 
-### 6.4 Update CI to Run on Push to Main
+### 6.3 Update CI to Run on Push to Main
 
 Current CI only runs on PRs. Add push trigger so Dev deployments are validated:
 
@@ -247,7 +191,7 @@ on:
     branches: [main]  # Add this
 ```
 
-### 6.5 App-Level Environment Awareness
+### 6.4 App-Level Environment Awareness
 
 Add a shared config that reads `NEXT_PUBLIC_APP_ENV` so components can conditionally render environment indicators:
 
@@ -279,7 +223,5 @@ Both domains must be added and verified in Vercel project settings.
 
 ## 9. Future Considerations
 
-- **GitHub Environment approvals** — add required reviewers to the `production` GitHub Environment for multi-person sign-off before mainnet deploys
-- **Promote from Dev** — once confident in the Dev build, promote it to Production via Vercel CLI (`vercel promote <deployment-url>`) instead of rebuilding. Caveat: environment variables differ, so this requires a rebuild (use "Promote from Preview" which triggers rebuild with prod vars)
 - **Neon database branching** — Neon supports branch-per-preview for isolated DB testing. Evaluate when preview deployments need DB isolation
 - **E2E tests in CI** — run Playwright against the Dev deployment URL after deploy, gate production promotion on E2E passing
