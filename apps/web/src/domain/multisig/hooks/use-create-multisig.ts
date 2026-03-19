@@ -141,6 +141,8 @@ interface CreateMultisigParams {
 	defaultConfirmations: number;
 	allowlistEnabled: boolean;
 	initialAllowlist: string[];
+	agentPrivateKey?: Hex;
+	agentAddress?: Address;
 }
 
 // ─── On-chain helpers ───────────────────────────────────────────────
@@ -329,6 +331,8 @@ export function useCreateMultisig() {
 				tiers: params.tiers,
 				defaultConfirmations: params.defaultConfirmations,
 				allowlistEnabled: params.allowlistEnabled,
+				agentPrivateKey: params.agentPrivateKey,
+				agentAddress: params.agentAddress,
 			});
 
 			if (result.error) {

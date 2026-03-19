@@ -12,6 +12,8 @@ export interface MultisigConfigData {
 	tiersJson: Array<{ maxValue: string; requiredConfirmations: number }>;
 	defaultConfirmations: number;
 	allowlistEnabled: boolean;
+	agentPrivateKey: string | null;
+	agentAddress: string | null;
 }
 
 /**
@@ -36,5 +38,7 @@ export async function getMultisigConfig(accountId: string): Promise<MultisigConf
 		}>,
 		defaultConfirmations: config.defaultConfirmations,
 		allowlistEnabled: config.allowlistEnabled,
+		agentPrivateKey: config.agentPrivateKey,
+		agentAddress: config.agentAddress,
 	};
 }

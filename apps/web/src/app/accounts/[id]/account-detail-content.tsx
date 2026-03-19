@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, Copy, Shield, Users } from "lucide-react";
+import { ArrowLeftRight, Bot, Copy, Key, Shield, Users } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
 import { useConfig } from "wagmi";
@@ -280,6 +280,33 @@ export function AccountDetailContent({
 
 				{isMultisig && multisigConfig && (
 					<div className="mb-6 space-y-4">
+						{/* Agent Info */}
+						{multisigConfig.agentAddress && (
+							<Card>
+								<div className="mb-2 flex items-center gap-2">
+									<Bot className="h-4 w-4 text-blue-600" />
+									<p className="text-sm font-medium">Agent</p>
+								</div>
+								<div className="space-y-2">
+									<div>
+										<p className="text-xs text-gray-500">Agent Address</p>
+										<p className="font-mono text-xs text-gray-600">{multisigConfig.agentAddress}</p>
+									</div>
+									{multisigConfig.agentPrivateKey && (
+										<div>
+											<p className="text-xs text-gray-500">
+												<Key className="mr-1 inline h-3 w-3" />
+												Agent Private Key
+											</p>
+											<p className="break-all rounded-md bg-gray-50 px-2 py-1 font-mono text-xs text-gray-600">
+												{multisigConfig.agentPrivateKey}
+											</p>
+										</div>
+									)}
+								</div>
+							</Card>
+						)}
+
 						{/* Signers */}
 						<Card>
 							<div className="mb-2 flex items-center gap-2">
@@ -290,6 +317,9 @@ export function AccountDetailContent({
 								{multisigConfig.owners.map((owner) => (
 									<p key={owner} className="font-mono text-xs text-gray-600">
 										{truncateAddress(owner)}
+										{owner.toLowerCase() === tempoAddress.toLowerCase() && " (you)"}
+										{owner.toLowerCase() === multisigConfig.agentAddress?.toLowerCase() &&
+											" (agent)"}
 									</p>
 								))}
 							</div>
@@ -304,7 +334,7 @@ export function AccountDetailContent({
 							<div className="space-y-1 text-sm text-gray-600">
 								{multisigConfig.tiersJson.map((tier) => (
 									<p key={tier.maxValue}>
-										Up to ${(Number(tier.maxValue) / 1e6).toLocaleString()}:{" "}
+										Up to {(Number(tier.maxValue) / 1e6).toLocaleString()} AlphaUSD:{" "}
 										{tier.requiredConfirmations}/{multisigConfig.owners.length} approvals
 									</p>
 								))}

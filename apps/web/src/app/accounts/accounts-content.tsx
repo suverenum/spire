@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Shield } from "lucide-react";
+import { Bot, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SidebarLayout } from "@/components/sidebar-layout";
@@ -56,8 +56,8 @@ export function AccountsContent({
 					<h1 className="text-2xl font-semibold">Accounts</h1>
 					<div className="flex gap-2">
 						<Button variant="outline" onClick={() => setMultisigOpen(true)}>
-							<Shield className="h-4 w-4" />
-							Create Multisig
+							<Bot className="h-4 w-4" />
+							Agent Account
 						</Button>
 						<Button onClick={() => setCreateOpen(true)}>
 							<Plus className="h-4 w-4" />

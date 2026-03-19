@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield } from "lucide-react";
+import { Bot } from "lucide-react";
 
 interface MultisigBadgeProps {
 	ownerCount: number;
@@ -14,8 +14,8 @@ export function MultisigBadge({ ownerCount, pendingCount }: MultisigBadgeProps) 
 				data-testid="multisig-badge"
 				className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
 			>
-				<Shield className="h-3 w-3" />
-				Multisig {ownerCount}
+				<Bot className="h-3 w-3" />
+				Agent
 			</span>
 			{pendingCount != null && pendingCount > 0 && (
 				<span

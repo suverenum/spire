@@ -7,7 +7,7 @@ afterEach(cleanup);
 describe("MultisigBadge", () => {
 	it("renders multisig badge with owner count", () => {
 		render(<MultisigBadge ownerCount={5} />);
-		expect(screen.getByTestId("multisig-badge")).toHaveTextContent("Multisig 5");
+		expect(screen.getByTestId("multisig-badge")).toHaveTextContent("Agent");
 	});
 
 	it("does not render pending badge when count is zero", () => {

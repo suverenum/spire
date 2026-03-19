@@ -43,6 +43,13 @@
       "when": 1773836587347,
       "tag": "0005_previous_justin_hammer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773914964338,
+      "tag": "0006_unknown_wilson_fisk",
+      "breakpoints": true
     }
   ]
 }

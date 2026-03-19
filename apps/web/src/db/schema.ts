@@ -58,6 +58,8 @@ export const multisigConfigs = pgTable("multisig_configs", {
 		.$type<Array<{ maxValue: string; requiredConfirmations: number }>>(),
 	defaultConfirmations: integer("default_confirmations").notNull(),
 	allowlistEnabled: boolean("allowlist_enabled").notNull().default(false),
+	agentPrivateKey: text("agent_private_key"),
+	agentAddress: text("agent_address"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

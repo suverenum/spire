@@ -3,6 +3,11 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CreateMultisigForm } from "./create-multisig-form";
 
+vi.mock("viem/accounts", () => ({
+	generatePrivateKey: () => "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+	privateKeyToAddress: () => "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+}));
+
 const mockMutate = vi.fn();
 vi.mock("../hooks/use-create-multisig", () => ({
 	useCreateMultisig: () => ({
@@ -30,10 +35,9 @@ describe("CreateMultisigForm", () => {
 			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 		expect(screen.getByLabelText("Account Name")).toBeInTheDocument();
-		expect(screen.getByLabelText("Token")).toBeInTheDocument();
-		expect(screen.getByText("Signers")).toBeInTheDocument();
-		expect(screen.getByText("Approval Thresholds")).toBeInTheDocument();
-		expect(screen.getByTestId("policy-preview")).toBeInTheDocument();
+		expect(screen.getByText(/Token:/)).toBeInTheDocument();
+		expect(screen.getByText(/you\)/)).toBeInTheDocument();
+		expect(screen.getByText("Auto-generated agent key")).toBeInTheDocument();
 	});
 
 	it("shows admin address as first signer", () => {
@@ -47,32 +51,19 @@ describe("CreateMultisigForm", () => {
 		renderWithQuery(
 			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
-		fireEvent.click(screen.getByRole("button", { name: /Create Multisig Account/ }));
+		fireEvent.click(screen.getByRole("button", { name: /Create Agent Account/ }));
 		expect(screen.getByText("Account name is required")).toBeInTheDocument();
 	});
 
-	it("validates invalid signer address", () => {
+	it("validates long name", () => {
 		renderWithQuery(
 			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
 		fireEvent.change(screen.getByLabelText("Account Name"), {
-			target: { value: "Test" },
+			target: { value: "a".repeat(101) },
 		});
-		fireEvent.change(screen.getByLabelText("Signer 2 address"), {
-			target: { value: "not-an-address" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: /Create Multisig Account/ }));
-		expect(screen.getByText(/Invalid signer address/)).toBeInTheDocument();
-	});
-
-	it("shows policy preview with tier configuration", () => {
-		renderWithQuery(
-			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
-		);
-		const preview = screen.getByTestId("policy-preview");
-		expect(preview).toHaveTextContent("Transfers up to $10,000");
-		// Only admin counted as signer (empty signer input doesn't count)
-		expect(preview).toHaveTextContent("1/1 approvals");
+		fireEvent.click(screen.getByRole("button", { name: /Create Agent Account/ }));
+		expect(screen.getByText("Account name must be 100 characters or less")).toBeInTheDocument();
 	});
 
 	it("calls mutate with correct params on valid submit", () => {
@@ -81,71 +72,28 @@ describe("CreateMultisigForm", () => {
 		);
 
 		fireEvent.change(screen.getByLabelText("Account Name"), {
-			target: { value: "Treasury Ops" },
+			target: { value: "Operations" },
 		});
-		// Add a valid signer address so we have 2 signers total
-		fireEvent.change(screen.getByLabelText("Signer 2 address"), {
-			target: { value: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" },
-		});
-		// Set default confirmations to 2 (within signer count)
-		fireEvent.change(screen.getByLabelText("Default confirmations"), {
-			target: { value: "2" },
-		});
-		fireEvent.click(screen.getByRole("button", { name: /Create Multisig Account/ }));
+		fireEvent.click(screen.getByRole("button", { name: /Create Agent Account/ }));
 
 		expect(mockMutate).toHaveBeenCalledWith(
 			expect.objectContaining({
 				treasuryId: "t1",
-				name: "Treasury Ops",
+				name: "Operations",
 				tokenSymbol: "AlphaUSD",
 				owners: [ADMIN, "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"],
+				defaultConfirmations: 2,
+				agentPrivateKey: expect.stringMatching(/^0x/),
+				agentAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
 			}),
 			expect.any(Object),
 		);
 	});
 
-	it("validates default confirmations exceeds signer count", () => {
-		renderWithQuery(
-			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
+	it("renders nothing when closed", () => {
+		const { container } = renderWithQuery(
+			<CreateMultisigForm open={false} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
 		);
-
-		fireEvent.change(screen.getByLabelText("Account Name"), {
-			target: { value: "Test" },
-		});
-		// Default confirmations dropdown max = totalSigners, so we can't set it higher
-		// via the dropdown. But let's verify the preview shows reasonable values.
-		const preview = screen.getByTestId("policy-preview");
-		expect(preview).toBeInTheDocument();
-	});
-
-	it("adds and removes signers", () => {
-		renderWithQuery(
-			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
-		);
-
-		// Initially one signer input
-		expect(screen.getByLabelText("Signer 2 address")).toBeInTheDocument();
-
-		// Add another signer
-		fireEvent.click(screen.getByText("+ Add signer"));
-		expect(screen.getByLabelText("Signer 3 address")).toBeInTheDocument();
-
-		// Remove the second signer
-		const removeButtons = screen.getAllByLabelText(/Remove signer/);
-		fireEvent.click(removeButtons[0]);
-		expect(screen.queryByLabelText("Signer 3 address")).not.toBeInTheDocument();
-	});
-
-	it("toggles allowlist", () => {
-		renderWithQuery(
-			<CreateMultisigForm open={true} onClose={vi.fn()} treasuryId="t1" adminAddress={ADMIN} />,
-		);
-
-		const checkbox = screen.getByLabelText(/Enable address allowlist/);
-		expect(checkbox).not.toBeChecked();
-
-		fireEvent.click(checkbox);
-		expect(checkbox).toBeChecked();
-		expect(screen.getByTestId("policy-preview")).toHaveTextContent("Only allowlisted addresses");
+		expect(container.querySelector("form")).toBeNull();
 	});
 });

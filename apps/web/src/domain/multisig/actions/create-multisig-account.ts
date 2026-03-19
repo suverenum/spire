@@ -102,6 +102,8 @@ export async function finalizeMultisigAccountCreate({
 	tiers,
 	defaultConfirmations,
 	allowlistEnabled,
+	agentPrivateKey,
+	agentAddress,
 }: {
 	treasuryId: string;
 	name: string;
@@ -112,6 +114,8 @@ export async function finalizeMultisigAccountCreate({
 	tiers: Array<{ maxValue: string; requiredConfirmations: number }>;
 	defaultConfirmations: number;
 	allowlistEnabled: boolean;
+	agentPrivateKey?: string;
+	agentAddress?: string;
 }): Promise<{ error?: string; account?: { id: string } }> {
 	const session = await getSession();
 	if (!session) return { error: "Not authenticated" };
@@ -146,6 +150,8 @@ export async function finalizeMultisigAccountCreate({
 			tiersJson: tiers,
 			defaultConfirmations,
 			allowlistEnabled,
+			agentPrivateKey: agentPrivateKey ?? null,
+			agentAddress: agentAddress?.toLowerCase() ?? null,
 		});
 
 		revalidatePath("/dashboard");
