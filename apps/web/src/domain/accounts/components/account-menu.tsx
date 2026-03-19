@@ -14,6 +14,8 @@ export function AccountMenu({ account, onRename, onDelete }: AccountMenuProps) {
 	const [open, setOpen] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
 
+	if (account.isDefault) return null;
+
 	return (
 		<div className="relative" ref={menuRef}>
 			<button
@@ -33,17 +35,19 @@ export function AccountMenu({ account, onRename, onDelete }: AccountMenuProps) {
 						aria-label="Close menu"
 					/>
 					<div className="absolute right-0 z-20 mt-1 w-36 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-						<button
-							type="button"
-							onClick={() => {
-								setOpen(false);
-								onRename();
-							}}
-							className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-						>
-							<Pencil className="h-3.5 w-3.5" />
-							Rename
-						</button>
+						{!account.isDefault && (
+							<button
+								type="button"
+								onClick={() => {
+									setOpen(false);
+									onRename();
+								}}
+								className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+							>
+								<Pencil className="h-3.5 w-3.5" />
+								Rename
+							</button>
+						)}
 						{!account.isDefault && (
 							<button
 								type="button"

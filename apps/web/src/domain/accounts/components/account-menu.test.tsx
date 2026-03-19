@@ -35,11 +35,11 @@ describe("AccountMenu", () => {
 		expect(screen.getByText("Delete")).toBeInTheDocument();
 	});
 
-	it("hides Delete option for default accounts", async () => {
-		render(<AccountMenu account={makeAccount(true)} onRename={vi.fn()} onDelete={vi.fn()} />);
-		await userEvent.click(screen.getByLabelText("Account actions"));
-		expect(screen.getByText("Rename")).toBeInTheDocument();
-		expect(screen.queryByText("Delete")).not.toBeInTheDocument();
+	it("renders nothing for default accounts", () => {
+		const { container } = render(
+			<AccountMenu account={makeAccount(true)} onRename={vi.fn()} onDelete={vi.fn()} />,
+		);
+		expect(container.innerHTML).toBe("");
 	});
 
 	it("calls onRename and closes menu", async () => {

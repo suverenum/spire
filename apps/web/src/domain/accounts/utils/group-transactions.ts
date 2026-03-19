@@ -185,6 +185,12 @@ export function groupTransactions(
 
 		// Internal transfer: both from and to belong to treasury wallets
 		if (fromAccount && toAccount) {
+			// Only show if the token matches at least one account's token
+			const visibleIds = [fromAccount, toAccount]
+				.filter((a) => a.tokenSymbol === tx.token)
+				.map((a) => a.id);
+			if (visibleIds.length === 0) continue;
+
 			const key = `internal-${tx.txHash}`;
 			if (!grouped.has(key)) {
 				grouped.set(key, {
@@ -194,7 +200,7 @@ export function groupTransactions(
 					direction: "internal",
 					status: tx.status,
 					timestamp: tx.timestamp,
-					visibleAccountIds: [fromAccount.id, toAccount.id],
+					visibleAccountIds: visibleIds,
 					fromAccountId: fromAccount.id,
 					fromAccountName: fromAccount.name,
 					toAccountId: toAccount.id,
@@ -212,6 +218,9 @@ export function groupTransactions(
 		const isSent = !!fromAccount;
 		const account = fromAccount ?? toAccount;
 		if (!account) continue;
+
+		// Skip transactions whose token doesn't match the account's token
+		if (tx.token !== account.tokenSymbol) continue;
 
 		const key = `payment-${tx.txHash}-${tx.accountId}`;
 		if (!grouped.has(key)) {

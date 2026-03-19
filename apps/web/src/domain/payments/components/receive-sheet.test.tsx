@@ -29,7 +29,7 @@ describe("ReceiveSheet", () => {
 
 	it("renders QR code and title when open", () => {
 		render(<ReceiveSheet open={true} onClose={() => {}} address={addr} />);
-		expect(screen.getByText("Receive Payment")).toBeInTheDocument();
+		expect(screen.getByText("Deposit")).toBeInTheDocument();
 	});
 
 	it("shows wallet address", () => {

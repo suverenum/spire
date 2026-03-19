@@ -7,6 +7,7 @@ import { cn, formatBalance, formatDate, truncateAddress } from "@/lib/utils";
 
 interface DashboardRecentTransactionsProps {
 	transactions: GroupedTransaction[];
+	accountId?: string;
 }
 
 function getLinkId(tx: GroupedTransaction): string {
@@ -102,7 +103,10 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 	);
 }
 
-export function DashboardRecentTransactions({ transactions }: DashboardRecentTransactionsProps) {
+export function DashboardRecentTransactions({
+	transactions,
+	accountId,
+}: DashboardRecentTransactionsProps) {
 	const recent = transactions.slice(0, 5);
 
 	if (recent.length === 0) {
@@ -118,7 +122,10 @@ export function DashboardRecentTransactions({ transactions }: DashboardRecentTra
 		<div>
 			<div className="mb-3 flex items-center justify-between">
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
-				<Link href="/transactions" className="text-sm text-gray-500 hover:text-gray-700">
+				<Link
+					href={accountId ? `/transactions?account=${accountId}` : "/transactions"}
+					className="text-sm text-gray-500 hover:text-gray-700"
+				>
 					View all &rarr;
 				</Link>
 			</div>

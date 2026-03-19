@@ -3,16 +3,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/toast";
 import { finalizeAccountCreate } from "@/domain/accounts/actions/create-account";
-import { CACHE_KEYS, TEMPO_RPC_URL } from "@/lib/constants";
+import { CACHE_KEYS, DEFAULT_ACCOUNTS, TEMPO_RPC_URL } from "@/lib/constants";
 
 interface SetupDefaultAccountsParams {
 	treasuryId: string;
 }
-
-const DEFAULT_ACCOUNTS = [
-	{ name: "Main AlphaUSD", tokenSymbol: "AlphaUSD" },
-	{ name: "Main BetaUSD", tokenSymbol: "BetaUSD" },
-] as const;
 
 /**
  * Client mutation to provision default account wallets during treasury creation.

@@ -35,6 +35,9 @@ export type TokenName = keyof typeof SUPPORTED_TOKENS;
 // Tokens available for account creation (subset of SUPPORTED_TOKENS)
 export const ACCOUNT_TOKENS = [SUPPORTED_TOKENS.AlphaUSD, SUPPORTED_TOKENS.BetaUSD] as const;
 
+// Default accounts provisioned when a new treasury is created
+export const DEFAULT_ACCOUNTS = [{ name: "Main", tokenSymbol: "AlphaUSD" as TokenName }] as const;
+
 export const DEX_ADDRESS = "0xDEc0000000000000000000000000000000000000" as `0x${string}`;
 export const KEYCHAIN_ADDRESS = "0xAAAAAAAA00000000000000000000000000000000" as `0x${string}`;
 

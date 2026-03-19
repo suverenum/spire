@@ -303,7 +303,7 @@ export function SendPaymentForm({
 						<div className="h-3 w-3 rounded-full bg-blue-600" />
 						{multisigResult.totalSigners > 1 &&
 							Array.from({ length: multisigResult.totalSigners - 1 }, () => "pending").map(
-								(status, _idx) => (
+								(_status, _idx) => (
 									// biome-ignore lint/suspicious/noArrayIndexKey: static visual dots never reorder
 									<div key={_idx} className="h-3 w-3 rounded-full bg-gray-200" />
 								),
@@ -328,7 +328,7 @@ export function SendPaymentForm({
 				</div>
 			) : (
 				<div className="space-y-4">
-					{accounts && accounts.length > 0 && (
+					{accounts && accounts.length > 1 && (
 						<div>
 							<label htmlFor="send-account" className="mb-1 block text-sm font-medium">
 								From Account

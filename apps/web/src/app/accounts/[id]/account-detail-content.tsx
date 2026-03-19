@@ -184,7 +184,9 @@ export function AccountDetailContent({
 	}
 
 	// Filter transactions to only those involving this account
-	const scopedTransactions = transactions.filter((tx) => tx.visibleAccountIds.includes(accountId));
+	const scopedTransactions = transactions.filter((tx) => {
+		return tx.visibleAccountIds.includes(accountId);
+	});
 
 	// Same-token accounts for transfer eligibility
 	const sameTokenAccounts = account
@@ -339,7 +341,7 @@ export function AccountDetailContent({
 					</div>
 				)}
 
-				<DashboardRecentTransactions transactions={scopedTransactions} />
+				<DashboardRecentTransactions transactions={scopedTransactions} accountId={accountId} />
 
 				<Sheet open={transferOpen} onClose={() => setTransferOpen(false)} title="Internal Transfer">
 					<div className="space-y-4">

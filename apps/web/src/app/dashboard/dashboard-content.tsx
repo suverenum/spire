@@ -1,18 +1,23 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowUpRight, Plus } from "lucide-react";
+import { ArrowLeftRight, ArrowUpRight, Plus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Sheet } from "@/components/ui/sheet";
 import { AccountGrid } from "@/domain/accounts/components/account-grid";
+import { AccountSelector } from "@/domain/accounts/components/account-selector";
 import { CreateAccountForm } from "@/domain/accounts/components/create-account-form";
 import { DeleteDialog } from "@/domain/accounts/components/delete-dialog";
 import { RenameDialog } from "@/domain/accounts/components/rename-dialog";
 import { useAllBalances } from "@/domain/accounts/hooks/use-all-balances";
 import { useAllTransactions } from "@/domain/accounts/hooks/use-all-transactions";
+import { useInternalTransfer } from "@/domain/accounts/hooks/use-internal-transfer";
 import { useMultiAccountWs } from "@/domain/accounts/hooks/use-multi-account-ws";
 import { getAccounts } from "@/domain/accounts/queries/get-accounts";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
@@ -45,7 +50,12 @@ export function DashboardContent({
 	const [createOpen, setCreateOpen] = useState(false);
 	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(null);
 	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(null);
-	const [selectedSendAccount, setSelectedSendAccount] = useState<AccountWithBalance | null>(null);
+	const [transferOpen, setTransferOpen] = useState(false);
+	const [transferFromId, setTransferFromId] = useState("");
+	const [transferToId, setTransferToId] = useState("");
+	const [transferAmount, setTransferAmount] = useState("");
+	const [transferError, setTransferError] = useState("");
+	const [, setSelectedSendAccount] = useState<AccountWithBalance | null>(null);
 	const [selectedReceiveAccount, setSelectedReceiveAccount] = useState<AccountWithBalance | null>(
 		null,
 	);
@@ -67,7 +77,7 @@ export function DashboardContent({
 	const retryDefaults = useRetryDefaultAccountSetup();
 
 	const defaultAccountCount = accounts.filter((a) => a.isDefault).length;
-	const hasAllDefaults = defaultAccountCount >= 2;
+	const hasAllDefaults = defaultAccountCount >= 1;
 
 	// Default to highest-balance account for send/receive; ties break by creation order
 	const sorted = [...accountsWithBalances].sort((a, b) => {
@@ -82,12 +92,44 @@ export function DashboardContent({
 		setSendOpen(true);
 	}
 
+	const defaultAccount = accountsWithBalances.find((a) => a.isDefault) ?? null;
+
 	function handleReceiveOpen() {
-		setSelectedReceiveAccount(highestBalanceAccount);
+		setSelectedReceiveAccount(defaultAccount);
 		setReceiveOpen(true);
 	}
 
-	const sendFromAddress = (selectedSendAccount?.walletAddress as `0x${string}`) ?? tempoAddress;
+	const transferMutation = useInternalTransfer();
+
+	function handleTransfer() {
+		setTransferError("");
+		if (!transferFromId || !transferToId || !transferAmount) {
+			setTransferError("Fill in all fields");
+			return;
+		}
+		transferMutation.mutate(
+			{
+				fromAccountId: transferFromId,
+				toAccountId: transferToId,
+				amount: transferAmount,
+				treasuryId,
+			},
+			{
+				onSuccess: () => {
+					setTransferOpen(false);
+					setTransferFromId("");
+					setTransferToId("");
+					setTransferAmount("");
+				},
+				onError: (err) => {
+					setTransferError(err.message);
+				},
+			},
+		);
+	}
+
+	const transferFromAccount = accountsWithBalances.find((a) => a.id === transferFromId);
+
 	const receiveAddress = (selectedReceiveAccount?.walletAddress as `0x${string}`) ?? tempoAddress;
 
 	return (
@@ -124,21 +166,37 @@ export function DashboardContent({
 				</Card>
 
 				<div className="mb-6 flex gap-3">
-					<Button onClick={handleSendOpen} className="flex-1" size="lg">
+					<Button onClick={handleReceiveOpen} className="flex-1" size="lg">
+						<Plus className="h-5 w-5" />
+						Deposit
+					</Button>
+					<Button onClick={handleSendOpen} variant="outline" className="flex-1" size="lg">
 						<ArrowUpRight className="h-5 w-5" />
-						Send
+						Withdraw
 					</Button>
-					<Button onClick={handleReceiveOpen} variant="outline" className="flex-1" size="lg">
-						<ArrowDownLeft className="h-5 w-5" />
-						Receive
-					</Button>
+					{accountsWithBalances.length > 1 && (
+						<Button
+							onClick={() => setTransferOpen(true)}
+							variant="outline"
+							className="flex-1"
+							size="lg"
+						>
+							<ArrowLeftRight className="h-5 w-5" />
+							Move
+						</Button>
+					)}
 					<Button onClick={() => setCreateOpen(true)} variant="outline" size="lg">
 						<Plus className="h-5 w-5" />
 					</Button>
 				</div>
 
 				<div className="mb-6">
-					<h2 className="mb-3 text-lg font-semibold">Accounts</h2>
+					<div className="mb-3 flex items-center justify-between">
+						<h2 className="text-lg font-semibold">Accounts</h2>
+						<Link href="/accounts" className="text-sm text-gray-500 hover:text-gray-700">
+							View all &rarr;
+						</Link>
+					</div>
 					<AccountGrid
 						accounts={accountsWithBalances}
 						maxItems={4}
@@ -153,9 +211,9 @@ export function DashboardContent({
 				<SendPaymentForm
 					open={sendOpen}
 					onClose={() => setSendOpen(false)}
-					fromAddress={sendFromAddress}
-					accounts={accountsWithBalances}
-					selectedAccountId={selectedSendAccount?.id}
+					fromAddress={(defaultAccount?.walletAddress as `0x${string}`) ?? tempoAddress}
+					accounts={defaultAccount ? [defaultAccount] : []}
+					selectedAccountId={defaultAccount?.id}
 					onAccountChange={(id) => {
 						const acct = accountsWithBalances.find((a) => a.id === id);
 						if (acct) setSelectedSendAccount(acct);
@@ -165,7 +223,7 @@ export function DashboardContent({
 					open={receiveOpen}
 					onClose={() => setReceiveOpen(false)}
 					address={receiveAddress}
-					accounts={accountsWithBalances}
+					accounts={defaultAccount ? [defaultAccount] : []}
 					selectedAccountId={selectedReceiveAccount?.id}
 					onAccountChange={(id) => {
 						const acct = accountsWithBalances.find((a) => a.id === id);
@@ -208,6 +266,63 @@ export function DashboardContent({
 						}
 					}}
 				/>
+				<Sheet
+					open={transferOpen}
+					onClose={() => {
+						setTransferOpen(false);
+						setTransferFromId("");
+						setTransferToId("");
+						setTransferAmount("");
+						setTransferError("");
+					}}
+					title="Move Funds"
+				>
+					<div className="space-y-4">
+						<AccountSelector
+							accounts={accountsWithBalances}
+							selectedAccountId={transferFromId}
+							onSelect={(id) => {
+								setTransferFromId(id);
+								if (id === transferToId) setTransferToId("");
+							}}
+							label="From"
+						/>
+						{transferFromAccount && (
+							<p className="text-xs text-gray-500">
+								Available: ${formatBalance(transferFromAccount.balance, 6)}
+							</p>
+						)}
+						<AccountSelector
+							accounts={accountsWithBalances}
+							selectedAccountId={transferToId}
+							onSelect={setTransferToId}
+							label="To"
+							excludeAccountId={transferFromId}
+						/>
+						<div>
+							<label htmlFor="transfer-amount" className="mb-1 block text-sm font-medium">
+								Amount
+							</label>
+							<Input
+								id="transfer-amount"
+								type="text"
+								inputMode="decimal"
+								placeholder="0.00"
+								value={transferAmount}
+								onChange={(e) => setTransferAmount(e.target.value)}
+							/>
+						</div>
+						{transferError && <p className="text-sm text-red-600">{transferError}</p>}
+						<Button
+							onClick={handleTransfer}
+							disabled={transferMutation.isPending}
+							className="w-full"
+							size="lg"
+						>
+							{transferMutation.isPending ? "Moving..." : "Move"}
+						</Button>
+					</div>
+				</Sheet>
 			</SidebarLayout>
 		</SessionGuard>
 	);
