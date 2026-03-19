@@ -91,8 +91,6 @@ describe("SendPaymentForm", () => {
 		expect(select).toBeInTheDocument();
 		expect(screen.getByText("AlphaUSD")).toBeInTheDocument();
 		expect(screen.getByText("BetaUSD")).toBeInTheDocument();
-		expect(screen.getByText("pathUSD")).toBeInTheDocument();
-		expect(screen.getByText("ThetaUSD")).toBeInTheDocument();
 	});
 
 	describe("form field interactions", () => {

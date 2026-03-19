@@ -42,10 +42,10 @@ describe("TreasuryHeader", () => {
 	beforeEach(() => {
 		mockPush.mockReset();
 		mockLogoutAction.mockReset();
-		Object.assign(navigator, {
-			clipboard: {
-				writeText: vi.fn().mockResolvedValue(undefined),
-			},
+		Object.defineProperty(navigator, "clipboard", {
+			value: { writeText: vi.fn().mockResolvedValue(undefined) },
+			writable: true,
+			configurable: true,
 		});
 	});
 

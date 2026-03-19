@@ -1,7 +1,7 @@
 {
-	"database": "dolt",
-	"backend": "dolt",
-	"dolt_mode": "server",
-	"dolt_database": "spire",
-	"project_id": "4f4f03fb-cae3-4afc-8f1d-78471f00b162"
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "spire",
+  "project_id": "4f4f03fb-cae3-4afc-8f1d-78471f00b162"
 }

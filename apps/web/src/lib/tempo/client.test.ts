@@ -47,7 +47,9 @@ describe("tempo client", () => {
 		const result = await fetchBalances(addr);
 		expect(result.partial).toBe(false);
 		expect(Array.isArray(result.balances)).toBe(true);
-		expect(result.balances.length).toBe(4); // 4 supported tokens
+		expect(result.balances.length).toBe(
+			Object.keys((await import("../constants")).SUPPORTED_TOKENS).length,
+		);
 		for (const b of result.balances) {
 			expect(b).toHaveProperty("token");
 			expect(b).toHaveProperty("tokenAddress");
@@ -79,8 +81,9 @@ describe("tempo client", () => {
 			const { fetchBalances } = await import("./client");
 			const result = await fetchBalances(addr);
 
-			// Only successful tokens are returned (3 out of 4)
-			expect(result.balances.length).toBe(3);
+			// One token failed, the rest succeeded
+			const tokenCount = Object.keys((await import("../constants")).SUPPORTED_TOKENS).length;
+			expect(result.balances.length).toBe(tokenCount - 1);
 			expect(result.partial).toBe(true);
 			for (const b of result.balances) {
 				expect(b.balance).toBe(5000000n);

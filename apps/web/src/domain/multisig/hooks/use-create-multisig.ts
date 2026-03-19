@@ -16,15 +16,27 @@ import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS } from "@/lib/constants";
+import { env } from "@/lib/env";
 import {
 	assertCanCreateMultisigAccount,
 	finalizeMultisigAccountCreate,
 	type MultisigAccountParams,
 } from "../actions/create-multisig-account";
 
-// ─── Contract addresses (Tempo Testnet v2 deployment) ───────────────
-const FACTORY_ADDRESS = "0xf6888688CAAed87352E975964400493429930342" as Address;
-const GUARD_FACTORY_ADDRESS = "0x53AbdcC50268bd4283187Bef5a48942E9e1aa161" as Address;
+// ─── Contract addresses (from environment config, optional) ─────────
+function getFactoryAddress(): Address {
+	if (!env.NEXT_PUBLIC_MULTISIG_FACTORY) {
+		throw new Error("Multisig is not available: NEXT_PUBLIC_MULTISIG_FACTORY is not configured");
+	}
+	return env.NEXT_PUBLIC_MULTISIG_FACTORY as Address;
+}
+
+function getGuardFactoryAddress(): Address {
+	if (!env.NEXT_PUBLIC_GUARD_FACTORY) {
+		throw new Error("Multisig is not available: NEXT_PUBLIC_GUARD_FACTORY is not configured");
+	}
+	return env.NEXT_PUBLIC_GUARD_FACTORY as Address;
+}
 
 // ─── Minimal ABIs (inlined to avoid SDK import dependency) ──────────
 const MultisigFactoryAbi = [
@@ -156,7 +168,7 @@ async function deployMultisigWallet(
 	const hash = await walletClient.writeContract({
 		account: walletClient.account!,
 		chain: walletClient.chain,
-		address: FACTORY_ADDRESS,
+		address: getFactoryAddress(),
 		abi: MultisigFactoryAbi,
 		functionName: "createWallet",
 		args: [owners, 1n, salt], // threshold=1, guard is the real policy engine
@@ -183,7 +195,7 @@ async function deployPolicyGuard(
 	const hash = await walletClient.writeContract({
 		account: walletClient.account!,
 		chain: walletClient.chain,
-		address: GUARD_FACTORY_ADDRESS,
+		address: getGuardFactoryAddress(),
 		abi: PolicyGuardFactoryAbi,
 		functionName: "createGuard",
 		args: [

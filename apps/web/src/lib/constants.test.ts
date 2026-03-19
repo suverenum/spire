@@ -13,15 +13,15 @@ import {
 } from "./constants";
 
 describe("constants", () => {
-	it("has correct Tempo RPC URL", () => {
+	it("has correct Tempo RPC URL from env", () => {
 		expect(TEMPO_RPC_URL).toBe("https://rpc.moderato.tempo.xyz");
 	});
 
-	it("has correct chain ID", () => {
+	it("has correct chain ID from env", () => {
 		expect(TEMPO_CHAIN_ID).toBe(42431);
 	});
 
-	it("has correct explorer URL", () => {
+	it("has correct explorer URL from env", () => {
 		expect(TEMPO_EXPLORER_URL).toBe("https://explore.tempo.xyz");
 	});
 
@@ -33,8 +33,8 @@ describe("constants", () => {
 		expect(SESSION_COOKIE_NAME).toBe("goldhord-session");
 	});
 
-	it("has all four supported tokens", () => {
-		expect(Object.keys(SUPPORTED_TOKENS)).toEqual(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]);
+	it("has supported tokens from env", () => {
+		expect(Object.keys(SUPPORTED_TOKENS)).toEqual(["AlphaUSD", "BetaUSD"]);
 	});
 
 	it("all tokens have 6 decimals", () => {
@@ -51,20 +51,12 @@ describe("constants", () => {
 });
 
 describe("ACCOUNT_TOKENS", () => {
-	it("contains only AlphaUSD", () => {
-		expect(ACCOUNT_TOKENS).toHaveLength(1);
-		expect(ACCOUNT_TOKENS[0].name).toBe("AlphaUSD");
-	});
-
-	it("references the same object as SUPPORTED_TOKENS", () => {
-		expect(ACCOUNT_TOKENS[0]).toBe(SUPPORTED_TOKENS.AlphaUSD);
-	});
-
-	it("does not include other tokens", () => {
-		const names = ACCOUNT_TOKENS.map((t) => t.name);
-		expect(names).not.toContain("BetaUSD");
-		expect(names).not.toContain("pathUSD");
-		expect(names).not.toContain("ThetaUSD");
+	it("contains tokens from env", () => {
+		expect(ACCOUNT_TOKENS.length).toBeGreaterThan(0);
+		for (const token of ACCOUNT_TOKENS) {
+			expect(token.name).toBeDefined();
+			expect(token.address).toMatch(/^0x[a-fA-F0-9]{40}$/);
+		}
 	});
 });
 

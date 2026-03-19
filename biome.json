@@ -54,7 +54,8 @@
 			"!**/public/sw.js",
 			"!**/bun.lock",
 			"!**/package-lock.json",
-			"!**/.claude"
+			"!**/.claude",
+			"!**/.beads"
 		]
 	}
 }

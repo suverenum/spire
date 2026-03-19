@@ -1,10 +1,26 @@
-import { tempoModerato } from "viem/chains";
+import type { Chain } from "viem";
 import { withFeePayer } from "viem/tempo";
 import { createConfig, http } from "wagmi";
 import { KeyManager, webAuthn } from "wagmi/tempo";
+import { env } from "./env";
+
+const tempoChain: Chain = {
+	id: env.NEXT_PUBLIC_TEMPO_CHAIN_ID,
+	name: env.NEXT_PUBLIC_APP_ENV === "production" ? "Tempo" : "Tempo Testnet",
+	nativeCurrency: { name: "TEMPO", symbol: "TEMPO", decimals: 18 },
+	rpcUrls: {
+		default: { http: [env.NEXT_PUBLIC_TEMPO_RPC_HTTP] },
+	},
+	blockExplorers: {
+		default: {
+			name: "Tempo Explorer",
+			url: env.NEXT_PUBLIC_TEMPO_EXPLORER_URL,
+		},
+	},
+};
 
 export const wagmiConfig = createConfig({
-	chains: [tempoModerato],
+	chains: [tempoChain],
 	connectors: [
 		webAuthn({
 			keyManager: KeyManager.localStorage(),
@@ -12,6 +28,8 @@ export const wagmiConfig = createConfig({
 	],
 	multiInjectedProviderDiscovery: false,
 	transports: {
-		[tempoModerato.id]: withFeePayer(http(), http("https://sponsor.moderato.tempo.xyz")),
+		[tempoChain.id]: env.NEXT_PUBLIC_TEMPO_SPONSOR_URL
+			? withFeePayer(http(), http(env.NEXT_PUBLIC_TEMPO_SPONSOR_URL))
+			: http(),
 	},
 });
