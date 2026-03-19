@@ -68,14 +68,16 @@ export default function CreateTreasuryPage() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-gray-50">
+		<div className="flex min-h-screen items-center justify-center bg-background">
 			<div className="w-full max-w-sm">
 				<div className="mb-8 text-center">
-					<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-900">
+					<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
 						<Fingerprint className="h-8 w-8 text-white" />
 					</div>
 					<h1 className="text-2xl font-semibold">Create Treasury</h1>
-					<p className="mt-1 text-sm text-gray-500">Choose a name and create your passkey</p>
+					<p className="mt-1 text-sm text-muted-foreground">
+						Choose a name and create your passkey
+					</p>
 				</div>
 
 				<form action={handleSubmit} className="space-y-4">

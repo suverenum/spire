@@ -41,13 +41,13 @@ export function BalanceCards({ address }: BalanceCardsProps) {
 				</Card>
 			)}
 			<Card className="mb-4">
-				<p className="text-sm text-gray-500">Total Balance</p>
+				<p className="text-sm text-muted-foreground">Total Balance</p>
 				<p className="text-3xl font-semibold">${formatBalance(totalBalance, 6)}</p>
 			</Card>
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 				{items.map((b) => (
 					<Card key={b.token}>
-						<p className="text-sm text-gray-500">{b.token}</p>
+						<p className="text-sm text-muted-foreground">{b.token}</p>
 						<p className="text-xl font-semibold">${formatBalance(b.balance, b.decimals)}</p>
 					</Card>
 				))}

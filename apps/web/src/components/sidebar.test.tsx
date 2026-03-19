@@ -62,9 +62,9 @@ describe("Sidebar", () => {
 
 	it("renders all navigation items", () => {
 		render(<Sidebar treasuryName="Test" />);
-		expect(screen.getAllByText("Dashboard")).toHaveLength(2); // mobile + desktop
+		expect(screen.getAllByText("Home")).toHaveLength(2); // mobile + desktop
 		expect(screen.getAllByText("Transactions")).toHaveLength(2);
-		expect(screen.getAllByText("Accounts")).toHaveLength(2);
+		expect(screen.getAllByText("Agent wallets")).toHaveLength(2);
 		expect(screen.getAllByText("Settings")).toHaveLength(2);
 	});
 
@@ -78,7 +78,7 @@ describe("Sidebar", () => {
 		render(<Sidebar treasuryName="Test" />);
 		const links = screen.getAllByText("Transactions");
 		// At least one should have the active class
-		expect(links.some((link) => link.closest("a")?.className.includes("bg-gray-100"))).toBe(true);
+		expect(links.some((link) => link.closest("a")?.className.includes("bg-white"))).toBe(true);
 	});
 
 	it("opens mobile menu on hamburger click", async () => {

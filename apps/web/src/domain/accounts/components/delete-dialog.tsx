@@ -102,7 +102,7 @@ export function DeleteDialog({
 		<Sheet open={open} onClose={onClose} title="Delete Account">
 			<div className="space-y-4">
 				{state.type === "loading" && (
-					<p className="text-sm text-gray-500">Checking account status...</p>
+					<p className="text-sm text-muted-foreground">Checking account status...</p>
 				)}
 
 				{state.type === "blocked" && (
@@ -111,7 +111,7 @@ export function DeleteDialog({
 							<AlertTriangle className="h-5 w-5" />
 							<p className="text-sm font-medium">Cannot delete account</p>
 						</div>
-						<p className="mt-2 text-sm text-gray-600">
+						<p className="mt-2 text-sm text-muted-foreground">
 							This account still holds ${formatBalance(state.assignedBalance, 6)}{" "}
 							{state.tokenSymbol}. Transfer the balance before deleting.
 						</p>
@@ -140,14 +140,14 @@ export function DeleteDialog({
 									: "Unassigned assets detected"}
 							</p>
 						</div>
-						<p className="mt-2 text-sm text-gray-600">
+						<p className="mt-2 text-sm text-muted-foreground">
 							{state.partialBalanceCheck
 								? "Some token balances could not be verified. There may be unassigned assets on this wallet that will remain on-chain but inaccessible through the app."
 								: "This wallet contains tokens not tracked by this account. They will remain on-chain but inaccessible through the app."}
 						</p>
 						<div className="mt-2 space-y-1">
 							{state.unassignedBalances.map((b) => (
-								<p key={b.tokenAddress} className="text-xs text-gray-500">
+								<p key={b.tokenAddress} className="text-xs text-muted-foreground">
 									{b.tokenSymbol}: ${formatBalance(b.amount, 6)}
 								</p>
 							))}
@@ -165,7 +165,7 @@ export function DeleteDialog({
 
 				{state.type === "ready" && (
 					<div>
-						<p className="text-sm text-gray-600">
+						<p className="text-sm text-muted-foreground">
 							Are you sure you want to delete <span className="font-medium">{account?.name}</span>?
 							This action cannot be undone.
 						</p>

@@ -295,7 +295,7 @@ export function SendPaymentForm({
 						<Check className="h-6 w-6 text-green-600" />
 					</div>
 					<h3 className="text-lg font-semibold">Transaction Proposed</h3>
-					<p className="text-sm text-gray-600">
+					<p className="text-sm text-muted-foreground">
 						Awaiting {multisigResult.requiredConfirmations - 1} more approval
 						{multisigResult.requiredConfirmations - 1 !== 1 ? "s" : ""}
 					</p>
@@ -305,10 +305,10 @@ export function SendPaymentForm({
 							Array.from({ length: multisigResult.totalSigners - 1 }, () => "pending").map(
 								(_status, _idx) => (
 									// biome-ignore lint/suspicious/noArrayIndexKey: static visual dots never reorder
-									<div key={_idx} className="h-3 w-3 rounded-full bg-gray-200" />
+									<div key={_idx} className="h-3 w-3 rounded-full bg-accent" />
 								),
 							)}
-						<span className="ml-2 text-xs text-gray-500">
+						<span className="ml-2 text-xs text-muted-foreground">
 							1/{multisigResult.requiredConfirmations} confirmed
 						</span>
 					</div>
@@ -337,7 +337,7 @@ export function SendPaymentForm({
 								id="send-account"
 								value={selectedAccountId ?? ""}
 								onChange={(e) => onAccountChange?.(e.target.value)}
-								className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+								className="flex h-10 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
 							>
 								{accounts.map((a) => (
 									<option key={a.id} value={a.id}>
@@ -398,7 +398,7 @@ export function SendPaymentForm({
 								id="send-token"
 								value={token}
 								onChange={(e) => setToken(e.target.value as TokenName)}
-								className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+								className="flex h-10 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
 							>
 								{Object.keys(SUPPORTED_TOKENS).map((t) => (
 									<option key={t} value={t}>
@@ -411,7 +411,7 @@ export function SendPaymentForm({
 
 					{selectedAccount && (
 						<div>
-							<p className="text-sm text-gray-500">Token: {selectedAccount.tokenSymbol}</p>
+							<p className="text-sm text-muted-foreground">Token: {selectedAccount.tokenSymbol}</p>
 						</div>
 					)}
 

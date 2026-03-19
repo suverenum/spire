@@ -9,31 +9,31 @@ describe("Button", () => {
 		render(<Button>Click me</Button>);
 		const button = screen.getByRole("button", { name: "Click me" });
 		expect(button).toBeInTheDocument();
-		expect(button.className).toContain("bg-gray-900");
+		expect(button.className).toContain("bg-primary");
 	});
 
 	it("renders outline variant", () => {
 		render(<Button variant="outline">Outline</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("border");
+		expect(button.className).toContain("bg-[rgb(28,28,29)]");
 	});
 
 	it("renders small size", () => {
 		render(<Button size="sm">Small</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("h-8");
+		expect(button.className).toContain("text-xs");
 	});
 
 	it("renders large size", () => {
 		render(<Button size="lg">Large</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("h-12");
+		expect(button.className).toContain("px-2.5");
 	});
 
 	it("renders icon size", () => {
 		render(<Button size="icon">X</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("w-10");
+		expect(button.className).toContain("p-1.5");
 	});
 
 	it("applies disabled state", () => {
@@ -49,7 +49,7 @@ describe("Button", () => {
 	it("renders ghost variant", () => {
 		render(<Button variant="ghost">Ghost</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("hover:bg-gray-100");
+		expect(button.className).toContain("hover:bg-accent");
 	});
 
 	it("renders destructive variant", () => {

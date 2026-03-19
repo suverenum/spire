@@ -31,10 +31,14 @@ function CopyableField({ label, value }: { label: string; value: string }) {
 
 	return (
 		<div className="flex items-center justify-between py-2">
-			<p className="text-sm text-gray-500">{label}</p>
+			<p className="text-sm text-muted-foreground">{label}</p>
 			<div className="flex items-center gap-1">
 				<code className="text-sm">{truncateAddress(value)}</code>
-				<button type="button" onClick={handleCopy} className="text-gray-400 hover:text-gray-600">
+				<button
+					type="button"
+					onClick={handleCopy}
+					className="text-muted-foreground hover:text-muted-foreground"
+				>
 					<Copy className="h-3 w-3" />
 				</button>
 			</div>
@@ -46,17 +50,17 @@ function PaymentDetail({ tx }: { tx: GroupedTransaction & { kind: "payment" } })
 	const isSent = tx.direction === "sent";
 	return (
 		<Card>
-			<div className="divide-y divide-gray-100">
+			<div className="divide-y divide-border">
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Type</p>
+					<p className="text-sm text-muted-foreground">Type</p>
 					<p className="text-sm font-medium">{isSent ? "Sent" : "Received"}</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Account</p>
+					<p className="text-sm text-muted-foreground">Account</p>
 					<p className="text-sm">{tx.accountName}</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Amount</p>
+					<p className="text-sm text-muted-foreground">Amount</p>
 					<p className="text-sm font-medium">
 						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
@@ -64,16 +68,16 @@ function PaymentDetail({ tx }: { tx: GroupedTransaction & { kind: "payment" } })
 				<CopyableField label={isSent ? "To" : "From"} value={isSent ? tx.to : tx.from} />
 				{tx.memo && (
 					<div className="flex items-center justify-between py-2">
-						<p className="text-sm text-gray-500">Memo</p>
+						<p className="text-sm text-muted-foreground">Memo</p>
 						<p className="text-sm">{tx.memo}</p>
 					</div>
 				)}
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Status</p>
+					<p className="text-sm text-muted-foreground">Status</p>
 					<p className="text-sm">{tx.status}</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Date</p>
+					<p className="text-sm text-muted-foreground">Date</p>
 					<p className="text-sm">{formatDate(tx.timestamp)}</p>
 				</div>
 				<CopyableField label="Tx Hash" value={tx.txHashes[0]} />
@@ -85,27 +89,27 @@ function PaymentDetail({ tx }: { tx: GroupedTransaction & { kind: "payment" } })
 function InternalTransferDetail({ tx }: { tx: GroupedTransaction & { kind: "internalTransfer" } }) {
 	return (
 		<Card>
-			<div className="divide-y divide-gray-100">
+			<div className="divide-y divide-border">
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Type</p>
+					<p className="text-sm text-muted-foreground">Type</p>
 					<p className="text-sm font-medium">Internal Transfer</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">From Account</p>
+					<p className="text-sm text-muted-foreground">From Account</p>
 					<p className="text-sm">{tx.fromAccountName}</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">To Account</p>
+					<p className="text-sm text-muted-foreground">To Account</p>
 					<p className="text-sm">{tx.toAccountName}</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Amount</p>
+					<p className="text-sm text-muted-foreground">Amount</p>
 					<p className="text-sm font-medium">
 						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Date</p>
+					<p className="text-sm text-muted-foreground">Date</p>
 					<p className="text-sm">{formatDate(tx.timestamp)}</p>
 				</div>
 				<CopyableField label="Tx Hash" value={tx.txHashes[0]} />
@@ -117,32 +121,32 @@ function InternalTransferDetail({ tx }: { tx: GroupedTransaction & { kind: "inte
 function SwapDetail({ tx }: { tx: GroupedTransaction & { kind: "swap" } }) {
 	return (
 		<Card>
-			<div className="divide-y divide-gray-100">
+			<div className="divide-y divide-border">
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Type</p>
+					<p className="text-sm text-muted-foreground">Type</p>
 					<p className="text-sm font-medium">Swap</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">From Account</p>
+					<p className="text-sm text-muted-foreground">From Account</p>
 					<p className="text-sm">
 						{tx.fromAccountName} ({tx.tokenIn})
 					</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">To Account</p>
+					<p className="text-sm text-muted-foreground">To Account</p>
 					<p className="text-sm">
 						{tx.toAccountName} ({tx.tokenOut})
 					</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Amount In</p>
+					<p className="text-sm text-muted-foreground">Amount In</p>
 					<p className="text-sm font-medium">
 						{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
 					</p>
 				</div>
 				{tx.amountOut !== undefined && (
 					<div className="flex items-center justify-between py-2">
-						<p className="text-sm text-gray-500">Amount Out</p>
+						<p className="text-sm text-muted-foreground">Amount Out</p>
 						<p className="text-sm font-medium">
 							{formatBalance(tx.amountOut, 6)} {tx.tokenOut}
 						</p>
@@ -156,11 +160,11 @@ function SwapDetail({ tx }: { tx: GroupedTransaction & { kind: "swap" } }) {
 					</div>
 				)}
 				<div className="flex items-center justify-between py-2">
-					<p className="text-sm text-gray-500">Date</p>
+					<p className="text-sm text-muted-foreground">Date</p>
 					<p className="text-sm">{formatDate(tx.timestamp)}</p>
 				</div>
 				<div className="py-2">
-					<p className="mb-1 text-sm text-gray-500">Transaction Hashes</p>
+					<p className="mb-1 text-sm text-muted-foreground">Transaction Hashes</p>
 					{tx.txHashes.map((hash, i) => (
 						<CopyableField key={hash} label={i === 0 ? "Swap" : "Transfer"} value={hash} />
 					))}
@@ -198,7 +202,7 @@ export function TransactionDetailContent({
 			<SidebarLayout treasuryName={treasuryName}>
 				<h1 className="mb-4 text-2xl font-semibold">Transaction Detail</h1>
 				{isLoading && !tx ? (
-					<p className="text-gray-500">Loading transaction...</p>
+					<p className="text-muted-foreground">Loading transaction...</p>
 				) : tx ? (
 					<>
 						{tx.kind === "payment" && <PaymentDetail tx={tx} />}
@@ -206,7 +210,7 @@ export function TransactionDetailContent({
 						{tx.kind === "swap" && <SwapDetail tx={tx} />}
 					</>
 				) : (
-					<p className="text-gray-500">Transaction not found.</p>
+					<p className="text-muted-foreground">Transaction not found.</p>
 				)}
 			</SidebarLayout>
 		</SessionGuard>

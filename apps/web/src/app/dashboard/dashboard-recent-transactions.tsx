@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Receipt } from "lucide-react";
 import Link from "next/link";
+import { SendIcon, TransactionsIcon, TransferIcon } from "@/components/icons";
 import type { GroupedTransaction } from "@/lib/tempo/types";
 import { cn, formatBalance, formatDate, truncateAddress } from "@/lib/utils";
 
@@ -20,38 +20,36 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="grid grid-cols-[100px_1fr_120px_100px] gap-x-8 items-center border-b border-white/[0.06] py-4 transition-colors hover:bg-white/[0.02]"
 			>
-				<div
+				<span className="text-sm text-muted-foreground">
+					{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
+				</span>
+				<span className="flex items-center gap-3">
+					<span
+						className={cn(
+							"flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+							isSent ? "bg-red-500/10" : "bg-green-500/10",
+						)}
+					>
+						<SendIcon
+							className={cn("h-4 w-4", isSent ? "text-red-400 rotate-180" : "text-green-400")}
+						/>
+					</span>
+					<span className="truncate text-sm font-medium text-foreground">
+						{isSent ? `To ${truncateAddress(tx.to)}` : `From ${truncateAddress(tx.from)}`}
+					</span>
+				</span>
+				<span
 					className={cn(
-						"flex h-10 w-10 items-center justify-center rounded-full",
-						isSent ? "bg-red-100" : "bg-green-100",
+						"text-right text-sm font-medium",
+						isSent ? "text-foreground" : "text-green-400",
 					)}
 				>
-					{isSent ? (
-						<ArrowUpRight className="h-5 w-5 text-red-600" />
-					) : (
-						<ArrowDownLeft className="h-5 w-5 text-green-600" />
-					)}
-				</div>
-				<div className="min-w-0 flex-1">
-					<p className="text-sm font-medium">
-						{isSent ? "Sent" : "Received"} {tx.token}
-					</p>
-					<p className="truncate text-xs text-gray-500">
-						{tx.accountName} &middot; {isSent ? "To" : "From"}:{" "}
-						{truncateAddress(isSent ? tx.to : tx.from)}
-					</p>
-				</div>
-				<div className="text-right">
-					<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
-						{isSent ? "-" : "+"}
-						{formatBalance(tx.amount, 6)} {tx.token}
-					</p>
-					<p className="text-xs text-gray-400">
-						{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
-					</p>
-				</div>
+					{isSent ? "-" : ""}
+					{formatBalance(tx.amount, 6)}
+				</span>
+				<span className="text-right text-sm text-muted-foreground">{tx.accountName}</span>
 			</Link>
 		);
 	}
@@ -60,23 +58,21 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="grid grid-cols-[100px_1fr_120px_100px] gap-x-8 items-center border-b border-white/[0.06] py-4 transition-colors hover:bg-white/[0.02]"
 			>
-				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-					<ArrowLeftRight className="h-5 w-5 text-blue-600" />
-				</div>
-				<div className="min-w-0 flex-1">
-					<p className="text-sm font-medium">Internal Transfer</p>
-					<p className="truncate text-xs text-gray-500">
+				<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+				<span className="flex items-center gap-3">
+					<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
+						<TransferIcon className="h-4 w-4 text-blue-400" />
+					</span>
+					<span className="truncate text-sm font-medium text-foreground">
 						{tx.fromAccountName} &rarr; {tx.toAccountName}
-					</p>
-				</div>
-				<div className="text-right">
-					<p className="text-sm font-medium text-gray-900">
-						{formatBalance(tx.amount, 6)} {tx.token}
-					</p>
-					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
-				</div>
+					</span>
+				</span>
+				<span className="text-right text-sm font-medium text-foreground">
+					{formatBalance(tx.amount, 6)}
+				</span>
+				<span className="text-right text-sm text-muted-foreground">{tx.fromAccountName}</span>
 			</Link>
 		);
 	}
@@ -85,21 +81,19 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="grid grid-cols-[100px_1fr_120px_100px] gap-x-8 items-center border-b border-white/[0.06] py-4 transition-colors hover:bg-white/[0.02]"
 			>
-				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-					<Receipt className="h-5 w-5 text-gray-500" />
-				</div>
-				<div className="min-w-0 flex-1">
-					<p className="text-sm font-medium">Network Fee</p>
-					<p className="truncate text-xs text-gray-500">{tx.accountName}</p>
-				</div>
-				<div className="text-right">
-					<p className="text-sm font-medium text-gray-500">
-						-{formatBalance(tx.amount, 6)} {tx.token}
-					</p>
-					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
-				</div>
+				<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+				<span className="flex items-center gap-3">
+					<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
+						<TransactionsIcon className="h-4 w-4 text-muted-foreground" />
+					</span>
+					<span className="truncate text-sm font-medium text-muted-foreground">Network Fee</span>
+				</span>
+				<span className="text-right text-sm font-medium text-muted-foreground">
+					-{formatBalance(tx.amount, 6)}
+				</span>
+				<span className="text-right text-sm text-muted-foreground">{tx.accountName}</span>
 			</Link>
 		);
 	}
@@ -108,23 +102,21 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 	return (
 		<Link
 			href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-			className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			className="grid grid-cols-[100px_1fr_120px_100px] gap-x-8 items-center border-b border-white/[0.06] py-4 transition-colors hover:bg-white/[0.02]"
 		>
-			<div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-				<ArrowLeftRight className="h-5 w-5 text-purple-600" />
-			</div>
-			<div className="min-w-0 flex-1">
-				<p className="text-sm font-medium">Swap</p>
-				<p className="truncate text-xs text-gray-500">
-					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} ({tx.tokenOut})
-				</p>
-			</div>
-			<div className="text-right">
-				<p className="text-sm font-medium text-gray-900">
-					{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
-				</p>
-				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
-			</div>
+			<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+			<span className="flex items-center gap-3">
+				<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500/10">
+					<TransferIcon className="h-4 w-4 text-purple-400" />
+				</span>
+				<span className="truncate text-sm font-medium text-foreground">
+					{tx.tokenIn} &rarr; {tx.tokenOut}
+				</span>
+			</span>
+			<span className="text-right text-sm font-medium text-foreground">
+				{formatBalance(tx.amountIn, 6)}
+			</span>
+			<span className="text-right text-sm text-muted-foreground">{tx.fromAccountName}</span>
 		</Link>
 	);
 }
@@ -138,8 +130,10 @@ export function DashboardRecentTransactions({
 	if (recent.length === 0) {
 		return (
 			<div className="py-12 text-center">
-				<p className="text-gray-500">No transactions yet</p>
-				<p className="mt-1 text-sm text-gray-400">Send or receive a payment to get started.</p>
+				<p className="text-muted-foreground">No transactions yet</p>
+				<p className="mt-1 text-sm text-muted-foreground">
+					Send or receive a payment to get started.
+				</p>
 			</div>
 		);
 	}
@@ -150,12 +144,18 @@ export function DashboardRecentTransactions({
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
 				<Link
 					href={accountId ? `/transactions?account=${accountId}` : "/transactions"}
-					className="text-sm text-gray-500 hover:text-gray-700"
+					className="text-sm text-muted-foreground hover:text-foreground"
 				>
 					View all &rarr;
 				</Link>
 			</div>
-			<div className="space-y-2">
+			<div>
+				<div className="grid grid-cols-[100px_1fr_120px_100px] gap-x-8 border-b border-white/[0.06] py-2 text-xs text-muted-foreground">
+					<span>Date</span>
+					<span>To/From</span>
+					<span className="text-right">Amount</span>
+					<span className="text-right">Account</span>
+				</div>
 				{recent.map((tx) => (
 					<GroupedTransactionRow key={tx.groupId} tx={tx} />
 				))}

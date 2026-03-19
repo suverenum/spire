@@ -21,7 +21,7 @@ export function PendingTransactions({
 }: PendingTransactionsProps) {
 	if (transactions.length === 0) {
 		return (
-			<div data-testid="no-pending" className="py-8 text-center text-sm text-gray-500">
+			<div data-testid="no-pending" className="py-8 text-center text-sm text-muted-foreground">
 				No pending transactions
 			</div>
 		);
@@ -42,12 +42,12 @@ export function PendingTransactions({
 					<div
 						key={tx.id}
 						data-testid={`pending-tx-${tx.onChainTxId}`}
-						className="rounded-lg border border-gray-200 bg-white p-4"
+						className="rounded-lg border border-border bg-muted p-4"
 					>
 						<div className="flex items-start justify-between">
 							<div>
-								<p className="text-sm font-medium text-gray-900">{description}</p>
-								<div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+								<p className="text-sm font-medium text-foreground">{description}</p>
+								<div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
 									<Clock className="h-3 w-3" />
 									<span>
 										{tx.currentConfirmations}/{tx.requiredConfirmations} confirmations

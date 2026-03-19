@@ -10,9 +10,9 @@ interface SidebarLayoutProps {
 
 export function SidebarLayout({ treasuryName, children }: SidebarLayoutProps) {
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-background">
 			<Sidebar treasuryName={treasuryName} />
-			<main className="lg:pl-64">
+			<main className="lg:pl-56">
 				<div className="mx-auto max-w-5xl px-4 py-6 pt-16 lg:pt-6">{children}</div>
 			</main>
 		</div>
