@@ -44,7 +44,9 @@ test.describe("Agent Wallets E2E", () => {
 	test.describe("Agent Wallets Page", () => {
 		test("shows agent wallet cards", async ({ page }) => {
 			await page.goto("/agents");
-			await expect(page.getByText("Agent Wallets").first()).toBeVisible({ timeout: 15000 });
+			await expect(page.getByRole("heading", { name: "Agent Wallets" })).toBeVisible({
+				timeout: 15000,
+			});
 			await expect(page.getByText("Marketing Bot").first()).toBeVisible({ timeout: 15000 });
 		});
 
@@ -99,14 +101,15 @@ test.describe("Agent Wallets E2E", () => {
 		test("shows vendor selection buttons", async ({ page }) => {
 			await page.goto("/agents");
 			await page.getByTestId("create-agent-btn").click();
-			await expect(page.getByTestId("create-agent-form")).toBeVisible({ timeout: 10000 });
+			const form = page.getByTestId("create-agent-form");
+			await expect(form).toBeVisible({ timeout: 10000 });
 
-			// Check vendor buttons exist
-			await expect(page.getByText("OpenAI")).toBeVisible();
-			await expect(page.getByText("Anthropic")).toBeVisible();
-			await expect(page.getByText("Stability AI")).toBeVisible();
-			await expect(page.getByText("fal.ai")).toBeVisible();
-			await expect(page.getByText("Perplexity")).toBeVisible();
+			// Check vendor buttons exist within the form
+			await expect(form.getByText("OpenAI")).toBeVisible();
+			await expect(form.getByText("Anthropic")).toBeVisible();
+			await expect(form.getByText("Stability AI")).toBeVisible();
+			await expect(form.getByText("fal.ai")).toBeVisible();
+			await expect(form.getByText("Perplexity")).toBeVisible();
 		});
 
 		test("vendor buttons toggle selection", async ({ page }) => {
@@ -150,19 +153,16 @@ test.describe("Agent Wallets E2E", () => {
 
 		test("revoked wallet disables action buttons", async ({ page }) => {
 			await page.goto("/agents");
-			// Find the revoked card
-			const revokedCard = page
-				.getByText("Deprecated Bot")
-				.locator("..")
-				.locator("..")
-				.locator("..");
-			await expect(revokedCard).toBeVisible({ timeout: 15000 });
+			// Find the card containing "Deprecated Bot" by filtering agent-wallet-card elements
+			const cards = page.getByTestId("agent-wallet-card");
+			await expect(cards.first()).toBeVisible({ timeout: 15000 });
+
+			const revokedCard = cards.filter({ hasText: "Deprecated Bot" });
+			await expect(revokedCard).toBeVisible();
 
 			// Check Reveal Key and Revoke buttons are disabled
-			const revealBtn = revokedCard.getByTestId("reveal-key-btn");
-			const revokeBtn = revokedCard.getByTestId("revoke-btn");
-			await expect(revealBtn).toBeDisabled();
-			await expect(revokeBtn).toBeDisabled();
+			await expect(revokedCard.getByTestId("reveal-key-btn")).toBeDisabled();
+			await expect(revokedCard.getByTestId("revoke-btn")).toBeDisabled();
 		});
 	});
 
@@ -197,17 +197,21 @@ test.describe("Agent Wallets E2E", () => {
 	test.describe("Sidebar", () => {
 		test("sidebar shows Agent Wallets nav item", async ({ page }) => {
 			await page.goto("/agents");
-			await expect(page.getByRole("link", { name: /Agent Wallets/ })).toBeVisible({
+			// Scope to the visible desktop sidebar (hidden lg:flex)
+			const desktopSidebar = page.locator("aside.hidden.lg\\:flex");
+			await expect(desktopSidebar.getByRole("link", { name: /Agent Wallets/ })).toBeVisible({
 				timeout: 15000,
 			});
 		});
 
 		test("Agent Wallets link navigates to /agents", async ({ page }) => {
 			await page.goto("/dashboard");
-			await expect(page.getByRole("link", { name: /Agent Wallets/ })).toBeVisible({
+			const desktopSidebar = page.locator("aside.hidden.lg\\:flex");
+			await expect(desktopSidebar.getByRole("link", { name: /Agent Wallets/ })).toBeVisible({
 				timeout: 15000,
 			});
-			await page.getByRole("link", { name: /Agent Wallets/ }).click();
+			await desktopSidebar.getByRole("link", { name: /Agent Wallets/ }).click();
+			await page.waitForURL("**/agents", { timeout: 10000 });
 			await expect(page).toHaveURL(/\/agents/);
 		});
 	});
