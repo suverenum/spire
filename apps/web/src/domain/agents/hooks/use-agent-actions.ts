@@ -41,6 +41,50 @@ const GuardianOwnerAbi = [
 		outputs: [],
 		stateMutability: "nonpayable",
 	},
+	{
+		type: "function",
+		name: "approvePay",
+		inputs: [{ name: "proposalId", type: "uint256" }],
+		outputs: [],
+		stateMutability: "nonpayable",
+	},
+	{
+		type: "function",
+		name: "rejectPay",
+		inputs: [{ name: "proposalId", type: "uint256" }],
+		outputs: [],
+		stateMutability: "nonpayable",
+	},
+	{
+		type: "function",
+		name: "proposalCount",
+		inputs: [],
+		outputs: [{ name: "", type: "uint256" }],
+		stateMutability: "view",
+	},
+	{
+		type: "function",
+		name: "proposals",
+		inputs: [{ name: "", type: "uint256" }],
+		outputs: [
+			{ name: "token", type: "address" },
+			{ name: "to", type: "address" },
+			{ name: "amount", type: "uint256" },
+			{ name: "status", type: "uint8" },
+			{ name: "createdAt", type: "uint256" },
+		],
+		stateMutability: "view",
+	},
+	{
+		type: "event",
+		name: "PaymentProposed",
+		inputs: [
+			{ name: "proposalId", type: "uint256", indexed: true },
+			{ name: "token", type: "address", indexed: true },
+			{ name: "to", type: "address", indexed: true },
+			{ name: "amount", type: "uint256", indexed: false },
+		],
+	},
 ] as const;
 
 const Tip20Abi = [
@@ -174,5 +218,79 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 			toast("Limits updated on-chain", "success");
 		},
 		onError: (error) => toast(error.message, "error"),
+	});
+}
+
+/**
+ * Hook for approving a pending over-limit payment on-chain.
+ */
+export function useApprovePay(treasuryId: string) {
+	const config = useConfig();
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			guardianAddress,
+			proposalId,
+		}: {
+			guardianAddress: Address;
+			proposalId: bigint;
+		}) => {
+			const walletClient = await getWalletClient(config);
+			const publicClient = await getPublicClient(config);
+			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
+
+			const hash = await walletClient.writeContract({
+				address: guardianAddress,
+				abi: GuardianOwnerAbi,
+				functionName: "approvePay",
+				args: [proposalId],
+			});
+
+			await publicClient.waitForTransactionReceipt({ hash });
+			return hash;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: CACHE_KEYS.agentWallets(treasuryId) });
+			toast("Payment approved and executed on-chain", "success");
+		},
+		onError: (error: Error) => toast(error.message, "error"),
+	});
+}
+
+/**
+ * Hook for rejecting a pending over-limit payment on-chain.
+ */
+export function useRejectPay(treasuryId: string) {
+	const config = useConfig();
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			guardianAddress,
+			proposalId,
+		}: {
+			guardianAddress: Address;
+			proposalId: bigint;
+		}) => {
+			const walletClient = await getWalletClient(config);
+			const publicClient = await getPublicClient(config);
+			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
+
+			const hash = await walletClient.writeContract({
+				address: guardianAddress,
+				abi: GuardianOwnerAbi,
+				functionName: "rejectPay",
+				args: [proposalId],
+			});
+
+			await publicClient.waitForTransactionReceipt({ hash });
+			return hash;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: CACHE_KEYS.agentWallets(treasuryId) });
+			toast("Payment rejected", "success");
+		},
+		onError: (error: Error) => toast(error.message, "error"),
 	});
 }
