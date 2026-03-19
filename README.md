@@ -40,6 +40,160 @@ AI Agent (mppx SDK)
     └── If approved → token.transfer() → vendor gets paid
 ```
 
+### How We Use MPP — Complete Integration
+
+Agent Bank is built on top of the [Machine Payments Protocol (MPP)](https://mpp.dev) by Stripe and Tempo. Here's exactly how the 402 payment flow works with our Guardian contracts:
+
+#### The Standard MPP Flow (without Agent Bank)
+
+```
+Agent → fetch("https://vendor.com/api")
+     ← 402 Payment Required
+        WWW-Authenticate: Payment {amount: "1.00", currency: "0x20c0...", recipient: "0x..."}
+     → Agent signs token.transfer(to, amount) directly
+     → Retry with Authorization: Payment <credential>
+     ← 200 OK + Payment-Receipt header
+```
+
+#### The Agent Bank Flow (with Guardian guardrails)
+
+```
+Agent → mppx.fetch("https://vendor.com/api")
+     ← 402 Payment Required (same as standard MPP)
+     → onChallenge() intercepts:
+        │
+        ├── Guardian.pay(token, to, amount)     ← on-chain, checks ALL rules
+        │   ├── Is token in allowlist?          ✓ or revert
+        │   ├── Is recipient in allowlist?      ✓ or revert
+        │   ├── amount ≤ maxPerTx?              ✓ or revert
+        │   ├── spentToday + amount ≤ daily?    ✓ or revert
+        │   └── totalSpent + amount ≤ cap?      ✓ or revert
+        │
+        ├── If ALL pass → token.transfer(to, amount)
+        │   └── Transfer event emitted by TOKEN contract
+        │
+        ├── If over limits → proposePay() creates on-chain proposal
+        │   └── Owner approves/rejects from dashboard
+        │
+        └── Build credential: { hash: txHash, type: "hash" }
+     → Retry with Authorization: Payment <credential>
+     ← Server verifies Transfer event (token ✓, recipient ✓, amount ✓)
+     ← 200 OK — vendor doesn't know Guardian exists
+```
+
+#### Why This Works (The Key Insight)
+
+The MPP server verification in `mppx/server` checks **only 3 fields** from the on-chain Transfer event:
+
+```typescript
+// From tempo-mppx/src/tempo/server/Charge.ts (lines 164-169)
+const match = [...transferLogs, ...memoLogs].find(
+  (log) =>
+    isAddressEqual(log.address, currency) &&   // ✓ token contract
+    isAddressEqual(log.args.to, recipient) &&   // ✓ recipient
+    log.args.amount.toString() === amount,       // ✓ amount
+)
+```
+
+It does **NOT** check:
+- `log.args.from` — who sent the tokens (Guardian contract, not agent EOA)
+- `tx.from` — who submitted the transaction (agent EOA)
+- `credential.source` — the optional DID field
+
+This means the Guardian contract can call `token.transfer(to, amount)` on behalf of the agent, and the MPP server accepts it — because the Transfer event is emitted by the token contract, not the caller. **The Guardian is invisible to the payment protocol.**
+
+#### Code: The `onChallenge` Integration
+
+```typescript
+// apps/web/src/domain/agents/utils/create-guarded-mppx.ts
+
+import { Credential } from "mppx";
+import { Mppx, tempo } from "mppx/client";
+
+export function createGuardedMppx({ agentKey, guardianAddress }) {
+  const account = privateKeyToAccount(agentKey);
+  const walletClient = createWalletClient({ account, transport: http(rpcUrl) });
+
+  return Mppx.create({
+    methods: [tempo({ account, getClient: () => publicClient })],
+
+    // THIS IS THE KEY PART — intercepts every 402 payment challenge
+    async onChallenge(challenge) {
+      const { amount, currency, recipient } = challenge.request;
+
+      // Route through Guardian instead of direct transfer
+      const hash = await walletClient.writeContract({
+        address: guardianAddress,
+        abi: parseAbi(["function pay(address,address,uint256) external"]),
+        functionName: "pay",
+        args: [currency, recipient, BigInt(amount)],
+      });
+
+      await publicClient.waitForTransactionReceipt({ hash });
+
+      // Standard MPP push-mode credential
+      return Credential.serialize(
+        Credential.from({
+          challenge,
+          payload: { hash, type: "hash" },
+        }),
+      );
+    },
+  });
+}
+
+// Usage — any fetch through this client is now guarded
+const mppx = createGuardedMppx({ agentKey: "0x...", guardianAddress: "0x..." });
+const res = await mppx.fetch("https://vendor.com/api", { method: "POST", body });
+```
+
+#### Code: Over-Limit Approval Flow
+
+When `Guardian.pay()` would revert (over per-tx cap, daily limit, or spending cap), the agent uses `proposePay()` instead:
+
+```typescript
+// From apps/web/scripts/demo/demo.ts — Step 6
+
+// Agent calls proposePay — if within limits, auto-executes
+// If over limits, creates an on-chain proposal for owner approval
+const hash = await agentWallet.writeContract({
+  address: guardianAddress,
+  abi: GuardianAbi,
+  functionName: "proposePay",
+  args: [token, recipient, amount],
+});
+// → Proposal #1 created on-chain (status: pending)
+
+// Owner reviews and approves from the Goldhord dashboard
+// → passkey authentication → approvePay(1) on-chain → payment executes
+```
+
+#### Files Where MPP Integration Lives
+
+| File | Role |
+|------|------|
+| `apps/web/src/domain/agents/utils/create-guarded-mppx.ts` | Core utility — `onChallenge` routes payments through Guardian |
+| `apps/web/src/domain/agents/hooks/use-deploy-guardian.ts` | Deploys Guardian via factory + configures allowlists |
+| `apps/web/src/domain/agents/hooks/use-agent-actions.ts` | On-chain hooks: approvePay, rejectPay, topUp, withdraw |
+| `apps/web/src/domain/agents/hooks/use-guardian-state.ts` | Reads proposals + spending state from chain |
+| `contracts/src/SimpleGuardian.sol` | Guardian contract: pay, proposePay, approvePay, rejectPay |
+| `contracts/src/GuardianFactory.sol` | CREATE2 factory for deploying Guardians |
+| `tests/integration/Guardian.integration.test.ts` | 6 on-chain tests proving mppx + Guardian works |
+| `apps/web/scripts/demo/demo.ts` | Full CLI demo with 6 steps |
+
+#### Verified On-Chain (Real Transactions)
+
+Every claim is backed by real on-chain transactions on Tempo Moderato testnet:
+
+- **Guardian Factory:** [`0x8f2958bC87f12c4556fb5a43A03eE30B1EEca9A8`](https://explore.moderato.tempo.xyz/address/0x8f2958bC87f12c4556fb5a43A03eE30B1EEca9A8)
+- **Example Guardian:** [`0x9CA7B94a0322f225e8e35cf87aA70FC515F4B049`](https://explore.moderato.tempo.xyz/address/0x9CA7B94a0322f225e8e35cf87aA70FC515F4B049)
+- **MPP Payment through Guardian:** [`0x1386d720...`](https://explore.moderato.tempo.xyz/tx/0x1386d7206cbe6ed17592040e8ea5daa14d648acd6f37dc7056ab69c4c1a4beff) — $2.00 AlphaUSD via Guardian.pay()
+- **Over-limit Proposal:** [`0x67009b69...`](https://explore.moderato.tempo.xyz/tx/0x67009b69f27526f95cecd198e968c2d8ce053fd426e835b96a8f2c55feaf7198) — $5.00 proposePay() creating on-chain approval
+
+#### Zero mppx Modifications
+
+We did **not** fork or modify the mppx SDK. The entire integration uses the standard `onChallenge` callback that mppx provides for custom payment handling. The Guardian contract is transparent to both the mppx client and the MPP server.
+
 ---
 
 ## Quick Start
