@@ -492,11 +492,14 @@ export function AgentDetailContent({
 								<Card>
 									<div className="p-4">
 										<h2 className="flex items-center gap-2 font-semibold">
-											<ClipboardList className="h-4 w-4" /> Pending Approvals
+											<ClipboardList className="h-4 w-4" /> Over-limit Transactions
 											<span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-												{onChainState.proposals.filter((p) => p.status === 0).length} pending
+												{onChainState.proposals.filter((p) => p.status === 0).length} rejected
 											</span>
 										</h2>
+										<p className="mt-1 text-xs text-gray-500">
+											Transactions exceeding spending limits are automatically rejected. Approvals coming soon.
+										</p>
 									</div>
 									<div className="border-t border-gray-100">
 										{onChainState.proposals.map((proposal) => (
@@ -516,58 +519,9 @@ export function AgentDetailContent({
 														</p>
 													</div>
 												</div>
-												<div className="flex items-center gap-2">
-													{proposal.status === 0 && (
-														<>
-															<span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-																pending
-															</span>
-															{isActive && (
-																<>
-																	<Button
-																		size="sm"
-																		onClick={() =>
-																			approveMutation.mutate({
-																				guardianAddress: wallet!.guardianAddress as `0x${string}`,
-																				proposalId: BigInt(proposal.id),
-																			})
-																		}
-																		disabled={approveMutation.isPending}
-																		className="bg-emerald-600 hover:bg-emerald-700"
-																		data-testid={`approve-${proposal.id}`}
-																	>
-																		{approveMutation.isPending ? "..." : <><Check className="mr-1 h-3 w-3" /> Approve</>}
-																	</Button>
-																	<Button
-																		size="sm"
-																		variant="outline"
-																		onClick={() =>
-																			rejectMutation.mutate({
-																				guardianAddress: wallet!.guardianAddress as `0x${string}`,
-																				proposalId: BigInt(proposal.id),
-																			})
-																		}
-																		disabled={rejectMutation.isPending}
-																		className="text-red-600 hover:bg-red-50"
-																		data-testid={`reject-${proposal.id}`}
-																	>
-																		{rejectMutation.isPending ? "..." : <><X className="mr-1 h-3 w-3" /> Reject</>}
-																	</Button>
-																</>
-															)}
-														</>
-													)}
-													{proposal.status === 1 && (
-														<span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-															approved
-														</span>
-													)}
-													{proposal.status === 2 && (
-														<span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
-															rejected
-														</span>
-													)}
-												</div>
+												<span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
+													rejected
+												</span>
 											</div>
 										))}
 									</div>

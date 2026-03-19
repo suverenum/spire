@@ -1,11 +1,20 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Address } from "viem";
+import type { Address, PublicClient } from "viem";
 import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS, SUPPORTED_TOKENS } from "@/lib/constants";
+
+/** Wait for receipt and throw on revert so onError fires correctly. */
+async function confirmTx(publicClient: PublicClient, hash: `0x${string}`, context: string) {
+	const receipt = await publicClient.waitForTransactionReceipt({ hash });
+	if (receipt.status === "reverted") {
+		throw new Error(`Transaction reverted: ${context} (tx: ${hash.slice(0, 12)}…)`);
+	}
+	return receipt;
+}
 
 // ─── Guardian ABI subset for owner actions ─────────────────────────
 
@@ -138,7 +147,7 @@ export function useTopUpAgent(treasuryId: string) {
 				args: [guardianAddress, amount],
 			});
 
-			await publicClient.waitForTransactionReceipt({ hash });
+			await confirmTx(publicClient, hash, "top up");
 			return hash;
 		},
 		onSuccess: () => {
@@ -178,7 +187,7 @@ export function useEmergencyWithdraw(treasuryId: string) {
 				args: [token.address],
 			});
 
-			await publicClient.waitForTransactionReceipt({ hash });
+			await confirmTx(publicClient, hash, "withdraw");
 			return hash;
 		},
 		onSuccess: () => {
@@ -217,7 +226,7 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 				args: [maxPerTx, dailyLimit],
 			});
 
-			await publicClient.waitForTransactionReceipt({ hash });
+			await confirmTx(publicClient, hash, "update limits");
 			return hash;
 		},
 		onSuccess: () => {
@@ -254,7 +263,7 @@ export function useApprovePay(treasuryId: string) {
 				args: [proposalId],
 			});
 
-			await publicClient.waitForTransactionReceipt({ hash });
+			await confirmTx(publicClient, hash, "approve payment");
 			return hash;
 		},
 		onSuccess: () => {
@@ -292,7 +301,7 @@ export function useRejectPay(treasuryId: string) {
 				args: [proposalId],
 			});
 
-			await publicClient.waitForTransactionReceipt({ hash });
+			await confirmTx(publicClient, hash, "reject payment");
 			return hash;
 		},
 		onSuccess: () => {
@@ -330,7 +339,7 @@ export function useAddToken(treasuryId: string) {
 				args: [tokenAddress],
 			});
 
-			await publicClient.waitForTransactionReceipt({ hash });
+			await confirmTx(publicClient, hash, "add token");
 			return hash;
 		},
 		onSuccess: () => {

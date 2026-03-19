@@ -40,6 +40,133 @@ AI Agent (mppx SDK)
     └── If approved → token.transfer() → vendor gets paid
 ```
 
+### Step-by-Step: Working with Agent Wallets
+
+#### 1. Create an Agent Wallet (UI)
+
+1. Go to the Agent Bank page (`/agents`)
+2. Click **Create Agent Wallet**
+3. Fill in: Label, Token (AlphaUSD), Spending limits, Allowed vendors
+4. Click **Create** — deploys Guardian contract with allowlists in a single transaction
+5. **Save the agent private key** — shown only once
+
+#### 2. Check Guardian State
+
+```typescript
+import { createPublicClient, parseAbi, http } from 'viem';
+import { tempoModerato } from 'viem/chains';
+
+const GUARDIAN = '0x1a446DAe9D1343c51E9D1f7710C052deFDFc7187';
+const TOKEN   = '0x20c0000000000000000000000000000000000001'; // AlphaUSD
+const VENDOR  = '0x0000000000000000000000000000000000000002'; // Anthropic
+
+const pub = createPublicClient({ chain: tempoModerato, transport: http('https://rpc.moderato.tempo.xyz') });
+const abi = parseAbi([
+  'function allowedTokens(address) view returns (bool)',
+  'function allowedRecipients(address) view returns (bool)',
+  'function maxPerTx() view returns (uint256)',
+  'function dailyLimit() view returns (uint256)',
+  'function spendingCap() view returns (uint256)',
+  'function spentToday() view returns (uint256)',
+  'function totalSpent() view returns (uint256)',
+]);
+const tip20 = parseAbi(['function balanceOf(address) view returns (uint256)']);
+
+const [tokenOk, vendorOk, balance, maxPerTx, dailyLimit, spentToday] = await Promise.all([
+  pub.readContract({ address: GUARDIAN, abi, functionName: 'allowedTokens', args: [TOKEN] }),
+  pub.readContract({ address: GUARDIAN, abi, functionName: 'allowedRecipients', args: [VENDOR] }),
+  pub.readContract({ address: TOKEN, abi: tip20, functionName: 'balanceOf', args: [GUARDIAN] }),
+  pub.readContract({ address: GUARDIAN, abi, functionName: 'maxPerTx' }),
+  pub.readContract({ address: GUARDIAN, abi, functionName: 'dailyLimit' }),
+  pub.readContract({ address: GUARDIAN, abi, functionName: 'spentToday' }),
+]);
+// AlphaUSD has 6 decimals — divide by 1e6 for dollar amounts
+```
+
+#### 3. Make a Payment (within limits)
+
+```typescript
+import { createWalletClient, parseAbi, http } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { tempoModerato } from 'viem/chains';
+
+const agent = privateKeyToAccount('0x<agent-private-key>');
+const wallet = createWalletClient({ account: agent, chain: tempoModerato, transport: http('https://rpc.moderato.tempo.xyz') });
+
+// Pay $1.00 (1_000_000 = 1 USD with 6 decimals)
+const hash = await wallet.writeContract({
+  address: GUARDIAN,
+  abi: parseAbi(['function pay(address,address,uint256) external']),
+  functionName: 'pay',
+  args: [TOKEN, VENDOR, 1_000_000n],
+});
+// ✓ Succeeds if: amount <= maxPerTx AND spentToday + amount <= dailyLimit
+```
+
+#### 4. Charge Multiple Dollars (loop with auto-reject on over-limit)
+
+```typescript
+const abi = parseAbi([
+  'function pay(address,address,uint256) external',
+  'function proposePay(address,address,uint256) external returns (uint256,bool)',
+]);
+
+const TARGET = 10_000_000n; // $10
+const PER_TX = 2_000_000n;  // $2 per payment (must be <= maxPerTx)
+let paid = 0n;
+
+while (paid < TARGET) {
+  const amount = (TARGET - paid) < PER_TX ? (TARGET - paid) : PER_TX;
+  try {
+    // Try direct payment first
+    const h = await wallet.writeContract({
+      address: GUARDIAN, abi, functionName: 'pay', args: [TOKEN, VENDOR, amount],
+    });
+    await pub.waitForTransactionReceipt({ hash: h });
+    paid += amount;
+  } catch {
+    // Over daily limit — proposePay records the rejected over-limit tx
+    const h = await wallet.writeContract({
+      address: GUARDIAN, abi, functionName: 'proposePay', args: [TOKEN, VENDOR, amount],
+    });
+    await pub.waitForTransactionReceipt({ hash: h });
+    paid += amount;
+  }
+}
+```
+
+#### 5. Important: Agent Needs Fee Tokens
+
+Agents need fee tokens at `0x20c0...0000` to pay Tempo gas:
+
+```typescript
+await fundedWallet.writeContract({
+  address: '0x20c0000000000000000000000000000000000000',
+  abi: parseAbi(['function transfer(address,uint256) returns (bool)']),
+  functionName: 'transfer',
+  args: [agentAddress, 50_000_000n],
+});
+```
+
+#### 6. Key Addresses
+
+| Item | Address |
+|------|---------|
+| AlphaUSD token | `0x20c0000000000000000000000000000000000001` |
+| Anthropic (vendor) | `0x0000000000000000000000000000000000000002` |
+| OpenAI (vendor) | `0x0000000000000000000000000000000000000001` |
+| Guardian Factory v2 | `0xb9EB15e52d9D3d51353549e3d10Ce0602Ef803df` |
+| Fee token (gas) | `0x20c0000000000000000000000000000000000000` |
+| RPC | `https://rpc.moderato.tempo.xyz` |
+
+#### 7. Spending Limits Explained
+
+| Limit | Check | What happens when exceeded |
+|-------|-------|---------------------------|
+| **Per-tx cap** | `amount <= maxPerTx` | `pay()` reverts, use `proposePay()` |
+| **Daily limit** | `spentToday + amount <= dailyLimit` | Resets every 24h |
+| **Spending cap** | `totalSpent + amount <= spendingCap` | Lifetime limit, never resets |
+
 ### How We Use MPP — Complete Integration
 
 Agent Bank is built on top of the [Machine Payments Protocol (MPP)](https://mpp.dev) by Stripe and Tempo. Here's exactly how the 402 payment flow works with our Guardian contracts:
@@ -185,7 +312,7 @@ const hash = await agentWallet.writeContract({
 
 Every claim is backed by real on-chain transactions on Tempo Moderato testnet:
 
-- **Guardian Factory:** [`0x8f2958bC87f12c4556fb5a43A03eE30B1EEca9A8`](https://explore.moderato.tempo.xyz/address/0x8f2958bC87f12c4556fb5a43A03eE30B1EEca9A8)
+- **Guardian Factory:** [`0xb9EB15e52d9D3d51353549e3d10Ce0602Ef803df`](https://explore.moderato.tempo.xyz/address/0xb9EB15e52d9D3d51353549e3d10Ce0602Ef803df)
 - **Example Guardian:** [`0x9CA7B94a0322f225e8e35cf87aA70FC515F4B049`](https://explore.moderato.tempo.xyz/address/0x9CA7B94a0322f225e8e35cf87aA70FC515F4B049)
 - **MPP Payment through Guardian:** [`0x1386d720...`](https://explore.moderato.tempo.xyz/tx/0x1386d7206cbe6ed17592040e8ea5daa14d648acd6f37dc7056ab69c4c1a4beff) — $2.00 AlphaUSD via Guardian.pay()
 - **Over-limit Proposal:** [`0x67009b69...`](https://explore.moderato.tempo.xyz/tx/0x67009b69f27526f95cecd198e968c2d8ce053fd426e835b96a8f2c55feaf7198) — $5.00 proposePay() creating on-chain approval
@@ -393,7 +520,7 @@ On-chain spending guardrails for AI agents.
 
 Deploys Guardian instances via CREATE2 for deterministic addresses.
 
-**Deployed on Moderato:** `0xeffb75d8e4e4622c523bd0b4f2b3ca9e3954b131`
+**Deployed on Moderato:** `0xb9EB15e52d9D3d51353549e3d10Ce0602Ef803df`
 
 ### Compile Contracts
 
