@@ -21,7 +21,6 @@ const STEP_LABELS: Record<AgentCreationStep, string> = {
 	idle: "",
 	validating: "Validating...",
 	deploying: "Deploying Guardian contract...",
-	configuring: "Configuring allowlists...",
 	funding: "Funding Guardian...",
 	persisting: "Saving to database...",
 	complete: "Complete!",

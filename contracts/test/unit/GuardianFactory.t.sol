@@ -15,6 +15,9 @@ contract GuardianFactoryTest is Test {
     address vendor;
     address stranger;
 
+    // Empty arrays for convenience
+    address[] emptyAddrs;
+
     uint256 constant MAX_PER_TX = 2_000_000; // 2 USDC
     uint256 constant DAILY_LIMIT = 10_000_000; // 10 USDC
     uint256 constant SPENDING_CAP = 50_000_000; // 50 USDC
@@ -35,6 +38,12 @@ contract GuardianFactoryTest is Test {
         vm.label(address(usdc), "USDC");
     }
 
+    // Helper to create single-element arrays
+    function _addr(address a) internal pure returns (address[] memory arr) {
+        arr = new address[](1);
+        arr[0] = a;
+    }
+
     // -----------------------------------------------------------------------
     // Factory: createGuardian
     // -----------------------------------------------------------------------
@@ -42,17 +51,23 @@ contract GuardianFactoryTest is Test {
     function test_createGuardian_deploysAtPredictedAddress() public {
         bytes32 salt = bytes32(uint256(1));
 
-        address predicted = factory.getGuardianAddress(owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt);
+        address predicted = factory.getGuardianAddress(
+            owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs
+        );
 
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs
+        );
 
         assertEq(guardian, predicted, "Deployed address should match prediction");
     }
 
     function test_createGuardian_setsOwnerAndAgent() public {
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs
+        );
 
         assertEq(SimpleGuardian(guardian).owner(), owner);
         assertEq(SimpleGuardian(guardian).agent(), agentAddr);
@@ -60,10 +75,25 @@ contract GuardianFactoryTest is Test {
 
     function test_createGuardian_setsLimits() public {
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs
+        );
 
         assertEq(SimpleGuardian(guardian).maxPerTx(), MAX_PER_TX);
         assertEq(SimpleGuardian(guardian).dailyLimit(), DAILY_LIMIT);
+    }
+
+    function test_createGuardian_setsInitialAllowlists() public {
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
+
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(10)), recipients, tokens
+        );
+
+        assertTrue(SimpleGuardian(guardian).allowedRecipients(vendor), "Vendor should be allowed");
+        assertTrue(SimpleGuardian(guardian).allowedTokens(address(usdc)), "Token should be allowed");
     }
 
     function test_createGuardian_emitsEvent() public {
@@ -72,28 +102,32 @@ contract GuardianFactoryTest is Test {
         vm.prank(owner);
         vm.expectEmit(false, true, true, true);
         emit GuardianFactory.GuardianCreated(address(0), owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP);
-        factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt);
+        factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs);
     }
 
     function test_createGuardian_duplicateSaltReverts() public {
         bytes32 salt = bytes32(uint256(99));
 
         vm.prank(owner);
-        factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt);
+        factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs);
 
         vm.prank(owner);
         vm.expectRevert();
-        factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt);
+        factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs);
     }
 
     function test_createGuardian_differentDeployersSameSalt() public {
         bytes32 salt = bytes32(uint256(1));
 
         vm.prank(owner);
-        address g1 = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt);
+        address g1 = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs
+        );
 
         vm.prank(stranger);
-        address g2 = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt);
+        address g2 = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs
+        );
 
         assertTrue(g1 != g2, "Different deployers should produce different addresses");
     }
@@ -103,14 +137,13 @@ contract GuardianFactoryTest is Test {
     // -----------------------------------------------------------------------
 
     function test_factoryGuardian_payWorks() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        // Owner configures Guardian
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, tokens
+        );
 
         // Fund Guardian with USDC
         usdc.mint(guardian, 50_000_000);
@@ -128,17 +161,20 @@ contract GuardianFactoryTest is Test {
     // -----------------------------------------------------------------------
 
     function test_removeRecipient() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, tokens
+        );
+
         assertTrue(SimpleGuardian(guardian).allowedRecipients(vendor));
 
+        vm.prank(owner);
         SimpleGuardian(guardian).removeRecipient(vendor);
         assertFalse(SimpleGuardian(guardian).allowedRecipients(vendor));
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+
         usdc.mint(guardian, 10_000_000);
 
         vm.prank(agentAddr);
@@ -151,14 +187,16 @@ contract GuardianFactoryTest is Test {
     // -----------------------------------------------------------------------
 
     function test_removeToken() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, tokens
+        );
+
+        vm.prank(owner);
         SimpleGuardian(guardian).removeToken(address(usdc));
-        vm.stopPrank();
 
         usdc.mint(guardian, 10_000_000);
 
@@ -173,7 +211,9 @@ contract GuardianFactoryTest is Test {
 
     function test_updateLimits() public {
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs
+        );
 
         vm.prank(owner);
         SimpleGuardian(guardian).updateLimits(5_000_000, 20_000_000);
@@ -184,7 +224,9 @@ contract GuardianFactoryTest is Test {
 
     function test_updateLimits_onlyOwner() public {
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs
+        );
 
         vm.prank(stranger);
         vm.expectRevert("Not owner");
@@ -197,7 +239,9 @@ contract GuardianFactoryTest is Test {
 
     function test_withdraw() public {
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs
+        );
 
         usdc.mint(guardian, 50_000_000);
 
@@ -210,7 +254,9 @@ contract GuardianFactoryTest is Test {
 
     function test_withdraw_onlyOwner() public {
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs
+        );
 
         usdc.mint(guardian, 10_000_000);
 
@@ -221,7 +267,9 @@ contract GuardianFactoryTest is Test {
 
     function test_withdraw_emptyBalance() public {
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs
+        );
 
         vm.prank(owner);
         vm.expectRevert("No balance");
@@ -233,13 +281,13 @@ contract GuardianFactoryTest is Test {
     // -----------------------------------------------------------------------
 
     function test_perTxLimit() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, tokens
+        );
 
         usdc.mint(guardian, 50_000_000);
 
@@ -250,13 +298,13 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_dailyLimit() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, tokens
+        );
 
         usdc.mint(guardian, 50_000_000);
 
@@ -277,14 +325,14 @@ contract GuardianFactoryTest is Test {
     // -----------------------------------------------------------------------
 
     function test_spendingCap() public {
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
+
         // Deploy with small spending cap: 5 USDC total lifetime
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, 5_000_000, bytes32(uint256(200)));
-
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, 5_000_000, bytes32(uint256(200)), recipients, tokens
+        );
 
         usdc.mint(guardian, 50_000_000);
 
@@ -301,14 +349,14 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_spendingCapZeroMeansUnlimited() public {
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
+
         // Deploy with spendingCap = 0 (unlimited)
         vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, 0, bytes32(uint256(201)));
-
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, 0, bytes32(uint256(201)), recipients, tokens
+        );
 
         usdc.mint(guardian, 50_000_000);
 
@@ -326,13 +374,13 @@ contract GuardianFactoryTest is Test {
     // -----------------------------------------------------------------------
 
     function test_proposePay_withinLimits_executesImmediately() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(300)));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(300)), recipients, tokens
+        );
         usdc.mint(guardian, 50_000_000);
 
         vm.prank(agentAddr);
@@ -344,13 +392,13 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_proposePay_overLimit_createsProposal() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(301)));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(301)), recipients, tokens
+        );
         usdc.mint(guardian, 50_000_000);
 
         // 5 USDC > 2 USDC per-tx cap
@@ -364,13 +412,13 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_approvePay_executesPayment() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(302)));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(302)), recipients, tokens
+        );
         usdc.mint(guardian, 50_000_000);
 
         // Agent proposes over-limit payment
@@ -386,13 +434,13 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_rejectPay_noPayment() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(303)));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(303)), recipients, tokens
+        );
         usdc.mint(guardian, 50_000_000);
 
         vm.prank(agentAddr);
@@ -411,13 +459,13 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_approvePay_onlyOwner() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(304)));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(304)), recipients, tokens
+        );
         usdc.mint(guardian, 50_000_000);
 
         vm.prank(agentAddr);
@@ -430,13 +478,13 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_approvePay_cannotDoubleApprove() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(305)));
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addRecipient(vendor);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(305)), recipients, tokens
+        );
         usdc.mint(guardian, 50_000_000);
 
         vm.prank(agentAddr);
@@ -452,12 +500,12 @@ contract GuardianFactoryTest is Test {
     }
 
     function test_proposePay_blockedVendor_reverts() public {
-        vm.prank(owner);
-        address guardian = factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(306)));
+        address[] memory tokens = _addr(address(usdc));
 
-        vm.startPrank(owner);
-        SimpleGuardian(guardian).addToken(address(usdc));
-        vm.stopPrank();
+        vm.prank(owner);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(306)), emptyAddrs, tokens
+        );
         usdc.mint(guardian, 50_000_000);
 
         // Vendor NOT in allowlist — proposePay should revert too

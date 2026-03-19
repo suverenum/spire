@@ -57,13 +57,27 @@ contract SimpleGuardian {
         _;
     }
 
-    constructor(address _owner, address _agent, uint256 _maxPerTx, uint256 _dailyLimit, uint256 _spendingCap) {
+    constructor(
+        address _owner,
+        address _agent,
+        uint256 _maxPerTx,
+        uint256 _dailyLimit,
+        uint256 _spendingCap,
+        address[] memory _recipients,
+        address[] memory _tokens
+    ) {
         owner = _owner;
         agent = _agent;
         maxPerTx = _maxPerTx;
         dailyLimit = _dailyLimit;
         spendingCap = _spendingCap;
         lastResetDay = block.timestamp / 1 days;
+        for (uint256 i = 0; i < _recipients.length; i++) {
+            allowedRecipients[_recipients[i]] = true;
+        }
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            allowedTokens[_tokens[i]] = true;
+        }
     }
 
     function addRecipient(address r) external onlyOwner {

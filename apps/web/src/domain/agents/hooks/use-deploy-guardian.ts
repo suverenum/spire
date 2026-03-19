@@ -2,7 +2,14 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { type Address, keccak256, parseEventLogs, toHex } from "viem";
+import {
+	type Address,
+	keccak256,
+	type PublicClient,
+	parseEventLogs,
+	type TransactionReceipt,
+	toHex,
+} from "viem";
 import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
@@ -25,6 +32,8 @@ const GuardianFactoryAbi = [
 			{ name: "dailyLimit", type: "uint256" },
 			{ name: "spendingCap", type: "uint256" },
 			{ name: "salt", type: "bytes32" },
+			{ name: "recipients", type: "address[]" },
+			{ name: "tokens", type: "address[]" },
 		],
 		outputs: [{ name: "guardian", type: "address" }],
 		stateMutability: "nonpayable",
@@ -43,22 +52,35 @@ const GuardianFactoryAbi = [
 	},
 ] as const;
 
-const GuardianAbi = [
+const GuardianReadAbi = [
 	{
 		type: "function",
-		name: "addRecipient",
-		inputs: [{ name: "r", type: "address" }],
-		outputs: [],
-		stateMutability: "nonpayable",
+		name: "allowedRecipients",
+		inputs: [{ name: "", type: "address" }],
+		outputs: [{ name: "", type: "bool" }],
+		stateMutability: "view",
 	},
 	{
 		type: "function",
-		name: "addToken",
-		inputs: [{ name: "t", type: "address" }],
-		outputs: [],
-		stateMutability: "nonpayable",
+		name: "allowedTokens",
+		inputs: [{ name: "", type: "address" }],
+		outputs: [{ name: "", type: "bool" }],
+		stateMutability: "view",
 	},
 ] as const;
+
+/** Wait for tx receipt and throw if the transaction reverted on-chain. */
+async function confirmTx(
+	publicClient: PublicClient,
+	hash: `0x${string}`,
+	context: string,
+): Promise<TransactionReceipt> {
+	const receipt = await publicClient.waitForTransactionReceipt({ hash });
+	if (receipt.status === "reverted") {
+		throw new Error(`Transaction reverted during ${context} (tx: ${hash})`);
+	}
+	return receipt;
+}
 
 // ─── TIP-20 transfer for funding ──────────────────────────────────
 const Tip20Abi = [
@@ -80,7 +102,6 @@ export type AgentCreationStep =
 	| "idle"
 	| "validating"
 	| "deploying"
-	| "configuring"
 	| "funding"
 	| "persisting"
 	| "complete"
@@ -111,9 +132,17 @@ export function useDeployGuardian() {
 			const publicClient = await getPublicClient(config);
 			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
 
-			// Step 2: Deploy Guardian via factory
+			// Step 2: Deploy Guardian via factory with allowlists in constructor
+			// This configures recipients + tokens in a single tx, avoiding the
+			// Tempo fee-payer issue where separate addRecipient/addToken calls
+			// revert because msg.sender differs between transactions.
 			setStep("deploying");
 			const salt = keccak256(toHex(`${params.label}-${Date.now()}`));
+
+			const selectedToken = SUPPORTED_TOKENS[params.tokenSymbol as keyof typeof SUPPORTED_TOKENS];
+			const tokenAddress =
+				selectedToken?.address ?? SUPPORTED_TOKENS[Object.keys(SUPPORTED_TOKENS)[0]]?.address;
+
 			const deployHash = await walletClient.writeContract({
 				address: GUARDIAN_FACTORY_ADDRESS,
 				abi: GuardianFactoryAbi,
@@ -124,12 +153,12 @@ export function useDeployGuardian() {
 					BigInt(params.dailyLimit),
 					BigInt(params.spendingCap),
 					salt,
+					params.allowedVendors as Address[],
+					[tokenAddress],
 				],
 			});
+			const deployReceipt = await confirmTx(publicClient, deployHash, "Guardian deployment");
 
-			const deployReceipt = await publicClient.waitForTransactionReceipt({
-				hash: deployHash,
-			});
 			const logs = parseEventLogs({
 				abi: GuardianFactoryAbi,
 				logs: deployReceipt.logs,
@@ -138,30 +167,36 @@ export function useDeployGuardian() {
 			if (logs.length === 0) throw new Error("GuardianCreated event not found");
 			const guardianAddress = logs[0].args.guardian;
 
-			// Step 3: Configure allowlists
-			setStep("configuring");
-			for (const vendorAddr of params.allowedVendors) {
-				const hash = await walletClient.writeContract({
+			// Verify on-chain: read back allowlists to confirm they were set
+			const [tokenOk, ...vendorChecks] = await Promise.all([
+				publicClient.readContract({
 					address: guardianAddress,
-					abi: GuardianAbi,
-					functionName: "addRecipient",
-					args: [vendorAddr as Address],
-				});
-				await publicClient.waitForTransactionReceipt({ hash });
+					abi: GuardianReadAbi,
+					functionName: "allowedTokens",
+					args: [tokenAddress],
+				}),
+				...params.allowedVendors.map((v) =>
+					publicClient.readContract({
+						address: guardianAddress,
+						abi: GuardianReadAbi,
+						functionName: "allowedRecipients",
+						args: [v as Address],
+					}),
+				),
+			]);
+
+			if (!tokenOk) {
+				throw new Error(`On-chain verification failed: token ${tokenAddress} not in allowlist`);
+			}
+			for (let i = 0; i < vendorChecks.length; i++) {
+				if (!vendorChecks[i]) {
+					throw new Error(
+						`On-chain verification failed: vendor ${params.allowedVendors[i]} not in allowlist`,
+					);
+				}
 			}
 
-			// Add the selected token to the Guardian's allowlist
-			const selectedToken = SUPPORTED_TOKENS[params.tokenSymbol as keyof typeof SUPPORTED_TOKENS];
-			const tokenAddress = selectedToken?.address ?? SUPPORTED_TOKENS[Object.keys(SUPPORTED_TOKENS)[0]]?.address;
-			const addTokenHash = await walletClient.writeContract({
-				address: guardianAddress,
-				abi: GuardianAbi,
-				functionName: "addToken",
-				args: [tokenAddress],
-			});
-			await publicClient.waitForTransactionReceipt({ hash: addTokenHash });
-
-			// Step 4: Fund Guardian with initial tokens
+			// Step 3: Fund Guardian with initial tokens
 			if (params.fundingAmount > 0n) {
 				setStep("funding");
 				const token = SUPPORTED_TOKENS[params.tokenSymbol as keyof typeof SUPPORTED_TOKENS];
@@ -173,10 +208,10 @@ export function useDeployGuardian() {
 					functionName: "transfer",
 					args: [guardianAddress, params.fundingAmount],
 				});
-				await publicClient.waitForTransactionReceipt({ hash: fundHash });
+				await confirmTx(publicClient, fundHash, "fund Guardian");
 			}
 
-			// Step 5: Persist to DB (encrypts the SAME key used for Guardian deployment)
+			// Step 4: Persist to DB (encrypts the SAME key used for Guardian deployment)
 			setStep("persisting");
 			const result = await finalizeAgentWalletCreate({
 				treasuryId: params.treasuryId,
