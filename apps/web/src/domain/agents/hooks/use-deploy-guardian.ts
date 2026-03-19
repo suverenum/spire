@@ -150,8 +150,9 @@ export function useDeployGuardian() {
 				await publicClient.waitForTransactionReceipt({ hash });
 			}
 
-			// Add pathUSD as allowed token
-			const tokenAddress = SUPPORTED_TOKENS.pathUSD.address;
+			// Add the selected token to the Guardian's allowlist
+			const selectedToken = SUPPORTED_TOKENS[params.tokenSymbol as keyof typeof SUPPORTED_TOKENS];
+			const tokenAddress = selectedToken?.address ?? SUPPORTED_TOKENS[Object.keys(SUPPORTED_TOKENS)[0]]?.address;
 			const addTokenHash = await walletClient.writeContract({
 				address: guardianAddress,
 				abi: GuardianAbi,
