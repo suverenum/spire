@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { parseUnits } from "viem";
-import { TransactionsIcon } from "@/components/icons";
+import { SendIcon, TransactionsIcon, TransferIcon } from "@/components/icons";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,124 +48,102 @@ function getComparableAmount(tx: GroupedTransaction): bigint {
 	return tx.amountIn;
 }
 
+const rowClass =
+	"grid grid-cols-[100px_1fr_120px_100px] gap-x-8 items-center border-b border-white/[0.06] py-4 transition-colors hover:bg-white/[0.02]";
+
 function TransactionRow({ tx }: { tx: GroupedTransaction }) {
-	const linkId =
-		tx.kind === "payment"
-			? tx.txHashes[0]
-			: tx.kind === "internalTransfer"
-				? tx.txHashes[0]
-				: tx.txHashes[0];
+	const linkId = tx.txHashes[0];
 
 	if (tx.kind === "payment") {
 		const isSent = tx.direction === "sent";
 		return (
-			<Link
-				href={`/transactions/${encodeURIComponent(linkId)}`}
-				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
-			>
-				<div
+			<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
+				<span className="text-sm text-muted-foreground">
+					{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
+				</span>
+				<span className="flex items-center gap-3">
+					<span
+						className={cn(
+							"flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+							isSent ? "bg-red-500/10" : "bg-green-500/10",
+						)}
+					>
+						<SendIcon
+							className={cn("h-4 w-4", isSent ? "text-red-400 rotate-180" : "text-green-400")}
+						/>
+					</span>
+					<span className="truncate text-sm font-medium text-foreground">
+						{isSent ? `To ${truncateAddress(tx.to)}` : `From ${truncateAddress(tx.from)}`}
+					</span>
+				</span>
+				<span
 					className={cn(
-						"flex h-10 w-10 items-center justify-center rounded-full",
-						isSent ? "bg-red-100" : "bg-green-100",
+						"text-right text-sm font-medium",
+						isSent ? "text-foreground" : "text-green-400",
 					)}
 				>
-					{isSent ? (
-						<ArrowUpRight className="h-5 w-5 text-red-600" />
-					) : (
-						<ArrowDownLeft className="h-5 w-5 text-green-600" />
-					)}
-				</div>
-				<div className="min-w-0 flex-1">
-					<p className="text-sm font-medium">
-						{isSent ? "Sent" : "Received"} {tx.token}
-					</p>
-					<p className="truncate text-xs text-muted-foreground">
-						{tx.accountName} &middot; {isSent ? "To" : "From"}:{" "}
-						{truncateAddress(isSent ? tx.to : tx.from)}
-					</p>
-				</div>
-				<div className="text-right">
-					<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
-						{isSent ? "-" : "+"}
-						{formatBalance(tx.amount, 6)} {tx.token}
-					</p>
-					<p className="text-xs text-muted-foreground">
-						{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
-					</p>
-				</div>
+					{isSent ? "-" : ""}
+					{formatBalance(tx.amount, 6)}
+				</span>
+				<span className="text-right text-sm text-muted-foreground">{tx.accountName}</span>
 			</Link>
 		);
 	}
 
 	if (tx.kind === "internalTransfer") {
 		return (
-			<Link
-				href={`/transactions/${encodeURIComponent(linkId)}`}
-				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
-			>
-				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-					<ArrowLeftRight className="h-5 w-5 text-blue-600" />
-				</div>
-				<div className="min-w-0 flex-1">
-					<p className="text-sm font-medium">Internal Transfer</p>
-					<p className="truncate text-xs text-muted-foreground">
+			<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
+				<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+				<span className="flex items-center gap-3">
+					<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
+						<TransferIcon className="h-4 w-4 text-blue-400" />
+					</span>
+					<span className="truncate text-sm font-medium text-foreground">
 						{tx.fromAccountName} &rarr; {tx.toAccountName}
-					</p>
-				</div>
-				<div className="text-right">
-					<p className="text-sm font-medium text-foreground">
-						{formatBalance(tx.amount, 6)} {tx.token}
-					</p>
-					<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
-				</div>
+					</span>
+				</span>
+				<span className="text-right text-sm font-medium text-foreground">
+					{formatBalance(tx.amount, 6)}
+				</span>
+				<span className="text-right text-sm text-muted-foreground">{tx.fromAccountName}</span>
 			</Link>
 		);
 	}
 
 	if (tx.kind === "fee") {
 		return (
-			<Link
-				href={`/transactions/${encodeURIComponent(linkId)}`}
-				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
-			>
-				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
-					<TransactionsIcon className="h-5 w-5 text-muted-foreground" />
-				</div>
-				<div className="min-w-0 flex-1">
-					<p className="text-sm font-medium">Network Fee</p>
-					<p className="truncate text-xs text-muted-foreground">{tx.accountName}</p>
-				</div>
-				<div className="text-right">
-					<p className="text-sm font-medium text-muted-foreground">
-						-{formatBalance(tx.amount, 6)} {tx.token}
-					</p>
-					<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
-				</div>
+			<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
+				<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+				<span className="flex items-center gap-3">
+					<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.06]">
+						<TransactionsIcon className="h-4 w-4 text-muted-foreground" />
+					</span>
+					<span className="truncate text-sm font-medium text-muted-foreground">Network Fee</span>
+				</span>
+				<span className="text-right text-sm font-medium text-muted-foreground">
+					-{formatBalance(tx.amount, 6)}
+				</span>
+				<span className="text-right text-sm text-muted-foreground">{tx.accountName}</span>
 			</Link>
 		);
 	}
 
 	// Swap
 	return (
-		<Link
-			href={`/transactions/${encodeURIComponent(linkId)}`}
-			className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
-		>
-			<div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-				<ArrowLeftRight className="h-5 w-5 text-purple-600" />
-			</div>
-			<div className="min-w-0 flex-1">
-				<p className="text-sm font-medium">Swap</p>
-				<p className="truncate text-xs text-muted-foreground">
-					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} ({tx.tokenOut})
-				</p>
-			</div>
-			<div className="text-right">
-				<p className="text-sm font-medium text-foreground">
-					{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
-				</p>
-				<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
-			</div>
+		<Link href={`/transactions/${encodeURIComponent(linkId)}`} className={rowClass}>
+			<span className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</span>
+			<span className="flex items-center gap-3">
+				<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-500/10">
+					<TransferIcon className="h-4 w-4 text-purple-400" />
+				</span>
+				<span className="truncate text-sm font-medium text-foreground">
+					{tx.tokenIn} &rarr; {tx.tokenOut}
+				</span>
+			</span>
+			<span className="text-right text-sm font-medium text-foreground">
+				{formatBalance(tx.amountIn, 6)}
+			</span>
+			<span className="text-right text-sm text-muted-foreground">{tx.fromAccountName}</span>
 		</Link>
 	);
 }
@@ -265,11 +243,11 @@ export function TransactionsContent({
 							className={cn(
 								"rounded-full px-3 py-1 text-xs font-medium transition-colors",
 								accountFilter === "all"
-									? "bg-primary text-white"
+									? "bg-white/[0.1] text-foreground"
 									: "bg-accent text-muted-foreground hover:bg-accent",
 							)}
 						>
-							All Agent Wallets
+							All
 						</button>
 						{accounts.map((a) => (
 							<button
@@ -279,7 +257,7 @@ export function TransactionsContent({
 								className={cn(
 									"rounded-full px-3 py-1 text-xs font-medium transition-colors",
 									accountFilter === a.id
-										? "bg-primary text-white"
+										? "bg-white/[0.1] text-foreground"
 										: "bg-accent text-muted-foreground hover:bg-accent",
 								)}
 							>
@@ -348,7 +326,13 @@ export function TransactionsContent({
 								No transactions found
 							</p>
 						)}
-						<div className="space-y-2">
+						<div>
+							<div className="grid grid-cols-[100px_1fr_120px_100px] gap-x-8 border-b border-white/[0.06] py-2 text-xs text-muted-foreground">
+								<span>Date</span>
+								<span>To/From</span>
+								<span className="text-right">Amount</span>
+								<span className="text-right">Account</span>
+							</div>
 							{filtered.map((tx) => (
 								<TransactionRow key={tx.groupId} tx={tx} />
 							))}

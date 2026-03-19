@@ -15,12 +15,17 @@ interface SidebarProps {
 	treasuryName: string;
 }
 
-const NAV_ITEMS = [
+const MAIN_NAV = [
 	{ href: "/dashboard", label: "Home", icon: HomeIcon },
 	{ href: "/transactions", label: "Transactions", icon: TransactionsIcon },
-	{ href: "/accounts", label: "Agent Wallets", icon: WalletIcon },
-	{ href: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
+
+const CASH_ACCOUNTS_NAV = [
+	{ href: "/cash-accounts", label: "Cash accounts", icon: WalletIcon },
+	{ href: "/accounts", label: "Agent wallets", icon: WalletIcon },
+] as const;
+
+const BOTTOM_NAV = [{ href: "/settings", label: "Settings", icon: SettingsIcon }] as const;
 
 export function Sidebar({ treasuryName }: SidebarProps) {
 	const pathname = usePathname();
@@ -76,29 +81,76 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 				<span className="truncate text-sm font-medium text-foreground">{treasuryName}</span>
 			</div>
 
-			<nav className="flex-1 space-y-0.5">
-				{NAV_ITEMS.map((item) => {
-					const isActive =
-						pathname === item.href ||
-						(item.href !== "/dashboard" && pathname.startsWith(item.href));
+			<nav className="flex-1">
+				<div className="space-y-0.5">
+					{MAIN_NAV.map((item) => {
+						const isActive =
+							pathname === item.href ||
+							(item.href !== "/dashboard" && pathname.startsWith(item.href));
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								onClick={() => setMobileOpen(false)}
+								className={cn(
+									"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
+									isActive
+										? "bg-white/[0.08] text-foreground"
+										: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+								)}
+							>
+								<item.icon className="h-4 w-4" />
+								{item.label}
+							</Link>
+						);
+					})}
+				</div>
 
-					return (
-						<Link
-							key={item.href}
-							href={item.href}
-							onClick={() => setMobileOpen(false)}
-							className={cn(
-								"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
-								isActive
-									? "bg-white/[0.08] text-foreground"
-									: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
-							)}
-						>
-							<item.icon className="h-4 w-4" />
-							{item.label}
-						</Link>
-					);
-				})}
+				<div className="mt-4 space-y-0.5">
+					<div className="space-y-0.5">
+						{CASH_ACCOUNTS_NAV.map((item) => {
+							const isActive = pathname.startsWith(item.href);
+							return (
+								<Link
+									key={item.href}
+									href={item.href}
+									onClick={() => setMobileOpen(false)}
+									className={cn(
+										"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
+										isActive
+											? "bg-white/[0.08] text-foreground"
+											: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+									)}
+								>
+									<item.icon className="h-4 w-4" />
+									{item.label}
+								</Link>
+							);
+						})}
+					</div>
+				</div>
+
+				<div className="mt-6 space-y-0.5">
+					{BOTTOM_NAV.map((item) => {
+						const isActive = pathname.startsWith(item.href);
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								onClick={() => setMobileOpen(false)}
+								className={cn(
+									"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
+									isActive
+										? "bg-white/[0.08] text-foreground"
+										: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
+								)}
+							>
+								<item.icon className="h-4 w-4" />
+								{item.label}
+							</Link>
+						);
+					})}
+				</div>
 			</nav>
 
 			<div className="mt-auto">

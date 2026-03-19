@@ -45,16 +45,18 @@ export function AccountCard({ account, onRename, onDelete }: AccountCardProps) {
 					<div>
 						<p className="text-sm font-medium text-foreground">{account.name}</p>
 						<p className="text-xs text-muted-foreground">{account.tokenSymbol}</p>
-						{isMultisig && config && (
-							<MultisigBadge ownerCount={config.owners.length} pendingCount={pendingTxs?.length} />
-						)}
 					</div>
 				</Link>
-				<AccountMenu
-					account={account}
-					onRename={() => onRename(account)}
-					onDelete={() => onDelete(account)}
-				/>
+				<div className="flex items-center gap-2">
+					{isMultisig && config && (
+						<MultisigBadge ownerCount={config.owners.length} pendingCount={pendingTxs?.length} />
+					)}
+					<AccountMenu
+						account={account}
+						onRename={() => onRename(account)}
+						onDelete={() => onDelete(account)}
+					/>
+				</div>
 			</div>
 			<Link href={`/accounts/${account.id}`}>
 				<p className="text-xl font-semibold">{account.balanceFormatted}</p>

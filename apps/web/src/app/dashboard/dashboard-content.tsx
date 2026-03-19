@@ -192,7 +192,7 @@ export function DashboardContent({
 
 				<div className="mb-6">
 					<div className="mb-3 flex items-center justify-between">
-						<h2 className="text-lg font-semibold">Agent Wallets</h2>
+						<h2 className="text-lg font-semibold">Agent wallets</h2>
 						<Link href="/accounts" className="text-sm text-muted-foreground hover:text-foreground">
 							View all &rarr;
 						</Link>

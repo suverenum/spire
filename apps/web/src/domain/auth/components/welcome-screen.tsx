@@ -68,9 +68,7 @@ export function WelcomeScreen() {
 						<Image src="/icon.svg" alt="Goldhord" width={62} height={62} priority />
 					</div>
 					<h1 className="text-2xl font-semibold">Goldhord</h1>
-					<p className="mt-2 text-sm text-muted-foreground">
-						Wallets for your AI agents. Secure, simple, controllable.
-					</p>
+					<p className="mt-2 text-sm text-muted-foreground">Home for your AI agent wallets</p>
 				</div>
 
 				{error && (

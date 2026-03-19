@@ -64,7 +64,7 @@ describe("Sidebar", () => {
 		render(<Sidebar treasuryName="Test" />);
 		expect(screen.getAllByText("Home")).toHaveLength(2); // mobile + desktop
 		expect(screen.getAllByText("Transactions")).toHaveLength(2);
-		expect(screen.getAllByText("Agent Wallets")).toHaveLength(2);
+		expect(screen.getAllByText("Agent wallets")).toHaveLength(2);
 		expect(screen.getAllByText("Settings")).toHaveLength(2);
 	});
 
