@@ -43,7 +43,7 @@ export interface AccountWithBalance extends AccountRecord {
 
 interface BaseGroupedTransaction {
 	groupId: string;
-	kind: "payment" | "internalTransfer" | "swap" | "fee";
+	kind: "payment" | "internalTransfer" | "swap" | "fee" | "bridgeDeposit";
 	status: "pending" | "confirmed" | "failed";
 	timestamp: Date;
 	visibleAccountIds: string[];
@@ -102,8 +102,22 @@ export interface FeeTransaction extends BaseGroupedTransaction {
 	token: string;
 }
 
+export interface BridgeDepositTransaction extends BaseGroupedTransaction {
+	kind: "bridgeDeposit";
+	txHashes: `0x${string}`[];
+	direction: "received";
+	accountId: string;
+	accountName: string;
+	sourceChain: string;
+	amount: bigint;
+	token: string;
+	bridgeStatus: "pending" | "bridging" | "completed" | "failed";
+	bridgeFee?: bigint;
+}
+
 export type GroupedTransaction =
 	| PaymentTransaction
 	| InternalTransferTransaction
 	| SwapTransaction
-	| FeeTransaction;
+	| FeeTransaction
+	| BridgeDepositTransaction;

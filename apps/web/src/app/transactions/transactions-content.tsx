@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Receipt, Search } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Globe, Receipt, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAllTransactions } from "@/domain/accounts/hooks/use-all-transactions";
 import { getAccounts } from "@/domain/accounts/queries/get-accounts";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
+import { BridgeStatusBadge } from "@/domain/bridge/components/bridge-status-badge";
 import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord, GroupedTransaction } from "@/lib/tempo/types";
 import { cn, formatBalance, formatDate, truncateAddress } from "@/lib/utils";
@@ -34,6 +35,7 @@ function matchesAddressFilter(tx: GroupedTransaction, address: string): boolean 
 		);
 	}
 	if (tx.kind === "fee") return false;
+	if (tx.kind === "bridgeDeposit") return false;
 	return (
 		tx.sourceWalletAddress.toLowerCase().includes(lower) ||
 		tx.destinationWalletAddress.toLowerCase().includes(lower)
@@ -44,16 +46,12 @@ function getComparableAmount(tx: GroupedTransaction): bigint {
 	if (tx.kind === "payment") return tx.amount;
 	if (tx.kind === "internalTransfer") return tx.amount;
 	if (tx.kind === "fee") return tx.amount;
+	if (tx.kind === "bridgeDeposit") return tx.amount;
 	return tx.amountIn;
 }
 
 function TransactionRow({ tx }: { tx: GroupedTransaction }) {
-	const linkId =
-		tx.kind === "payment"
-			? tx.txHashes[0]
-			: tx.kind === "internalTransfer"
-				? tx.txHashes[0]
-				: tx.txHashes[0];
+	const linkId = tx.kind === "bridgeDeposit" ? tx.groupId : tx.txHashes[0];
 
 	if (tx.kind === "payment") {
 		const isSent = tx.direction === "sent";
@@ -144,6 +142,32 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 		);
 	}
 
+	if (tx.kind === "bridgeDeposit") {
+		const chainLabel = tx.sourceChain === "ethereum" ? "Ethereum" : "Solana";
+		return (
+			<Link
+				href={`/transactions/${encodeURIComponent(linkId)}`}
+				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			>
+				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+					<Globe className="h-5 w-5 text-emerald-600" />
+				</div>
+				<div className="min-w-0 flex-1">
+					<p className="text-sm font-medium">Bridge Deposit</p>
+					<p className="truncate text-xs text-gray-500">
+						{tx.accountName} &middot; From {chainLabel} via Stargate
+					</p>
+				</div>
+				<div className="text-right">
+					<p className="text-sm font-medium text-green-600">
+						+{formatBalance(tx.amount, 6)} {tx.token}
+					</p>
+					<BridgeStatusBadge status={tx.bridgeStatus} />
+				</div>
+			</Link>
+		);
+	}
+
 	// Swap
 	return (
 		<Link
@@ -222,6 +246,8 @@ export function TransactionsContent({
 		.filter((tx) => accountFilter === "all" || tx.visibleAccountIds.includes(accountFilter))
 		.filter((tx) => {
 			if (tab === "all") return true;
+			// Bridge deposits always show in "received" tab
+			if (tx.kind === "bridgeDeposit") return tab === "received";
 			// Sent/Received tabs only apply to external payments
 			if (tx.kind !== "payment") return false;
 			return tx.direction === tab;

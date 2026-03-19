@@ -8,6 +8,7 @@ import { toast } from "@/components/ui/toast";
 import { useAllTransactions } from "@/domain/accounts/hooks/use-all-transactions";
 import { getAccounts } from "@/domain/accounts/queries/get-accounts";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
+import { BridgeStatusBadge } from "@/domain/bridge/components/bridge-status-badge";
 import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord, GroupedTransaction } from "@/lib/tempo/types";
 import { formatBalance, formatDate, truncateAddress } from "@/lib/utils";
@@ -170,6 +171,47 @@ function SwapDetail({ tx }: { tx: GroupedTransaction & { kind: "swap" } }) {
 	);
 }
 
+function BridgeDepositDetail({ tx }: { tx: GroupedTransaction & { kind: "bridgeDeposit" } }) {
+	const chainLabel = tx.sourceChain === "ethereum" ? "Ethereum" : "Solana";
+	return (
+		<Card>
+			<div className="divide-y divide-gray-100">
+				<div className="flex items-center justify-between py-2">
+					<p className="text-sm text-gray-500">Type</p>
+					<p className="text-sm font-medium">Bridge Deposit</p>
+				</div>
+				<div className="flex items-center justify-between py-2">
+					<p className="text-sm text-gray-500">Source Chain</p>
+					<p className="text-sm">{chainLabel}</p>
+				</div>
+				<div className="flex items-center justify-between py-2">
+					<p className="text-sm text-gray-500">Account</p>
+					<p className="text-sm">{tx.accountName}</p>
+				</div>
+				<div className="flex items-center justify-between py-2">
+					<p className="text-sm text-gray-500">Amount</p>
+					<p className="text-sm font-medium">
+						{formatBalance(tx.amount, 6)} {tx.token}
+					</p>
+				</div>
+				<div className="flex items-center justify-between py-2">
+					<p className="text-sm text-gray-500">Bridge Status</p>
+					<BridgeStatusBadge status={tx.bridgeStatus} />
+				</div>
+				<div className="flex items-center justify-between py-2">
+					<p className="text-sm text-gray-500">Date</p>
+					<p className="text-sm">{formatDate(tx.timestamp)}</p>
+				</div>
+				{tx.txHashes.length > 0 && <CopyableField label="Tempo Tx Hash" value={tx.txHashes[0]} />}
+				<div className="flex items-center justify-between py-2">
+					<p className="text-sm text-gray-500">Bridge</p>
+					<p className="text-sm">Stargate (LayerZero)</p>
+				</div>
+			</div>
+		</Card>
+	);
+}
+
 export function TransactionDetailContent({
 	transactionId,
 	treasuryName,
@@ -204,6 +246,7 @@ export function TransactionDetailContent({
 						{tx.kind === "payment" && <PaymentDetail tx={tx} />}
 						{tx.kind === "internalTransfer" && <InternalTransferDetail tx={tx} />}
 						{tx.kind === "swap" && <SwapDetail tx={tx} />}
+						{tx.kind === "bridgeDeposit" && <BridgeDepositDetail tx={tx} />}
 					</>
 				) : (
 					<p className="text-gray-500">Transaction not found.</p>

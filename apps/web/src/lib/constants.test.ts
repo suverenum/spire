@@ -100,4 +100,8 @@ describe("CACHE_KEYS", () => {
 			"0xtoken",
 		]);
 	});
+
+	it("generates bridgeDeposits key", () => {
+		expect(CACHE_KEYS.bridgeDeposits("acc-1")).toEqual(["bridge-deposits", "acc-1"]);
+	});
 });

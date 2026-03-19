@@ -87,6 +87,31 @@ export const multisigTransactions = pgTable(
 	],
 );
 
+// ─── Bridge Tables ─────────────────────────────────────────────────
+
+export const bridgeDeposits = pgTable(
+	"bridge_deposits",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		accountId: uuid("account_id")
+			.references(() => accounts.id, { onDelete: "cascade" })
+			.notNull(),
+		sourceChain: text("source_chain").notNull(), // "ethereum" | "solana"
+		amount: text("amount").notNull(), // USDC amount as decimal string
+		status: text("status").notNull().default("pending"), // "pending" | "bridging" | "completed" | "failed"
+		sourceTxHash: text("source_tx_hash").notNull(),
+		tempoTxHash: text("tempo_tx_hash"),
+		lzMessageHash: text("lz_message_hash"),
+		bridgeFee: text("bridge_fee"),
+		initiatedAt: timestamp("initiated_at").defaultNow().notNull(),
+		completedAt: timestamp("completed_at"),
+	},
+	(table) => [
+		uniqueIndex("bridge_deposits_source_tx_hash_idx").on(table.sourceTxHash),
+		index("bridge_deposits_account_status_idx").on(table.accountId, table.status),
+	],
+);
+
 export const multisigConfirmations = pgTable(
 	"multisig_confirmations",
 	{

@@ -43,4 +43,5 @@ export const CACHE_KEYS = {
 		["accountBalance", walletAddress, tokenAddress] as const,
 	multisigConfig: (accountId: string) => ["multisig-config", accountId] as const,
 	pendingTransactions: (accountId: string) => ["pending-transactions", accountId] as const,
+	bridgeDeposits: (accountId: string) => ["bridge-deposits", accountId] as const,
 } as const;

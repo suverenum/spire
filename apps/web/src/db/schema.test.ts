@@ -2,6 +2,7 @@ import { getTableName } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import {
 	accounts,
+	bridgeDeposits,
 	multisigConfigs,
 	multisigConfirmations,
 	multisigTransactions,
@@ -110,5 +111,26 @@ describe("multisigConfirmations schema", () => {
 		expect(columnNames).toContain("multisigTransactionId");
 		expect(columnNames).toContain("signerAddress");
 		expect(columnNames).toContain("confirmedAt");
+	});
+});
+
+describe("bridgeDeposits schema", () => {
+	it("has the expected table name", () => {
+		expect(getTableName(bridgeDeposits)).toBe("bridge_deposits");
+	});
+
+	it("has all required columns", () => {
+		const columnNames = Object.keys(bridgeDeposits);
+		expect(columnNames).toContain("id");
+		expect(columnNames).toContain("accountId");
+		expect(columnNames).toContain("sourceChain");
+		expect(columnNames).toContain("amount");
+		expect(columnNames).toContain("status");
+		expect(columnNames).toContain("sourceTxHash");
+		expect(columnNames).toContain("tempoTxHash");
+		expect(columnNames).toContain("lzMessageHash");
+		expect(columnNames).toContain("bridgeFee");
+		expect(columnNames).toContain("initiatedAt");
+		expect(columnNames).toContain("completedAt");
 	});
 });

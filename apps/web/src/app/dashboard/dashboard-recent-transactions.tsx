@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Receipt } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Globe, Receipt } from "lucide-react";
 import Link from "next/link";
+import { BridgeStatusBadge } from "@/domain/bridge/components/bridge-status-badge";
 import type { GroupedTransaction } from "@/lib/tempo/types";
 import { cn, formatBalance, formatDate, truncateAddress } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ interface DashboardRecentTransactionsProps {
 }
 
 function getLinkId(tx: GroupedTransaction): string {
+	if (tx.kind === "bridgeDeposit") return tx.groupId;
 	return tx.txHashes[0];
 }
 
@@ -99,6 +101,32 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 						-{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+				</div>
+			</Link>
+		);
+	}
+
+	if (tx.kind === "bridgeDeposit") {
+		const chainLabel = tx.sourceChain === "ethereum" ? "Ethereum" : "Solana";
+		return (
+			<Link
+				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
+				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			>
+				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+					<Globe className="h-5 w-5 text-emerald-600" />
+				</div>
+				<div className="min-w-0 flex-1">
+					<p className="text-sm font-medium">Bridge Deposit</p>
+					<p className="truncate text-xs text-gray-500">
+						{tx.accountName} &middot; From {chainLabel} via Stargate
+					</p>
+				</div>
+				<div className="text-right">
+					<p className="text-sm font-medium text-green-600">
+						+{formatBalance(tx.amount, 6)} {tx.token}
+					</p>
+					<BridgeStatusBadge status={tx.bridgeStatus} />
 				</div>
 			</Link>
 		);

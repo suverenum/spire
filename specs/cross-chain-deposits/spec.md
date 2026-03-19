@@ -539,17 +539,17 @@ Show active bridge deposits at the top of the dashboard or in the transaction fe
 
 ### Feature-Specific
 
-- [ ] Receive sheet has chain selector (Tempo, Ethereum, Solana)
-- [ ] Tempo selected: existing QR code + address view (unchanged)
-- [ ] Ethereum/Solana selected: Stargate widget loads with instructions for USDC accounts only
-- [ ] Non-USDC accounts remain Tempo-only for receive
-- [ ] Destination wallet address shown prominently above widget with copy button
-- [ ] Tracking form captures source tx hash and amount after widget submission
-- [ ] `bridge_deposits` table created with migration
-- [ ] Bridge deposits tracked in DB (create from explicit tracking form, update from server-side reconciliation)
-- [ ] LayerZero Scan API polled by a server-side reconciler for bridge message status
-- [ ] Bridge deposits appear across dashboard, account detail, transactions list, and transaction detail with source chain label
-- [ ] In-progress bridges show animated "Bridging..." indicator
-- [ ] Toast notification on bridge completion
-- [ ] WebSocket detects incoming USDC (existing behavior, no change needed)
-- [ ] No bridge-related code runs when Tempo is selected (zero overhead for native deposits)
+- [x] Receive sheet has chain selector (Tempo, Ethereum, Solana)
+- [x] Tempo selected: existing QR code + address view (unchanged)
+- [x] Ethereum/Solana selected: Stargate widget loads with instructions for USDC accounts only
+- [x] Non-USDC accounts remain Tempo-only for receive
+- [x] Destination wallet address shown prominently above widget with copy button
+- [x] Tracking form captures source tx hash and amount after widget submission
+- [x] `bridge_deposits` table created with migration
+- [x] Bridge deposits tracked in DB (create from explicit tracking form, update from server-side reconciliation)
+- [x] LayerZero Scan API polled by a server-side reconciler for bridge message status
+- [x] Bridge deposits appear across dashboard, account detail, transactions list, and transaction detail with source chain label
+- [x] In-progress bridges show animated "Bridging..." indicator
+- [x] Toast notification on bridge completion
+- [x] WebSocket detects incoming USDC (existing behavior, no change needed)
+- [x] No bridge-related code runs when Tempo is selected (zero overhead for native deposits)
