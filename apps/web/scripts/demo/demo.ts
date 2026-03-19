@@ -64,7 +64,7 @@ const EXPLORER = "https://explore.moderato.tempo.xyz";
 const CHAIN_ID = 42431;
 const PATHUSD = "0x20c0000000000000000000000000000000000000" as const;
 
-const GUARDIAN_FACTORY = "0xeffb75d8e4e4622c523bd0b4f2b3ca9e3954b131" as const;
+const GUARDIAN_FACTORY = "0x8f2958bC87f12c4556fb5a43A03eE30B1EEca9A8" as const;
 
 const MAX_PER_TX = 2_000_000n; // $2
 const DAILY_LIMIT = 10_000_000n; // $10
@@ -77,10 +77,13 @@ const GuardianFactoryAbi = parseAbi([
 
 const GuardianAbi = parseAbi([
 	"function pay(address token, address to, uint256 amount) external",
+	"function proposePay(address token, address to, uint256 amount) external returns (uint256 proposalId, bool executed)",
+	"function approvePay(uint256 proposalId) external",
 	"function addRecipient(address r) external",
 	"function addToken(address t) external",
 	"function spentToday() external view returns (uint256)",
 	"function totalSpent() external view returns (uint256)",
+	"function proposalCount() external view returns (uint256)",
 ]);
 
 const Tip20Abi = parseAbi([
@@ -366,6 +369,53 @@ async function main() {
 		ok("Agent cannot exceed spending limits — enforced ON-CHAIN");
 	}
 
+	// ─── Step 6: Approval flow — agent proposes, owner approves ──
+	step(6, "Agent proposes over-limit payment → owner approves on-chain");
+
+	info("Agent calls proposePay($5) — exceeds $2 per-tx cap...");
+	const proposeTx = await agentWallet.writeContract({
+		address: guardianAddr,
+		abi: GuardianAbi,
+		functionName: "proposePay",
+		args: [PATHUSD, vendorAccount.address, 5_000_000n],
+	});
+	await waitForTransactionReceipt(publicClient, { hash: proposeTx });
+
+	const proposalCount = await readContract(publicClient, {
+		address: guardianAddr,
+		abi: GuardianAbi,
+		functionName: "proposalCount",
+	});
+	ok(`Proposal #${proposalCount} created on-chain (status: pending)`);
+	info(`Instead of reverting, the Guardian queues it for owner approval`);
+	info(`Explorer: ${EXPLORER}/tx/${proposeTx}`);
+
+	// Owner approves
+	info("");
+	info("Owner reviews and approves the proposal...");
+	const approveTx = await ownerWallet.writeContract({
+		address: guardianAddr,
+		abi: GuardianAbi,
+		functionName: "approvePay",
+		args: [proposalCount],
+	});
+	await waitForTransactionReceipt(publicClient, { hash: approveTx });
+	ok(`${GREEN}Owner APPROVED${RESET} → $5.00 payment executed on-chain`);
+	info(`Explorer: ${EXPLORER}/tx/${approveTx}`);
+
+	// Show final spending
+	const finalSpent = await readContract(publicClient, {
+		address: guardianAddr,
+		abi: GuardianAbi,
+		functionName: "totalSpent",
+	});
+	spending(
+		fmt(await readContract(publicClient, { address: guardianAddr, abi: GuardianAbi, functionName: "spentToday" })),
+		fmt(DAILY_LIMIT),
+		fmt(finalSpent),
+		fmt(SPENDING_CAP),
+	);
+
 	// ─── Summary ──────────────────────────────────────────────────
 	log(`\n${BOLD}${GREEN}╔══════════════════════════════════════════════════════╗${RESET}`);
 	log(`${BOLD}${GREEN}║  Demo Complete!                                      ║${RESET}`);
@@ -375,9 +425,11 @@ async function main() {
 	ok("Agent paid local MPP server through Guardian");
 	ok("Guardian blocked unauthorized vendor on-chain");
 	ok("Guardian blocked over-limit payment on-chain");
+	ok("Agent proposed over-limit payment → owner approved on-chain");
 	log("");
 	log(`${BOLD}All rules enforced ON-CHAIN. Even a compromised agent key${RESET}`);
 	log(`${BOLD}can only spend within the Guardian's rules.${RESET}`);
+	log(`${BOLD}Over-limit payments need owner approval — not blocked, just governed.${RESET}`);
 	log("");
 	info(`Guardian: ${guardianAddr}`);
 	info(`Explorer: ${EXPLORER}/address/${guardianAddr}`);
