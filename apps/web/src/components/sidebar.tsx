@@ -43,11 +43,40 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 
 	const navContent = (
 		<>
-			<div className="mb-8 px-2">
-				<h2 className="truncate text-lg font-semibold text-foreground">{treasuryName}</h2>
+			<div className="mb-6 flex items-center gap-2 px-2">
+				<svg
+					aria-hidden="true"
+					className="h-6 w-6 shrink-0"
+					viewBox="0 0 62 62"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<defs>
+						<linearGradient id="hex-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+							<stop offset="0%" stopColor="#8B6FFF" />
+							<stop offset="100%" stopColor="#2DD4BF" />
+						</linearGradient>
+					</defs>
+					<path
+						d="M24,7 L46,20 L46,46 L24,59 L2,46 L2,20 Z"
+						stroke="#8B6FFF"
+						strokeWidth="2"
+						strokeLinejoin="round"
+						fill="none"
+						opacity="0.35"
+					/>
+					<path
+						d="M36,4 L58,17 L58,43 L36,56 L14,43 L14,17 Z"
+						stroke="url(#hex-sidebar)"
+						strokeWidth="2.8"
+						strokeLinejoin="round"
+						fill="none"
+					/>
+				</svg>
+				<span className="truncate text-sm font-medium text-foreground">{treasuryName}</span>
 			</div>
 
-			<nav className="flex-1 space-y-1">
+			<nav className="flex-1 space-y-0.5">
 				{NAV_ITEMS.map((item) => {
 					const isActive =
 						pathname === item.href ||
@@ -59,27 +88,27 @@ export function Sidebar({ treasuryName }: SidebarProps) {
 							href={item.href}
 							onClick={() => setMobileOpen(false)}
 							className={cn(
-								"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+								"flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium transition-colors",
 								isActive
-									? "bg-accent text-foreground"
-									: "text-muted-foreground hover:bg-accent hover:text-foreground",
+									? "bg-white/[0.08] text-foreground"
+									: "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
 							)}
 						>
-							<item.icon className="h-5 w-5" />
+							<item.icon className="h-4 w-4" />
 							{item.label}
 						</Link>
 					);
 				})}
 			</nav>
 
-			<div className="mt-auto pt-4">
+			<div className="mt-auto">
 				<button
 					type="button"
 					onClick={handleLogout}
 					disabled={isLoggingOut}
-					className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+					className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground disabled:opacity-50"
 				>
-					<LogOutIcon className="h-5 w-5" />
+					<LogOutIcon className="h-4 w-4" />
 					{isLoggingOut ? "Logging out..." : "Logout"}
 				</button>
 			</div>

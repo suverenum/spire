@@ -67,23 +67,23 @@ describe("WelcomeScreen", () => {
 
 	it("renders unlock button", () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		expect(screen.getByRole("button", { name: /Unlock with Passkey/ })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /Login with Passkey/ })).toBeInTheDocument();
 	});
 
 	it("renders create treasury button", () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		expect(screen.getByRole("button", { name: /Create Treasury/ })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: /Sign up/ })).toBeInTheDocument();
 	});
 
 	it("navigates to /create on create button click", () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		fireEvent.click(screen.getByRole("button", { name: /Create Treasury/ }));
+		fireEvent.click(screen.getByRole("button", { name: /Sign up/ }));
 		expect(mockPush).toHaveBeenCalledWith("/create");
 	});
 
 	it("calls loginAction with address on unlock and navigates", async () => {
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
+		const button = screen.getByRole("button", { name: /Login with Passkey/ });
 
 		await act(async () => {
 			fireEvent.click(button);
@@ -99,7 +99,7 @@ describe("WelcomeScreen", () => {
 			error: "No treasury found for this passkey",
 		});
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
+		const button = screen.getByRole("button", { name: /Login with Passkey/ });
 
 		await act(async () => {
 			fireEvent.click(button);
@@ -111,7 +111,7 @@ describe("WelcomeScreen", () => {
 	it("shows error when passkey connection fails", async () => {
 		mockConnectAsync.mockRejectedValue(new Error("Passkey denied"));
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
+		const button = screen.getByRole("button", { name: /Login with Passkey/ });
 
 		await act(async () => {
 			fireEvent.click(button);
@@ -123,7 +123,7 @@ describe("WelcomeScreen", () => {
 	it("shows error when no account returned from passkey", async () => {
 		mockConnectAsync.mockResolvedValue({ accounts: [] });
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
+		const button = screen.getByRole("button", { name: /Login with Passkey/ });
 
 		await act(async () => {
 			fireEvent.click(button);
@@ -138,7 +138,7 @@ describe("WelcomeScreen", () => {
 		});
 
 		render(<WelcomeScreen />, { wrapper: Wrapper });
-		const button = screen.getByRole("button", { name: /Unlock with Passkey/ });
+		const button = screen.getByRole("button", { name: /Login with Passkey/ });
 
 		await act(async () => {
 			fireEvent.click(button);

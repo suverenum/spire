@@ -1,11 +1,11 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Fingerprint, Plus } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useConnect, useDisconnect } from "wagmi";
-import { Button } from "@/components/ui/button";
+import { PasskeyIcon } from "@/components/icons";
 import { fetchBalancesClient } from "@/domain/payments/hooks/use-balances";
 import { fetchTransactionsClient } from "@/domain/payments/hooks/use-transactions";
 import { CACHE_KEYS } from "@/lib/constants";
@@ -61,15 +61,15 @@ export function WelcomeScreen() {
 	}
 
 	return (
-		<div className="flex min-h-screen flex-col items-center justify-center bg-background">
-			<div className="w-full max-w-sm text-center">
-				<div className="mb-6">
-					<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary">
-						<Fingerprint className="h-10 w-10 text-white" />
+		<div className="flex min-h-screen flex-col items-center justify-center bg-[rgb(10,10,10)]">
+			<div className="w-full max-w-[240px] text-center">
+				<div className="mb-8">
+					<div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center">
+						<Image src="/icon.svg" alt="Goldhord" width={62} height={62} priority />
 					</div>
 					<h1 className="text-2xl font-semibold">Goldhord</h1>
-					<p className="mt-1 text-sm text-muted-foreground">
-						Treasury management on Tempo blockchain
+					<p className="mt-2 text-sm text-muted-foreground">
+						Wallets for your AI agents. Secure, simple, controllable.
 					</p>
 				</div>
 
@@ -79,22 +79,27 @@ export function WelcomeScreen() {
 					</p>
 				)}
 
-				<div className="space-y-3">
-					<Button onClick={handleUnlock} disabled={isPending} size="lg" className="w-full">
-						<Fingerprint className="h-5 w-5" />
-						{isPending ? "Authenticating..." : "Unlock with Passkey"}
-					</Button>
+				<div className="flex flex-col gap-3">
+					<button
+						type="button"
+						onClick={handleUnlock}
+						disabled={isPending}
+						className="w-full cursor-pointer rounded-lg bg-primary px-4 py-2.5 text-[13px] font-medium text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
+					>
+						<span className="flex items-center justify-center gap-2">
+							<PasskeyIcon className="h-5 w-5" />
+							{isPending ? "Authenticating..." : "Login with Passkey"}
+						</span>
+					</button>
 
-					<Button
-						variant="outline"
-						size="lg"
-						className="w-full"
+					<button
+						type="button"
 						onClick={() => router.push("/create")}
 						disabled={isPending}
+						className="w-full cursor-pointer rounded-lg bg-[rgb(28,28,29)] px-4 py-2.5 text-[13px] font-medium text-white/80 transition-all hover:opacity-80 disabled:opacity-50"
 					>
-						<Plus className="h-5 w-5" />
-						Create Treasury
-					</Button>
+						Sign up
+					</button>
 				</div>
 			</div>
 		</div>

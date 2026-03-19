@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bot, Plus } from "lucide-react";
+import { Bot } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PlusIcon } from "@/components/icons";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { AccountGrid } from "@/domain/accounts/components/account-grid";
@@ -60,7 +61,7 @@ export function AccountsContent({
 							Agent Account
 						</Button>
 						<Button onClick={() => setCreateOpen(true)}>
-							<Plus className="h-4 w-4" />
+							<PlusIcon className="h-4 w-4" />
 							Create Account
 						</Button>
 					</div>

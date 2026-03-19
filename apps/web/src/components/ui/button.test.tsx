@@ -15,25 +15,25 @@ describe("Button", () => {
 	it("renders outline variant", () => {
 		render(<Button variant="outline">Outline</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("border");
+		expect(button.className).toContain("bg-[rgb(28,28,29)]");
 	});
 
 	it("renders small size", () => {
 		render(<Button size="sm">Small</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("h-8");
+		expect(button.className).toContain("text-xs");
 	});
 
 	it("renders large size", () => {
 		render(<Button size="lg">Large</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("h-12");
+		expect(button.className).toContain("px-2.5");
 	});
 
 	it("renders icon size", () => {
 		render(<Button size="icon">X</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("w-10");
+		expect(button.className).toContain("p-1.5");
 	});
 
 	it("applies disabled state", () => {

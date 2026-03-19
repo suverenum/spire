@@ -1,7 +1,7 @@
 "use client";
 
-import { Plus } from "lucide-react";
 import { useState } from "react";
+import { PlusIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
@@ -94,7 +94,7 @@ export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFo
 					className="w-full"
 					size="lg"
 				>
-					<Plus className="h-4 w-4" />
+					<PlusIcon className="h-4 w-4" />
 					{createMutation.isPending ? "Creating..." : "Create Account"}
 				</Button>
 			</div>

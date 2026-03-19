@@ -35,7 +35,7 @@ export function AccountCard({ account, onRename, onDelete }: AccountCardProps) {
 	return (
 		<div
 			data-testid="account-card"
-			className="relative rounded-xl border border-border bg-muted p-4 transition-shadow hover:shadow-md"
+			className="relative rounded-lg border border-white/[0.06] bg-[lch(7.67_0.75_272)] p-4 transition-colors hover:bg-white/[0.04]"
 		>
 			<div className="mb-3 flex items-start justify-between">
 				<Link href={`/accounts/${account.id}`} className="flex items-center gap-2">

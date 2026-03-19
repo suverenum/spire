@@ -78,7 +78,7 @@ describe("Sidebar", () => {
 		render(<Sidebar treasuryName="Test" />);
 		const links = screen.getAllByText("Transactions");
 		// At least one should have the active class
-		expect(links.some((link) => link.closest("a")?.className.includes("bg-accent"))).toBe(true);
+		expect(links.some((link) => link.closest("a")?.className.includes("bg-white"))).toBe(true);
 	});
 
 	it("opens mobile menu on hamburger click", async () => {
