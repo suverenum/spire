@@ -192,13 +192,32 @@ export function DashboardContent({
 
 				<div className="mb-6">
 					<div className="mb-3 flex items-center justify-between">
-						<h2 className="text-lg font-semibold">Agent wallets</h2>
-						<Link href="/accounts" className="text-muted-foreground hover:text-foreground text-sm">
+						<h2 className="text-lg font-semibold">Cash accounts</h2>
+						<Link
+							href="/cash-accounts"
+							className="text-muted-foreground hover:text-foreground text-sm"
+						>
 							View all &rarr;
 						</Link>
 					</div>
 					<AccountGrid
-						accounts={accountsWithBalances}
+						accounts={accountsWithBalances.filter((a) => a.walletType === "eoa")}
+						maxItems={4}
+						showViewAll
+						onRename={setRenameAccount}
+						onDelete={setDeleteAccount}
+					/>
+				</div>
+
+				<div className="mb-6">
+					<div className="mb-3 flex items-center justify-between">
+						<h2 className="text-lg font-semibold">Agent wallets</h2>
+						<Link href="/agents" className="text-muted-foreground hover:text-foreground text-sm">
+							View all &rarr;
+						</Link>
+					</div>
+					<AccountGrid
+						accounts={accountsWithBalances.filter((a) => a.walletType === "guardian")}
 						maxItems={4}
 						showViewAll
 						onRename={setRenameAccount}
