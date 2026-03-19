@@ -18,7 +18,7 @@ function TransactionRow({ tx, address }: { tx: Payment; address: string }) {
 	return (
 		<Link
 			href={`/transactions/${encodeURIComponent(tx.id)}`}
-			className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 		>
 			<div
 				className={cn(
@@ -36,17 +36,17 @@ function TransactionRow({ tx, address }: { tx: Payment; address: string }) {
 				<p className="text-sm font-medium">
 					{isSent ? "Sent" : "Received"} {tx.token}
 				</p>
-				<p className="truncate text-xs text-gray-500">
+				<p className="truncate text-xs text-muted-foreground">
 					{isSent ? "To" : "From"}: {truncateAddress(counterparty)}
 				</p>
-				{tx.memo && <p className="truncate text-xs text-gray-400">{tx.memo}</p>}
+				{tx.memo && <p className="truncate text-xs text-muted-foreground">{tx.memo}</p>}
 			</div>
 			<div className="text-right">
 				<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
 					{isSent ? "-" : "+"}
 					{formatBalance(tx.amount, 6)} {tx.token}
 				</p>
-				<p className="text-xs text-gray-400">
+				<p className="text-xs text-muted-foreground">
 					{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
 				</p>
 			</div>
@@ -66,8 +66,10 @@ export function RecentTransactions({ address }: RecentTransactionsProps) {
 	if (items.length === 0) {
 		return (
 			<div className="py-12 text-center">
-				<p className="text-gray-500">No transactions yet</p>
-				<p className="mt-1 text-sm text-gray-400">Send or receive a payment to get started.</p>
+				<p className="text-muted-foreground">No transactions yet</p>
+				<p className="mt-1 text-sm text-muted-foreground">
+					Send or receive a payment to get started.
+				</p>
 			</div>
 		);
 	}
@@ -78,7 +80,7 @@ export function RecentTransactions({ address }: RecentTransactionsProps) {
 		<div>
 			<div className="mb-3 flex items-center justify-between">
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
-				<Link href="/transactions" className="text-sm text-gray-500 hover:text-gray-700">
+				<Link href="/transactions" className="text-sm text-muted-foreground hover:text-foreground">
 					View all &rarr;
 				</Link>
 			</div>

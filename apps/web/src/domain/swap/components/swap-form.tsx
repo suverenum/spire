@@ -101,7 +101,7 @@ export function SwapForm({ accounts, treasuryId }: SwapFormProps) {
 			/>
 
 			<div className="flex justify-center">
-				<ArrowLeftRight className="h-5 w-5 text-gray-400" />
+				<ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
 			</div>
 
 			<AccountSelector

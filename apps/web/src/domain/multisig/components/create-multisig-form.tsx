@@ -105,15 +105,15 @@ export function CreateMultisigForm({
 					/>
 				</div>
 
-				<p className="text-sm text-gray-500">Token: {ACCOUNT_TOKENS[0].name}</p>
+				<p className="text-sm text-muted-foreground">Token: {ACCOUNT_TOKENS[0].name}</p>
 
-				<div className="text-sm text-gray-500">
+				<div className="text-sm text-muted-foreground">
 					<p>Signers:</p>
 					<div className="mt-1 space-y-1">
-						<div className="rounded-md bg-gray-50 px-3 py-2 font-mono text-xs">
+						<div className="rounded-md bg-background px-3 py-2 font-mono text-xs">
 							{adminAddress.slice(0, 6)}...{adminAddress.slice(-4)} (you)
 						</div>
-						<div className="rounded-md bg-gray-50 px-3 py-2 font-mono text-xs">
+						<div className="rounded-md bg-background px-3 py-2 font-mono text-xs">
 							Auto-generated agent key
 						</div>
 					</div>

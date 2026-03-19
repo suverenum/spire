@@ -1,11 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Receipt, Search } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { parseUnits } from "viem";
+import { TransactionsIcon } from "@/components/icons";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -60,7 +61,7 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(linkId)}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 			>
 				<div
 					className={cn(
@@ -78,7 +79,7 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 					<p className="text-sm font-medium">
 						{isSent ? "Sent" : "Received"} {tx.token}
 					</p>
-					<p className="truncate text-xs text-gray-500">
+					<p className="truncate text-xs text-muted-foreground">
 						{tx.accountName} &middot; {isSent ? "To" : "From"}:{" "}
 						{truncateAddress(isSent ? tx.to : tx.from)}
 					</p>
@@ -88,7 +89,7 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 						{isSent ? "-" : "+"}
 						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
-					<p className="text-xs text-gray-400">
+					<p className="text-xs text-muted-foreground">
 						{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
 					</p>
 				</div>
@@ -100,22 +101,22 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(linkId)}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 			>
 				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
 					<ArrowLeftRight className="h-5 w-5 text-blue-600" />
 				</div>
 				<div className="min-w-0 flex-1">
 					<p className="text-sm font-medium">Internal Transfer</p>
-					<p className="truncate text-xs text-gray-500">
+					<p className="truncate text-xs text-muted-foreground">
 						{tx.fromAccountName} &rarr; {tx.toAccountName}
 					</p>
 				</div>
 				<div className="text-right">
-					<p className="text-sm font-medium text-gray-900">
+					<p className="text-sm font-medium text-foreground">
 						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
-					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+					<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
 				</div>
 			</Link>
 		);
@@ -125,20 +126,20 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(linkId)}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 			>
-				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-					<Receipt className="h-5 w-5 text-gray-500" />
+				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
+					<TransactionsIcon className="h-5 w-5 text-muted-foreground" />
 				</div>
 				<div className="min-w-0 flex-1">
 					<p className="text-sm font-medium">Network Fee</p>
-					<p className="truncate text-xs text-gray-500">{tx.accountName}</p>
+					<p className="truncate text-xs text-muted-foreground">{tx.accountName}</p>
 				</div>
 				<div className="text-right">
-					<p className="text-sm font-medium text-gray-500">
+					<p className="text-sm font-medium text-muted-foreground">
 						-{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
-					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+					<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
 				</div>
 			</Link>
 		);
@@ -148,22 +149,22 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 	return (
 		<Link
 			href={`/transactions/${encodeURIComponent(linkId)}`}
-			className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 		>
 			<div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
 				<ArrowLeftRight className="h-5 w-5 text-purple-600" />
 			</div>
 			<div className="min-w-0 flex-1">
 				<p className="text-sm font-medium">Swap</p>
-				<p className="truncate text-xs text-gray-500">
+				<p className="truncate text-xs text-muted-foreground">
 					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} ({tx.tokenOut})
 				</p>
 			</div>
 			<div className="text-right">
-				<p className="text-sm font-medium text-gray-900">
+				<p className="text-sm font-medium text-foreground">
 					{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
 				</p>
-				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+				<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
 			</div>
 		</Link>
 	);
@@ -264,11 +265,11 @@ export function TransactionsContent({
 							className={cn(
 								"rounded-full px-3 py-1 text-xs font-medium transition-colors",
 								accountFilter === "all"
-									? "bg-gray-900 text-white"
-									: "bg-gray-100 text-gray-600 hover:bg-gray-200",
+									? "bg-primary text-white"
+									: "bg-accent text-muted-foreground hover:bg-accent",
 							)}
 						>
-							All Accounts
+							All Agent Wallets
 						</button>
 						{accounts.map((a) => (
 							<button
@@ -278,8 +279,8 @@ export function TransactionsContent({
 								className={cn(
 									"rounded-full px-3 py-1 text-xs font-medium transition-colors",
 									accountFilter === a.id
-										? "bg-gray-900 text-white"
-										: "bg-gray-100 text-gray-600 hover:bg-gray-200",
+										? "bg-primary text-white"
+										: "bg-accent text-muted-foreground hover:bg-accent",
 								)}
 							>
 								{a.name}
@@ -289,7 +290,7 @@ export function TransactionsContent({
 
 					<div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
 						<div className="relative col-span-2">
-							<Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
+							<Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
 							<Input
 								placeholder="Filter by address..."
 								value={addressFilter}
@@ -338,10 +339,14 @@ export function TransactionsContent({
 
 					<TabsContent value={tab}>
 						{isLoading && (
-							<p className="py-8 text-center text-sm text-gray-500">Loading transactions...</p>
+							<p className="py-8 text-center text-sm text-muted-foreground">
+								Loading transactions...
+							</p>
 						)}
 						{!isLoading && filtered.length === 0 && (
-							<p className="py-8 text-center text-sm text-gray-500">No transactions found</p>
+							<p className="py-8 text-center text-sm text-muted-foreground">
+								No transactions found
+							</p>
 						)}
 						<div className="space-y-2">
 							{filtered.map((tx) => (

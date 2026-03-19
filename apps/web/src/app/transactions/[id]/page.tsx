@@ -9,7 +9,7 @@ interface Props {
 
 export default function TransactionDetailPage({ params }: Props) {
 	return (
-		<Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+		<Suspense fallback={<div className="min-h-screen bg-background" />}>
 			<TransactionDetailLoader params={params} />
 		</Suspense>
 	);

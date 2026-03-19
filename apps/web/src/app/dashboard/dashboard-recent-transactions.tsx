@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Receipt } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { TransactionsIcon } from "@/components/icons";
 import type { GroupedTransaction } from "@/lib/tempo/types";
 import { cn, formatBalance, formatDate, truncateAddress } from "@/lib/utils";
 
@@ -20,7 +21,7 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 			>
 				<div
 					className={cn(
@@ -38,7 +39,7 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 					<p className="text-sm font-medium">
 						{isSent ? "Sent" : "Received"} {tx.token}
 					</p>
-					<p className="truncate text-xs text-gray-500">
+					<p className="truncate text-xs text-muted-foreground">
 						{tx.accountName} &middot; {isSent ? "To" : "From"}:{" "}
 						{truncateAddress(isSent ? tx.to : tx.from)}
 					</p>
@@ -48,7 +49,7 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 						{isSent ? "-" : "+"}
 						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
-					<p className="text-xs text-gray-400">
+					<p className="text-xs text-muted-foreground">
 						{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
 					</p>
 				</div>
@@ -60,22 +61,22 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 			>
 				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
 					<ArrowLeftRight className="h-5 w-5 text-blue-600" />
 				</div>
 				<div className="min-w-0 flex-1">
 					<p className="text-sm font-medium">Internal Transfer</p>
-					<p className="truncate text-xs text-gray-500">
+					<p className="truncate text-xs text-muted-foreground">
 						{tx.fromAccountName} &rarr; {tx.toAccountName}
 					</p>
 				</div>
 				<div className="text-right">
-					<p className="text-sm font-medium text-gray-900">
+					<p className="text-sm font-medium text-foreground">
 						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
-					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+					<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
 				</div>
 			</Link>
 		);
@@ -85,20 +86,20 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 		return (
 			<Link
 				href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+				className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 			>
-				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-					<Receipt className="h-5 w-5 text-gray-500" />
+				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
+					<TransactionsIcon className="h-5 w-5 text-muted-foreground" />
 				</div>
 				<div className="min-w-0 flex-1">
 					<p className="text-sm font-medium">Network Fee</p>
-					<p className="truncate text-xs text-gray-500">{tx.accountName}</p>
+					<p className="truncate text-xs text-muted-foreground">{tx.accountName}</p>
 				</div>
 				<div className="text-right">
-					<p className="text-sm font-medium text-gray-500">
+					<p className="text-sm font-medium text-muted-foreground">
 						-{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
-					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+					<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
 				</div>
 			</Link>
 		);
@@ -108,22 +109,22 @@ function GroupedTransactionRow({ tx }: { tx: GroupedTransaction }) {
 	return (
 		<Link
 			href={`/transactions/${encodeURIComponent(getLinkId(tx))}`}
-			className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-background"
 		>
 			<div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
 				<ArrowLeftRight className="h-5 w-5 text-purple-600" />
 			</div>
 			<div className="min-w-0 flex-1">
 				<p className="text-sm font-medium">Swap</p>
-				<p className="truncate text-xs text-gray-500">
+				<p className="truncate text-xs text-muted-foreground">
 					{tx.fromAccountName} ({tx.tokenIn}) &rarr; {tx.toAccountName} ({tx.tokenOut})
 				</p>
 			</div>
 			<div className="text-right">
-				<p className="text-sm font-medium text-gray-900">
+				<p className="text-sm font-medium text-foreground">
 					{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
 				</p>
-				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+				<p className="text-xs text-muted-foreground">{formatDate(tx.timestamp)}</p>
 			</div>
 		</Link>
 	);
@@ -138,8 +139,10 @@ export function DashboardRecentTransactions({
 	if (recent.length === 0) {
 		return (
 			<div className="py-12 text-center">
-				<p className="text-gray-500">No transactions yet</p>
-				<p className="mt-1 text-sm text-gray-400">Send or receive a payment to get started.</p>
+				<p className="text-muted-foreground">No transactions yet</p>
+				<p className="mt-1 text-sm text-muted-foreground">
+					Send or receive a payment to get started.
+				</p>
 			</div>
 		);
 	}
@@ -150,7 +153,7 @@ export function DashboardRecentTransactions({
 				<h2 className="text-lg font-semibold">Recent Transactions</h2>
 				<Link
 					href={accountId ? `/transactions?account=${accountId}` : "/transactions"}
-					className="text-sm text-gray-500 hover:text-gray-700"
+					className="text-sm text-muted-foreground hover:text-foreground"
 				>
 					View all &rarr;
 				</Link>

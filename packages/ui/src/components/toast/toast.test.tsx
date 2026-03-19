@@ -24,7 +24,7 @@ describe("Toast", () => {
 			toast("Success!", "success");
 		});
 		const alert = screen.getByRole("alert");
-		expect(alert.className).toContain("bg-green-600");
+		expect(alert.className).toContain("bg-success");
 	});
 
 	it("shows error toast with red styling", () => {
@@ -33,16 +33,16 @@ describe("Toast", () => {
 			toast("Error!", "error");
 		});
 		const alert = screen.getByRole("alert");
-		expect(alert.className).toContain("bg-red-600");
+		expect(alert.className).toContain("bg-error");
 	});
 
-	it("shows info toast with gray styling", () => {
+	it("shows info toast with dark styling", () => {
 		render(<Toaster />);
 		act(() => {
 			toast("Info message", "info");
 		});
 		const alert = screen.getByRole("alert");
-		expect(alert.className).toContain("bg-gray-900");
+		expect(alert.className).toContain("bg-muted");
 	});
 
 	it("auto-dismisses after timeout", () => {
@@ -117,7 +117,7 @@ describe("Toast", () => {
 			toast("Default type");
 		});
 		const alert = screen.getByRole("alert");
-		expect(alert.className).toContain("bg-gray-900");
+		expect(alert.className).toContain("bg-muted");
 	});
 
 	it("does nothing when toast is called without Toaster mounted", () => {

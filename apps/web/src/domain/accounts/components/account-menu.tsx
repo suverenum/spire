@@ -21,7 +21,7 @@ export function AccountMenu({ account, onRename, onDelete }: AccountMenuProps) {
 			<button
 				type="button"
 				onClick={() => setOpen(!open)}
-				className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+				className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground"
 				aria-label="Account actions"
 			>
 				<MoreHorizontal className="h-4 w-4" />
@@ -34,7 +34,7 @@ export function AccountMenu({ account, onRename, onDelete }: AccountMenuProps) {
 						onClick={() => setOpen(false)}
 						aria-label="Close menu"
 					/>
-					<div className="absolute right-0 z-20 mt-1 w-36 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+					<div className="absolute right-0 z-20 mt-1 w-36 rounded-lg border border-border bg-muted py-1 shadow-lg">
 						{!account.isDefault && (
 							<button
 								type="button"
@@ -42,7 +42,7 @@ export function AccountMenu({ account, onRename, onDelete }: AccountMenuProps) {
 									setOpen(false);
 									onRename();
 								}}
-								className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+								className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-background"
 							>
 								<Pencil className="h-3.5 w-3.5" />
 								Rename

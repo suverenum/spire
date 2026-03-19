@@ -162,7 +162,7 @@ export function DashboardContent({
 				)}
 
 				<Card className="mb-6">
-					<p className="text-sm text-gray-500">Total Balance</p>
+					<p className="text-sm text-muted-foreground">Total Balance</p>
 					<p className="text-3xl font-semibold">
 						{formatBalance(totalBalance, 6)} {ACCOUNT_TOKENS[0].name}
 					</p>
@@ -196,8 +196,8 @@ export function DashboardContent({
 
 				<div className="mb-6">
 					<div className="mb-3 flex items-center justify-between">
-						<h2 className="text-lg font-semibold">Accounts</h2>
-						<Link href="/accounts" className="text-sm text-gray-500 hover:text-gray-700">
+						<h2 className="text-lg font-semibold">Agent Wallets</h2>
+						<Link href="/accounts" className="text-sm text-muted-foreground hover:text-foreground">
 							View all &rarr;
 						</Link>
 					</div>
@@ -292,7 +292,7 @@ export function DashboardContent({
 							label="From"
 						/>
 						{transferFromAccount && (
-							<p className="text-xs text-gray-500">
+							<p className="text-xs text-muted-foreground">
 								Available: {formatBalance(transferFromAccount.balance, 6)}{" "}
 								{transferFromAccount.tokenSymbol}
 							</p>

@@ -53,7 +53,7 @@ export function AccountsContent({
 		<SessionGuard authenticatedAt={authenticatedAt}>
 			<SidebarLayout treasuryName={treasuryName}>
 				<div className="mb-4 flex items-center justify-between">
-					<h1 className="text-2xl font-semibold">Accounts</h1>
+					<h1 className="text-2xl font-semibold">Agent Wallets</h1>
 					<div className="flex gap-2">
 						<Button variant="outline" onClick={() => setMultisigOpen(true)}>
 							<Bot className="h-4 w-4" />

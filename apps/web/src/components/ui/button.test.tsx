@@ -9,7 +9,7 @@ describe("Button", () => {
 		render(<Button>Click me</Button>);
 		const button = screen.getByRole("button", { name: "Click me" });
 		expect(button).toBeInTheDocument();
-		expect(button.className).toContain("bg-gray-900");
+		expect(button.className).toContain("bg-primary");
 	});
 
 	it("renders outline variant", () => {
@@ -49,7 +49,7 @@ describe("Button", () => {
 	it("renders ghost variant", () => {
 		render(<Button variant="ghost">Ghost</Button>);
 		const button = screen.getByRole("button");
-		expect(button.className).toContain("hover:bg-gray-100");
+		expect(button.className).toContain("hover:bg-accent");
 	});
 
 	it("renders destructive variant", () => {

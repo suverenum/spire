@@ -1,9 +1,10 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, LogOut, Settings } from "lucide-react";
+import { Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { LogOutIcon, SettingsIcon } from "@/components/icons";
 import { clearPersistedCache } from "@/components/providers";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -43,14 +44,14 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
 	}
 
 	return (
-		<header className="border-b border-gray-200 bg-white">
+		<header className="border-b border-border bg-muted">
 			<div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
 				<div>
 					<h1 className="text-xl font-semibold">{name}</h1>
 					<button
 						type="button"
 						onClick={handleCopyAddress}
-						className="flex cursor-pointer items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+						className="flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
 					>
 						{truncateAddress(address)}
 						<Copy className="h-3 w-3" />
@@ -63,7 +64,7 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
 						onClick={() => router.push("/settings")}
 						aria-label="Settings"
 					>
-						<Settings className="h-5 w-5" />
+						<SettingsIcon className="h-5 w-5" />
 					</Button>
 					<Button
 						variant="ghost"
@@ -72,7 +73,7 @@ export function TreasuryHeader({ name, address }: TreasuryHeaderProps) {
 						disabled={isLoggingOut}
 						aria-label="Logout"
 					>
-						<LogOut className="h-5 w-5" />
+						<LogOutIcon className="h-5 w-5" />
 					</Button>
 				</div>
 			</div>
