@@ -22,9 +22,11 @@ import {
 	type MultisigAccountParams,
 } from "../actions/create-multisig-account";
 
-// ─── Contract addresses (Tempo Testnet v2 deployment) ───────────────
-const FACTORY_ADDRESS = "0xf6888688CAAed87352E975964400493429930342" as Address;
-const GUARD_FACTORY_ADDRESS = "0x53AbdcC50268bd4283187Bef5a48942E9e1aa161" as Address;
+// ─── Contract addresses (from network config) ──────────────────────
+import { MULTISIG_FACTORY_ADDRESS, POLICY_GUARD_FACTORY_ADDRESS } from "@/lib/constants";
+
+const FACTORY_ADDRESS = MULTISIG_FACTORY_ADDRESS as Address;
+const GUARD_FACTORY_ADDRESS = POLICY_GUARD_FACTORY_ADDRESS as Address;
 
 // ─── Minimal ABIs (inlined to avoid SDK import dependency) ──────────
 const MultisigFactoryAbi = [

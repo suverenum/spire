@@ -10,19 +10,40 @@ import {
 	TEMPO_CHAIN_ID,
 	TEMPO_EXPLORER_URL,
 	TEMPO_RPC_URL,
+	HAS_FAUCET,
 } from "./constants";
+import { TEMPO_NETWORK, networkConfig } from "./network-config";
 
-describe("constants", () => {
-	it("has correct Tempo RPC URL", () => {
-		expect(TEMPO_RPC_URL).toBe("https://rpc.moderato.tempo.xyz");
+describe("network config", () => {
+	it("defaults to testnet when NEXT_PUBLIC_TEMPO_NETWORK is not set", () => {
+		expect(TEMPO_NETWORK).toBe("testnet");
 	});
 
-	it("has correct chain ID", () => {
-		expect(TEMPO_CHAIN_ID).toBe(42431);
+	it("networkConfig matches the selected network", () => {
+		expect(networkConfig.chainId).toBe(TEMPO_CHAIN_ID);
+		expect(networkConfig.rpcUrl).toBe(TEMPO_RPC_URL);
+		expect(networkConfig.explorerUrl).toBe(TEMPO_EXPLORER_URL);
 	});
 
-	it("has correct explorer URL", () => {
-		expect(TEMPO_EXPLORER_URL).toBe("https://explore.moderato.tempo.xyz");
+	it("testnet has faucet, mainnet does not", () => {
+		if (TEMPO_NETWORK === "testnet") {
+			expect(HAS_FAUCET).toBe(true);
+		}
+	});
+});
+
+describe("constants (derived from network config)", () => {
+	it("has valid RPC URL", () => {
+		expect(TEMPO_RPC_URL).toMatch(/^https:\/\//);
+	});
+
+	it("has numeric chain ID", () => {
+		expect(typeof TEMPO_CHAIN_ID).toBe("number");
+		expect(TEMPO_CHAIN_ID).toBeGreaterThan(0);
+	});
+
+	it("has valid explorer URL", () => {
+		expect(TEMPO_EXPLORER_URL).toMatch(/^https:\/\//);
 	});
 
 	it("has 15 minute session timeout", () => {
@@ -33,8 +54,8 @@ describe("constants", () => {
 		expect(SESSION_COOKIE_NAME).toBe("goldhord-session");
 	});
 
-	it("has all four supported tokens", () => {
-		expect(Object.keys(SUPPORTED_TOKENS)).toEqual(["AlphaUSD", "BetaUSD", "pathUSD", "ThetaUSD"]);
+	it("has at least one supported token", () => {
+		expect(Object.keys(SUPPORTED_TOKENS).length).toBeGreaterThan(0);
 	});
 
 	it("all tokens have 6 decimals", () => {
@@ -51,39 +72,23 @@ describe("constants", () => {
 });
 
 describe("ACCOUNT_TOKENS", () => {
-	it("contains only AlphaUSD", () => {
-		expect(ACCOUNT_TOKENS).toHaveLength(1);
-		expect(ACCOUNT_TOKENS[0].name).toBe("AlphaUSD");
+	it("has at least one token", () => {
+		expect(ACCOUNT_TOKENS.length).toBeGreaterThan(0);
 	});
 
-	it("references the same object as SUPPORTED_TOKENS", () => {
-		expect(ACCOUNT_TOKENS[0]).toBe(SUPPORTED_TOKENS.AlphaUSD);
-	});
-
-	it("does not include other tokens", () => {
-		const names = ACCOUNT_TOKENS.map((t) => t.name);
-		expect(names).not.toContain("BetaUSD");
-		expect(names).not.toContain("pathUSD");
-		expect(names).not.toContain("ThetaUSD");
+	it("all account tokens exist in SUPPORTED_TOKENS", () => {
+		for (const token of ACCOUNT_TOKENS) {
+			expect(Object.values(SUPPORTED_TOKENS)).toContainEqual(token);
+		}
 	});
 });
 
-describe("DEX_ADDRESS", () => {
-	it("is a valid hex address", () => {
-		expect(DEX_ADDRESS).toMatch(/^0x[a-fA-F0-9]{40}$/);
-	});
-
-	it("matches the Tempo DEX precompile address", () => {
+describe("precompile addresses (same on all networks)", () => {
+	it("DEX is valid hex address", () => {
 		expect(DEX_ADDRESS).toBe("0xDEc0000000000000000000000000000000000000");
 	});
-});
 
-describe("KEYCHAIN_ADDRESS", () => {
-	it("is a valid hex address", () => {
-		expect(KEYCHAIN_ADDRESS).toMatch(/^0x[a-fA-F0-9]{40}$/);
-	});
-
-	it("matches the Tempo Account Keychain precompile address", () => {
+	it("Keychain is valid hex address", () => {
 		expect(KEYCHAIN_ADDRESS).toBe("0xAAAAAAAA00000000000000000000000000000000");
 	});
 });

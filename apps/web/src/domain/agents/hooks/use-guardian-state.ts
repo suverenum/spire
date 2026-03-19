@@ -2,8 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createPublicClient, http, parseAbi } from "viem";
-import { tempo } from "viem/chains";
+import { tempo, tempoModerato } from "viem/chains";
 import { TEMPO_RPC_URL } from "@/lib/constants";
+import { TEMPO_NETWORK } from "@/lib/network-config";
 
 const GuardianReadAbi = parseAbi([
 	"function spentToday() external view returns (uint256)",
@@ -15,7 +16,7 @@ const GuardianReadAbi = parseAbi([
 const Tip20ReadAbi = parseAbi(["function balanceOf(address) external view returns (uint256)"]);
 
 const publicClient = createPublicClient({
-	chain: tempo,
+	chain: TEMPO_NETWORK === "mainnet" ? tempo : tempoModerato,
 	transport: http(TEMPO_RPC_URL),
 });
 

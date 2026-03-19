@@ -1,17 +1,18 @@
 import { createPublicClient, http, type PublicClient } from "viem";
-import { SUPPORTED_TOKENS, TEMPO_CHAIN_ID, TEMPO_RPC_URL } from "../constants";
+import { SUPPORTED_TOKENS, TEMPO_CHAIN_ID, TEMPO_EXPLORER_URL, TEMPO_RPC_URL } from "../constants";
+import { networkConfig } from "../network-config";
 import { tip20Abi } from "./abi";
 import type { AccountBalance, BalancesResult, Payment } from "./types";
 
 const tempoChain = {
 	id: TEMPO_CHAIN_ID,
-	name: "Tempo Testnet",
+	name: networkConfig.name,
 	nativeCurrency: { name: "TEMPO", symbol: "TEMPO", decimals: 18 },
 	rpcUrls: {
 		default: { http: [TEMPO_RPC_URL] },
 	},
 	blockExplorers: {
-		default: { name: "Tempo Explorer", url: "https://explore.moderato.tempo.xyz" },
+		default: { name: "Tempo Explorer", url: TEMPO_EXPLORER_URL },
 	},
 } as const;
 
