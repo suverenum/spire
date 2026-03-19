@@ -85,8 +85,10 @@ export type AgentCreationStep =
 	| "error";
 
 export interface DeployGuardianParams extends AgentWalletParams {
-	/** Agent's EOA address (generated server-side in finalize, but we need a placeholder for the factory) */
+	/** Agent's EOA address (derived from agentPrivateKey) */
 	agentAddress: Address;
+	/** Agent's private key (generated client-side, passed to finalize for encryption) */
+	agentPrivateKey: `0x${string}`;
 	/** Initial funding amount in token base units */
 	fundingAmount: bigint;
 }
@@ -165,7 +167,7 @@ export function useDeployGuardian() {
 				await publicClient.waitForTransactionReceipt({ hash: fundHash });
 			}
 
-			// Step 5: Persist to DB (generates agent key, encrypts, stores)
+			// Step 5: Persist to DB (encrypts the SAME key used for Guardian deployment)
 			setStep("persisting");
 			const result = await finalizeAgentWalletCreate({
 				treasuryId: params.treasuryId,
@@ -176,6 +178,7 @@ export function useDeployGuardian() {
 				spendingCap: params.spendingCap,
 				dailyLimit: params.dailyLimit,
 				maxPerTx: params.maxPerTx,
+				agentPrivateKey: params.agentPrivateKey,
 			});
 
 			if (result.error) throw new Error(result.error);

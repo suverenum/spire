@@ -71,6 +71,7 @@ export function CreateAgentWalletDialog({
 				maxPerTx: toBaseUnits(maxPerTx),
 				allowedVendors: selectedVendors,
 				agentAddress: agentAccount.address,
+				agentPrivateKey: agentKey,
 				fundingAmount: BigInt(toBaseUnits(fundingAmount)),
 			},
 			{
