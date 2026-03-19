@@ -36,6 +36,7 @@ export function useAllTransactions(accounts: AccountRecord[]) {
 			queryKey: CACHE_KEYS.bridgeDeposits(account.id),
 			queryFn: () => getBridgeDepositsForAccount(account.id),
 			staleTime: 10_000,
+			refetchInterval: 15_000,
 			enabled: usdcAccounts.length > 0,
 		})),
 	});

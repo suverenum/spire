@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { bridgeDeposits } from "@/db/schema";
 
 const LZ_SCAN_API = "https://scan.layerzero-api.com/v1";
+const BATCH_SIZE = 50;
 
 interface LzMessage {
 	guid?: string;
@@ -21,6 +22,7 @@ export async function reconcilePendingBridgeDeposits(): Promise<{
 }> {
 	const pending = await db.query.bridgeDeposits.findMany({
 		where: inArray(bridgeDeposits.status, ["pending", "bridging"]),
+		limit: BATCH_SIZE,
 	});
 
 	let completed = 0;

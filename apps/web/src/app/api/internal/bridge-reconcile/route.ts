@@ -1,14 +1,20 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { reconcilePendingBridgeDeposits } from "@/domain/bridge/actions/reconcile-pending-deposits";
 
 export async function GET(request: Request) {
 	const cronSecret = process.env.CRON_SECRET;
 	if (!cronSecret) {
-		return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
 	const authHeader = request.headers.get("authorization");
-	if (authHeader !== `Bearer ${cronSecret}`) {
+	const expected = `Bearer ${cronSecret}`;
+	if (
+		!authHeader ||
+		authHeader.length !== expected.length ||
+		!timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
+	) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
