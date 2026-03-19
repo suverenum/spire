@@ -46,17 +46,17 @@ describe("TransactionDetail", () => {
 
 	it("shows negative amount for sent transaction", () => {
 		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
-		expect(screen.getByText(/-\$5\.00/)).toBeInTheDocument();
+		expect(screen.getByText(/-5\.00 AlphaUSD/)).toBeInTheDocument();
 	});
 
 	it("shows positive amount for received transaction", () => {
 		render(<TransactionDetail transaction={mockTx} userAddress={receiverAddress} />);
-		expect(screen.getByText(/\+\$5\.00/)).toBeInTheDocument();
+		expect(screen.getByText(/\+5\.00 AlphaUSD/)).toBeInTheDocument();
 	});
 
 	it("shows amount", () => {
 		render(<TransactionDetail transaction={mockTx} userAddress={senderAddress} />);
-		expect(screen.getByText(/\$5\.00/)).toBeInTheDocument();
+		expect(screen.getByText(/5\.00 AlphaUSD/)).toBeInTheDocument();
 	});
 
 	it("shows memo when present", () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Search } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Receipt, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
@@ -33,6 +33,7 @@ function matchesAddressFilter(tx: GroupedTransaction, address: string): boolean 
 			tx.toWalletAddress.toLowerCase().includes(lower)
 		);
 	}
+	if (tx.kind === "fee") return false;
 	return (
 		tx.sourceWalletAddress.toLowerCase().includes(lower) ||
 		tx.destinationWalletAddress.toLowerCase().includes(lower)
@@ -42,6 +43,7 @@ function matchesAddressFilter(tx: GroupedTransaction, address: string): boolean 
 function getComparableAmount(tx: GroupedTransaction): bigint {
 	if (tx.kind === "payment") return tx.amount;
 	if (tx.kind === "internalTransfer") return tx.amount;
+	if (tx.kind === "fee") return tx.amount;
 	return tx.amountIn;
 }
 
@@ -83,7 +85,8 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 				</div>
 				<div className="text-right">
 					<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
-						{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
+						{isSent ? "-" : "+"}
+						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 					<p className="text-xs text-gray-400">
 						{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}
@@ -110,7 +113,30 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 				</div>
 				<div className="text-right">
 					<p className="text-sm font-medium text-gray-900">
-						${formatBalance(tx.amount, 6)} {tx.token}
+						{formatBalance(tx.amount, 6)} {tx.token}
+					</p>
+					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
+				</div>
+			</Link>
+		);
+	}
+
+	if (tx.kind === "fee") {
+		return (
+			<Link
+				href={`/transactions/${encodeURIComponent(linkId)}`}
+				className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+			>
+				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+					<Receipt className="h-5 w-5 text-gray-500" />
+				</div>
+				<div className="min-w-0 flex-1">
+					<p className="text-sm font-medium">Network Fee</p>
+					<p className="truncate text-xs text-gray-500">{tx.accountName}</p>
+				</div>
+				<div className="text-right">
+					<p className="text-sm font-medium text-gray-500">
+						-{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 					<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 				</div>
@@ -134,7 +160,9 @@ function TransactionRow({ tx }: { tx: GroupedTransaction }) {
 				</p>
 			</div>
 			<div className="text-right">
-				<p className="text-sm font-medium text-gray-900">${formatBalance(tx.amountIn, 6)}</p>
+				<p className="text-sm font-medium text-gray-900">
+					{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
+				</p>
 				<p className="text-xs text-gray-400">{formatDate(tx.timestamp)}</p>
 			</div>
 		</Link>

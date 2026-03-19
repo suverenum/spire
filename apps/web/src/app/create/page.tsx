@@ -53,6 +53,7 @@ export default function CreateTreasuryPage() {
 						try {
 							await setupDefaults.mutateAsync({
 								treasuryId: actionResult.treasuryId,
+								tempoAddress: address,
 							});
 						} catch {
 							// Default account setup failure is non-fatal; dashboard retry handles it

@@ -58,7 +58,7 @@ function PaymentDetail({ tx }: { tx: GroupedTransaction & { kind: "payment" } })
 				<div className="flex items-center justify-between py-2">
 					<p className="text-sm text-gray-500">Amount</p>
 					<p className="text-sm font-medium">
-						${formatBalance(tx.amount, 6)} {tx.token}
+						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 				</div>
 				<CopyableField label={isSent ? "To" : "From"} value={isSent ? tx.to : tx.from} />
@@ -101,7 +101,7 @@ function InternalTransferDetail({ tx }: { tx: GroupedTransaction & { kind: "inte
 				<div className="flex items-center justify-between py-2">
 					<p className="text-sm text-gray-500">Amount</p>
 					<p className="text-sm font-medium">
-						${formatBalance(tx.amount, 6)} {tx.token}
+						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 				</div>
 				<div className="flex items-center justify-between py-2">
@@ -137,14 +137,14 @@ function SwapDetail({ tx }: { tx: GroupedTransaction & { kind: "swap" } }) {
 				<div className="flex items-center justify-between py-2">
 					<p className="text-sm text-gray-500">Amount In</p>
 					<p className="text-sm font-medium">
-						${formatBalance(tx.amountIn, 6)} {tx.tokenIn}
+						{formatBalance(tx.amountIn, 6)} {tx.tokenIn}
 					</p>
 				</div>
 				{tx.amountOut !== undefined && (
 					<div className="flex items-center justify-between py-2">
 						<p className="text-sm text-gray-500">Amount Out</p>
 						<p className="text-sm font-medium">
-							${formatBalance(tx.amountOut, 6)} {tx.tokenOut}
+							{formatBalance(tx.amountOut, 6)} {tx.tokenOut}
 						</p>
 					</div>
 				)}

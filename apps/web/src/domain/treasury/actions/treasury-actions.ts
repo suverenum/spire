@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
-import { TEMPO_RPC_URL } from "@/lib/constants";
 import { createSession, getSession } from "@/lib/session";
 import { createTreasurySchema } from "@/lib/validations";
 
@@ -52,20 +51,6 @@ export async function createTreasuryAction(
 		}
 		throw err;
 	}
-
-	// Auto-fund wallet via Tempo testnet faucet (fire-and-forget, non-blocking)
-	fetch(TEMPO_RPC_URL, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({
-			jsonrpc: "2.0",
-			method: "tempo_fundAddress",
-			params: [row.tempoAddress],
-			id: 1,
-		}),
-	}).catch(() => {
-		// Faucet failure is non-fatal on testnet
-	});
 
 	await createSession({
 		treasuryId: row.id,

@@ -7,24 +7,25 @@ import { CACHE_KEYS, DEFAULT_ACCOUNTS, TEMPO_RPC_URL } from "@/lib/constants";
 
 interface SetupDefaultAccountsParams {
 	treasuryId: string;
+	tempoAddress: string;
 }
 
 /**
  * Client mutation to provision default account wallets during treasury creation.
- * In production: creates on-chain wallets, registers root passkey on each keychain,
- * calls faucet for each wallet, then persists DB rows with isDefault: true.
+ * The default Main account uses the passkey address as its wallet — this is the
+ * user's on-chain identity and the address that holds tokens.
  */
 export function useSetupDefaultAccounts() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: async ({ treasuryId }: SetupDefaultAccountsParams) => {
+		mutationFn: async ({ treasuryId, tempoAddress }: SetupDefaultAccountsParams) => {
 			const results: { name: string; success: boolean; error?: string }[] = [];
 
 			for (const defaultAccount of DEFAULT_ACCOUNTS) {
 				try {
-					// In production: create wallet on-chain, register passkey
-					const walletAddress = `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
+					// Use the passkey address as the wallet for the default account
+					const walletAddress = tempoAddress;
 
 					// Persist DB row
 					const result = await finalizeAccountCreate({
@@ -95,9 +96,11 @@ export function useRetryDefaultAccountSetup() {
 	return useMutation({
 		mutationFn: async ({
 			treasuryId,
+			tempoAddress,
 			existingAccounts,
 		}: {
 			treasuryId: string;
+			tempoAddress: string;
 			existingAccounts: { tokenSymbol: string; isDefault: boolean }[];
 		}) => {
 			const existingDefaults = new Set(
@@ -112,7 +115,7 @@ export function useRetryDefaultAccountSetup() {
 
 			for (const defaultAccount of missing) {
 				try {
-					const walletAddress = `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
+					const walletAddress = tempoAddress;
 
 					const result = await finalizeAccountCreate({
 						treasuryId,

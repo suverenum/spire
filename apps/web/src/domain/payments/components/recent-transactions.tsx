@@ -43,7 +43,8 @@ function TransactionRow({ tx, address }: { tx: Payment; address: string }) {
 			</div>
 			<div className="text-right">
 				<p className={cn("text-sm font-medium", isSent ? "text-red-600" : "text-green-600")}>
-					{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
+					{isSent ? "-" : "+"}
+					{formatBalance(tx.amount, 6)} {tx.token}
 				</p>
 				<p className="text-xs text-gray-400">
 					{tx.status === "pending" ? "Pending" : formatDate(tx.timestamp)}

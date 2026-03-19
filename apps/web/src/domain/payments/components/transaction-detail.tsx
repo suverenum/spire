@@ -59,7 +59,8 @@ export function TransactionDetail({ transaction: tx, userAddress }: TransactionD
 						{isSent ? "Sent" : "Received"} {tx.token}
 					</p>
 					<p className={cn("text-2xl font-semibold", isSent ? "text-red-600" : "text-green-600")}>
-						{isSent ? "-" : "+"}${formatBalance(tx.amount, 6)}
+						{isSent ? "-" : "+"}
+						{formatBalance(tx.amount, 6)} {tx.token}
 					</p>
 				</div>
 			</div>

@@ -287,7 +287,7 @@ export function SendPaymentForm({
 				setMultisigResult(null);
 				onClose();
 			}}
-			title="Send Payment"
+			title="Withdraw"
 		>
 			{multisigResult ? (
 				<div className="space-y-4 text-center">
@@ -341,7 +341,7 @@ export function SendPaymentForm({
 							>
 								{accounts.map((a) => (
 									<option key={a.id} value={a.id}>
-										{a.name} ({a.tokenSymbol}) - ${formatBalance(a.balance, 6)}
+										{a.name} ({a.tokenSymbol}) - {formatBalance(a.balance, 6)}
 									</option>
 								))}
 							</select>

@@ -33,12 +33,13 @@ export const SUPPORTED_TOKENS = {
 export type TokenName = keyof typeof SUPPORTED_TOKENS;
 
 // Tokens available for account creation (subset of SUPPORTED_TOKENS)
-export const ACCOUNT_TOKENS = [SUPPORTED_TOKENS.AlphaUSD, SUPPORTED_TOKENS.BetaUSD] as const;
+export const ACCOUNT_TOKENS = [SUPPORTED_TOKENS.AlphaUSD] as const;
 
 // Default accounts provisioned when a new treasury is created
 export const DEFAULT_ACCOUNTS = [{ name: "Main", tokenSymbol: "AlphaUSD" as TokenName }] as const;
 
 export const DEX_ADDRESS = "0xDEc0000000000000000000000000000000000000" as `0x${string}`;
+export const FEE_MANAGER_ADDRESS = "0xfeec000000000000000000000000000000000000" as `0x${string}`;
 export const KEYCHAIN_ADDRESS = "0xAAAAAAAA00000000000000000000000000000000" as `0x${string}`;
 
 export const SESSION_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes

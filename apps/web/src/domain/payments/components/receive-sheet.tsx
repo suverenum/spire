@@ -55,7 +55,7 @@ export function ReceiveSheet({
 						>
 							{accounts.map((a) => (
 								<option key={a.id} value={a.id}>
-									{a.name} ({a.tokenSymbol}) - ${formatBalance(a.balance, 6)}
+									{a.name} ({a.tokenSymbol}) - {formatBalance(a.balance, 6)}
 								</option>
 							))}
 						</select>

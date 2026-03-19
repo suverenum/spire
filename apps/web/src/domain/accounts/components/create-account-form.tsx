@@ -64,23 +64,27 @@ export function CreateAccountForm({ open, onClose, treasuryId }: CreateAccountFo
 					/>
 				</div>
 
-				<div>
-					<label htmlFor="account-token" className="mb-1 block text-sm font-medium">
-						Token
-					</label>
-					<select
-						id="account-token"
-						value={tokenSymbol}
-						onChange={(e) => setTokenSymbol(e.target.value)}
-						className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-					>
-						{ACCOUNT_TOKENS.map((t) => (
-							<option key={t.name} value={t.name}>
-								{t.name}
-							</option>
-						))}
-					</select>
-				</div>
+				{ACCOUNT_TOKENS.length > 1 ? (
+					<div>
+						<label htmlFor="account-token" className="mb-1 block text-sm font-medium">
+							Token
+						</label>
+						<select
+							id="account-token"
+							value={tokenSymbol}
+							onChange={(e) => setTokenSymbol(e.target.value)}
+							className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+						>
+							{ACCOUNT_TOKENS.map((t) => (
+								<option key={t.name} value={t.name}>
+									{t.name}
+								</option>
+							))}
+						</select>
+					</div>
+				) : (
+					<p className="text-sm text-gray-500">Token: {ACCOUNT_TOKENS[0].name}</p>
+				)}
 
 				{error && <p className="text-sm text-red-600">{error}</p>}
 

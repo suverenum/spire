@@ -25,7 +25,7 @@ import { ReceiveSheet } from "@/domain/payments/components/receive-sheet";
 import { SendPaymentForm } from "@/domain/payments/components/send-payment-form";
 import { WebSocketBanner } from "@/domain/payments/components/websocket-banner";
 import { useRetryDefaultAccountSetup } from "@/domain/treasury/hooks/use-setup-default-accounts";
-import { CACHE_KEYS } from "@/lib/constants";
+import { ACCOUNT_TOKENS, CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord, AccountWithBalance } from "@/lib/tempo/types";
 import { formatBalance } from "@/lib/utils";
 import { DashboardRecentTransactions } from "./dashboard-recent-transactions";
@@ -148,6 +148,7 @@ export function DashboardContent({
 							onClick={() =>
 								retryDefaults.mutate({
 									treasuryId,
+									tempoAddress,
 									existingAccounts: accounts.map((a) => ({
 										tokenSymbol: a.tokenSymbol,
 										isDefault: a.isDefault,
@@ -162,7 +163,9 @@ export function DashboardContent({
 
 				<Card className="mb-6">
 					<p className="text-sm text-gray-500">Total Balance</p>
-					<p className="text-3xl font-semibold">${formatBalance(totalBalance, 6)}</p>
+					<p className="text-3xl font-semibold">
+						{formatBalance(totalBalance, 6)} {ACCOUNT_TOKENS[0].name}
+					</p>
 				</Card>
 
 				<div className="mb-6 flex gap-3">
@@ -289,7 +292,8 @@ export function DashboardContent({
 						/>
 						{transferFromAccount && (
 							<p className="text-xs text-gray-500">
-								Available: ${formatBalance(transferFromAccount.balance, 6)}
+								Available: {formatBalance(transferFromAccount.balance, 6)}{" "}
+								{transferFromAccount.tokenSymbol}
 							</p>
 						)}
 						<AccountSelector

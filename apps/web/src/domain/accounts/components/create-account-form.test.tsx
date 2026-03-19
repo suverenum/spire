@@ -21,7 +21,7 @@ describe("CreateAccountForm", () => {
 	it("renders form fields when open", () => {
 		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
 		expect(screen.getByLabelText("Account Name")).toBeInTheDocument();
-		expect(screen.getByLabelText("Token")).toBeInTheDocument();
+		expect(screen.getByText(/Token:\s*AlphaUSD/)).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Create Account" })).toBeInTheDocument();
 	});
 
@@ -75,14 +75,9 @@ describe("CreateAccountForm", () => {
 		expect(screen.getByText("Name already taken")).toBeInTheDocument();
 	});
 
-	it("allows selecting token", async () => {
+	it("shows token as plain text when only one option", () => {
 		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		await userEvent.selectOptions(screen.getByLabelText("Token"), "BetaUSD");
-		await userEvent.type(screen.getByLabelText("Account Name"), "Beta Acc");
-		await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
-		expect(mockMutate).toHaveBeenCalledWith(
-			expect.objectContaining({ tokenSymbol: "BetaUSD" }),
-			expect.any(Object),
-		);
+		expect(screen.getByText(/Token:\s*AlphaUSD/)).toBeInTheDocument();
+		expect(screen.queryByLabelText("Token")).not.toBeInTheDocument();
 	});
 });
