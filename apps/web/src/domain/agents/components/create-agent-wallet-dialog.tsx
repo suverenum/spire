@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toast";
 import { ACCOUNT_TOKENS } from "@/lib/constants";
-import { VENDOR_LIST } from "@/lib/vendors";
 import { type AgentCreationStep, useDeployGuardian } from "../hooks/use-deploy-guardian";
 
 interface CreateAgentWalletDialogProps {
@@ -38,7 +37,6 @@ export function CreateAgentWalletDialog({
 	const [dailyLimit, setDailyLimit] = useState("10");
 	const [maxPerTx, setMaxPerTx] = useState("2");
 	const [fundingAmount, setFundingAmount] = useState("10");
-	const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
 	const [createdKey, setCreatedKey] = useState<string | null>(null);
 	const [guardianAddr, setGuardianAddr] = useState<string | null>(null);
 
@@ -51,11 +49,6 @@ export function CreateAgentWalletDialog({
 			toast("Enter a label", "error");
 			return;
 		}
-		if (selectedVendors.length === 0) {
-			toast("Select at least one vendor", "error");
-			return;
-		}
-
 		// Generate agent key for the factory (agent address needed for deployment)
 		const agentKey = generatePrivateKey();
 		const agentAccount = privateKeyToAccount(agentKey);
@@ -68,7 +61,7 @@ export function CreateAgentWalletDialog({
 				spendingCap: toBaseUnits(spendingCap),
 				dailyLimit: toBaseUnits(dailyLimit),
 				maxPerTx: toBaseUnits(maxPerTx),
-				allowedVendors: selectedVendors,
+				allowedVendors: [],
 				agentAddress: agentAccount.address,
 				agentPrivateKey: agentKey,
 				fundingAmount: BigInt(toBaseUnits(fundingAmount)),
@@ -87,12 +80,6 @@ export function CreateAgentWalletDialog({
 			await navigator.clipboard.writeText(createdKey);
 			toast("Key copied!", "success");
 		}
-	};
-
-	const toggleVendor = (addr: string) => {
-		setSelectedVendors((prev) =>
-			prev.includes(addr) ? prev.filter((a) => a !== addr) : [...prev, addr],
-		);
 	};
 
 	// Success screen — show key
@@ -217,27 +204,6 @@ export function CreateAgentWalletDialog({
 						onChange={(e) => setFundingAmount(e.target.value)}
 						disabled={isPending}
 					/>
-				</div>
-
-				<div>
-					<p className="mb-2 text-sm font-medium">Allowed Vendors</p>
-					<div className="flex flex-wrap gap-2">
-						{VENDOR_LIST.map((vendor) => (
-							<button
-								type="button"
-								key={vendor.id}
-								onClick={() => toggleVendor(vendor.address)}
-								disabled={isPending}
-								className={`rounded-full border px-3 py-1 text-xs transition ${
-									selectedVendors.includes(vendor.address)
-										? "border-blue-500/30 bg-blue-500/10 text-blue-400"
-										: "border-border bg-background text-muted-foreground hover:bg-muted"
-								}`}
-							>
-								{vendor.name}
-							</button>
-						))}
-					</div>
 				</div>
 
 				{step !== "idle" && step !== "complete" && step !== "error" && (

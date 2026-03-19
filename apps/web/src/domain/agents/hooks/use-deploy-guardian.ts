@@ -13,7 +13,12 @@ import {
 import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
-import { CACHE_KEYS, GUARDIAN_FACTORY_ADDRESS, SUPPORTED_TOKENS } from "@/lib/constants";
+import {
+	CACHE_KEYS,
+	GUARDIAN_FACTORY_ADDRESS,
+	MPP_ESCROW_ADDRESS,
+	SUPPORTED_TOKENS,
+} from "@/lib/constants";
 import {
 	type AgentWalletParams,
 	assertCanCreateAgentWallet,
@@ -153,7 +158,7 @@ export function useDeployGuardian() {
 					BigInt(params.dailyLimit),
 					BigInt(params.spendingCap),
 					salt,
-					params.allowedVendors as Address[],
+					[MPP_ESCROW_ADDRESS],
 					[tokenAddress],
 				],
 			});
@@ -168,32 +173,26 @@ export function useDeployGuardian() {
 			const guardianAddress = logs[0].args.guardian;
 
 			// Verify on-chain: read back allowlists to confirm they were set
-			const [tokenOk, ...vendorChecks] = await Promise.all([
+			const [tokenOk, escrowOk] = await Promise.all([
 				publicClient.readContract({
 					address: guardianAddress,
 					abi: GuardianReadAbi,
 					functionName: "allowedTokens",
 					args: [tokenAddress],
 				}),
-				...params.allowedVendors.map((v) =>
-					publicClient.readContract({
-						address: guardianAddress,
-						abi: GuardianReadAbi,
-						functionName: "allowedRecipients",
-						args: [v as Address],
-					}),
-				),
+				publicClient.readContract({
+					address: guardianAddress,
+					abi: GuardianReadAbi,
+					functionName: "allowedRecipients",
+					args: [MPP_ESCROW_ADDRESS],
+				}),
 			]);
 
 			if (!tokenOk) {
 				throw new Error(`On-chain verification failed: token ${tokenAddress} not in allowlist`);
 			}
-			for (let i = 0; i < vendorChecks.length; i++) {
-				if (!vendorChecks[i]) {
-					throw new Error(
-						`On-chain verification failed: vendor ${params.allowedVendors[i]} not in allowlist`,
-					);
-				}
+			if (!escrowOk) {
+				throw new Error("On-chain verification failed: MPP escrow not in allowlist");
 			}
 
 			// Step 3: Fund Guardian with initial tokens
@@ -218,7 +217,7 @@ export function useDeployGuardian() {
 				label: params.label,
 				tokenSymbol: params.tokenSymbol,
 				guardianAddress,
-				allowedVendors: params.allowedVendors,
+				allowedVendors: [MPP_ESCROW_ADDRESS.toLowerCase()],
 				spendingCap: params.spendingCap,
 				dailyLimit: params.dailyLimit,
 				maxPerTx: params.maxPerTx,

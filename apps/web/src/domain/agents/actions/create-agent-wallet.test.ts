@@ -88,22 +88,13 @@ describe("assertCanCreateAgentWallet", () => {
 		expect(result.error).toBe("Daily limit cannot exceed spending cap");
 	});
 
-	test("rejects empty vendor list", async () => {
+	test("accepts empty vendor list (escrow auto-added at deploy)", async () => {
 		const { assertCanCreateAgentWallet } = await import("./create-agent-wallet");
 		const result = await assertCanCreateAgentWallet({
 			...validParams,
 			allowedVendors: [],
 		});
-		expect(result.error).toBe("At least one vendor required");
-	});
-
-	test("rejects invalid vendor address", async () => {
-		const { assertCanCreateAgentWallet } = await import("./create-agent-wallet");
-		const result = await assertCanCreateAgentWallet({
-			...validParams,
-			allowedVendors: ["not-an-address"],
-		});
-		expect(result.error).toContain("Invalid vendor address");
+		expect(result.error).toBeUndefined();
 	});
 
 	test("rejects treasury mismatch", async () => {

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getVendorByAddress } from "@/lib/vendors";
 import { useGuardianState } from "../hooks/use-guardian-state";
 import type { AgentWalletData } from "../queries/get-agents";
 import { RevealKeyDialog } from "./reveal-key-dialog";
@@ -37,10 +36,6 @@ export function AgentWalletCard({ wallet, onRevoke }: AgentWalletCardProps) {
 	);
 
 	const isActive = wallet.status === "active";
-	const vendorNames = wallet.allowedVendors
-		.map((addr) => getVendorByAddress(addr)?.name ?? truncateAddress(addr))
-		.slice(0, 3);
-
 	return (
 		<>
 			<Card data-testid="agent-wallet-card">
@@ -110,25 +105,6 @@ export function AgentWalletCard({ wallet, onRevoke }: AgentWalletCardProps) {
 						</div>
 					</div>
 				)}
-
-				{/* Vendor tags */}
-				<div className="border-border border-t px-4 py-2">
-					<div className="flex flex-wrap gap-1">
-						{vendorNames.map((name) => (
-							<span
-								key={name}
-								className="rounded bg-blue-500/10 px-1.5 py-0.5 text-xs text-blue-400"
-							>
-								{name}
-							</span>
-						))}
-						{wallet.allowedVendors.length > 3 && (
-							<span className="text-muted-foreground text-xs">
-								+{wallet.allowedVendors.length - 3}
-							</span>
-						)}
-					</div>
-				</div>
 
 				{/* Actions */}
 				<div className="border-border flex gap-2 border-t p-3">

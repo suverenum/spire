@@ -7,11 +7,9 @@ import {
 	ClipboardList,
 	DollarSign,
 	Eye,
-	Minus,
 	Plus,
 	ShieldOff,
 	Upload,
-	Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -21,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
-import { addVendorToWallet, removeVendorFromWallet } from "@/domain/agents/actions/manage-vendors";
 import { revokeAgentKey } from "@/domain/agents/actions/revoke-agent-key";
 import { updateAgentLimits } from "@/domain/agents/actions/update-agent-limits";
 import { RevealKeyDialog } from "@/domain/agents/components/reveal-key-dialog";
@@ -37,7 +34,7 @@ import { useAgentWallets } from "@/domain/agents/hooks/use-agent-wallets";
 import { useGuardianState } from "@/domain/agents/hooks/use-guardian-state";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
 import { SUPPORTED_TOKENS } from "@/lib/constants";
-import { getVendorByAddress, VENDOR_LIST } from "@/lib/vendors";
+import { getVendorByAddress } from "@/lib/vendors";
 
 interface AgentDetailContentProps {
 	walletId: string;
@@ -71,7 +68,6 @@ export function AgentDetailContent({
 	const [topUpAmount, setTopUpAmount] = useState("");
 	const [showTopUp, setShowTopUp] = useState(false);
 	const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
-	const [addingVendor, setAddingVendor] = useState(false);
 
 	const { data: onChainState } = useGuardianState(
 		wallet?.guardianAddress as `0x${string}` | undefined,
@@ -147,23 +143,6 @@ export function AgentDetailContent({
 			},
 			{ onSuccess: () => setShowWithdrawConfirm(false) },
 		);
-	};
-
-	const handleAddVendor = async (vendorAddress: string) => {
-		if (!wallet) return;
-		// On-chain addRecipient would be called via wagmi hook here
-		// For now, sync to DB
-		const result = await addVendorToWallet({ walletId: wallet.id, vendorAddress });
-		if (result.error) toast(result.error, "error");
-		else toast("Vendor added", "success");
-		setAddingVendor(false);
-	};
-
-	const handleRemoveVendor = async (vendorAddress: string) => {
-		if (!wallet) return;
-		const result = await removeVendorFromWallet({ walletId: wallet.id, vendorAddress });
-		if (result.error) toast(result.error, "error");
-		else toast("Vendor removed", "success");
 	};
 
 	return (
@@ -285,67 +264,6 @@ export function AgentDetailContent({
 										</div>
 									</div>
 								)}
-							</Card>
-
-							{/* Allowed vendors */}
-							<Card>
-								<div className="flex items-center justify-between p-4">
-									<h2 className="flex items-center gap-2 font-semibold">
-										<Users className="h-4 w-4" /> Allowed Vendors
-									</h2>
-									{isActive && (
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => setAddingVendor(!addingVendor)}
-											data-testid="manage-vendors-btn"
-										>
-											<Plus className="mr-1 h-3 w-3" /> Add
-										</Button>
-									)}
-								</div>
-								<div className="border-border border-t p-4">
-									<div className="flex flex-wrap gap-2">
-										{wallet.allowedVendors.map((addr) => {
-											const vendor = getVendorByAddress(addr);
-											return (
-												<span
-													key={addr}
-													className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-sm text-blue-400"
-												>
-													{vendor?.name ?? truncateAddress(addr)}
-													{isActive && (
-														<button
-															type="button"
-															onClick={() => handleRemoveVendor(addr)}
-															className="ml-1 text-blue-400/60 hover:text-red-400"
-															title="Remove vendor"
-														>
-															<Minus className="h-3 w-3" />
-														</button>
-													)}
-												</span>
-											);
-										})}
-									</div>
-									{addingVendor && (
-										<div className="border-border mt-3 flex flex-wrap gap-2 border-t pt-3">
-											<p className="text-muted-foreground mb-1 w-full text-xs">Add a vendor:</p>
-											{VENDOR_LIST.filter(
-												(v) => !wallet.allowedVendors.includes(v.address.toLowerCase()),
-											).map((vendor) => (
-												<button
-													key={vendor.id}
-													type="button"
-													onClick={() => handleAddVendor(vendor.address)}
-													className="border-border text-muted-foreground rounded-full border px-3 py-1 text-xs hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-400"
-												>
-													+ {vendor.name}
-												</button>
-											))}
-										</div>
-									)}
-								</div>
 							</Card>
 
 							{/* Agent info */}

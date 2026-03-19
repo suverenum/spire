@@ -59,12 +59,6 @@ export async function assertCanCreateAgentWallet(
 		return { error: "Invalid limit values" };
 	}
 
-	// Vendor validation
-	if (params.allowedVendors.length === 0) return { error: "At least one vendor required" };
-	for (const addr of params.allowedVendors) {
-		if (!ADDRESS_RE.test(addr)) return { error: `Invalid vendor address: ${addr}` };
-	}
-
 	return {};
 }
 
