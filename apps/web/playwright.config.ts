@@ -31,7 +31,6 @@ export default defineConfig({
 		timeout: 60_000,
 		env: {
 			DATABASE_URL: TEST_DB_URL,
-			SESSION_SECRET: "dev-secret-change-in-production",
 			NEXT_PUBLIC_TEMPO_CHAIN_ID: "42431",
 			NEXT_PUBLIC_TEMPO_RPC_HTTP: "https://rpc.moderato.tempo.xyz",
 			NEXT_PUBLIC_TEMPO_RPC_WS: "wss://rpc.moderato.tempo.xyz",
