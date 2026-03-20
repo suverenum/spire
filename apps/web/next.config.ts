@@ -33,11 +33,11 @@ const nextConfig = {
 						key: "Content-Security-Policy",
 						value: [
 							"default-src 'self'",
-							"script-src 'self' 'unsafe-inline' https://vercel.live",
+							"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://us-assets.i.posthog.com",
 							"style-src 'self' 'unsafe-inline'",
 							"img-src 'self' data: blob:",
 							"font-src 'self'",
-							`connect-src 'self' ${[process.env.NEXT_PUBLIC_TEMPO_RPC_HTTP, process.env.NEXT_PUBLIC_TEMPO_RPC_WS, process.env.NEXT_PUBLIC_TEMPO_SPONSOR_URL, "https://*.ingest.sentry.io", "https://us.i.posthog.com"].filter(Boolean).join(" ")}`,
+							`connect-src 'self' ${[process.env.NEXT_PUBLIC_TEMPO_RPC_HTTP, process.env.NEXT_PUBLIC_TEMPO_RPC_WS, process.env.NEXT_PUBLIC_TEMPO_SPONSOR_URL, "https://*.ingest.sentry.io", "https://us.i.posthog.com", "https://us-assets.i.posthog.com"].filter(Boolean).join(" ")}`,
 							"frame-src https://vercel.live",
 							"frame-ancestors 'none'",
 						].join("; "),
