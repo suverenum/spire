@@ -29,6 +29,7 @@ import { getPendingTransactions } from "@/domain/multisig/queries/get-pending-tr
 import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord } from "@/lib/tempo/types";
 import { formatBalance, truncateAddress } from "@/lib/utils";
+import { FEE_TOKEN } from "@/lib/wagmi";
 
 const MultisigAbi = [
 	{
@@ -113,6 +114,7 @@ export function AccountDetailContent({
 				abi: MultisigAbi,
 				functionName: "confirmTransaction",
 				args: [BigInt(onChainTxId)],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 			await publicClient.waitForTransactionReceipt({ hash });
 			// Sync confirmation to DB
@@ -158,6 +160,7 @@ export function AccountDetailContent({
 				abi: MultisigAbi,
 				functionName: "executeTransaction",
 				args: [BigInt(onChainTxId)],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 			await publicClient.waitForTransactionReceipt({ hash });
 			// Mark as executed in DB

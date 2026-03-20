@@ -17,6 +17,7 @@ import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS } from "@/lib/constants";
 import { env } from "@/lib/env";
+import { FEE_TOKEN } from "@/lib/wagmi";
 import {
 	assertCanCreateMultisigAccount,
 	finalizeMultisigAccountCreate,
@@ -172,6 +173,7 @@ async function deployMultisigWallet(
 		abi: MultisigFactoryAbi,
 		functionName: "createWallet",
 		args: [owners, 1n, salt], // threshold=1, guard is the real policy engine
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	const receipt = await publicClient.waitForTransactionReceipt({ hash });
 	const logs = parseEventLogs({
@@ -208,6 +210,7 @@ async function deployPolicyGuard(
 			allowlistEnabled,
 			initialAllowlist,
 		],
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	const receipt = await publicClient.waitForTransactionReceipt({ hash });
 	const logs = parseEventLogs({
@@ -240,6 +243,7 @@ async function setGuardOnWallet(
 		abi: MultisigSingletonAbi,
 		functionName: "submitTransaction",
 		args: [walletAddress, 0n, setGuardData],
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	const submitReceipt = await publicClient.waitForTransactionReceipt({
 		hash: submitHash,
@@ -260,6 +264,7 @@ async function setGuardOnWallet(
 		abi: MultisigSingletonAbi,
 		functionName: "executeTransaction",
 		args: [txId],
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	await publicClient.waitForTransactionReceipt({ hash: execHash });
 }
