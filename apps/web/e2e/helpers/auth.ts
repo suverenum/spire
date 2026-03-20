@@ -1,7 +1,22 @@
 import { createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { BrowserContext } from "@playwright/test";
 
-const DEV_SECRET = "dev-secret-change-in-production";
+function loadSessionSecret(): string {
+	if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+	try {
+		const envPath = resolve(__dirname, "../../.env.local");
+		const content = readFileSync(envPath, "utf-8");
+		const match = content.match(/^SESSION_SECRET=(.+)$/m);
+		if (match) return match[1].trim();
+	} catch {
+		// fallback
+	}
+	return "dev-secret-change-in-production";
+}
+
+const DEV_SECRET = loadSessionSecret();
 const COOKIE_NAME = "goldhord-session";
 
 interface SessionData {

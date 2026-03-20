@@ -1,20 +1,12 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Address, PublicClient } from "viem";
+import type { Address } from "viem";
 import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS, SUPPORTED_TOKENS } from "@/lib/constants";
-
-/** Wait for receipt and throw on revert so onError fires correctly. */
-async function confirmTx(publicClient: PublicClient, hash: `0x${string}`, context: string) {
-	const receipt = await publicClient.waitForTransactionReceipt({ hash });
-	if (receipt.status === "reverted") {
-		throw new Error(`Transaction reverted: ${context} (tx: ${hash.slice(0, 12)}…)`);
-	}
-	return receipt;
-}
+import { confirmTx } from "@/lib/tempo/confirm-tx";
 
 // ─── Guardian ABI subset for owner actions ─────────────────────────
 
