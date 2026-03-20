@@ -7,6 +7,7 @@ import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS, SUPPORTED_TOKENS } from "@/lib/constants";
 import { confirmTx } from "@/lib/tempo/confirm-tx";
+import { FEE_TOKEN } from "@/lib/wagmi";
 
 // ─── Guardian ABI subset for owner actions ─────────────────────────
 
@@ -137,6 +138,7 @@ export function useTopUpAgent(treasuryId: string) {
 				abi: Tip20Abi,
 				functionName: "transfer",
 				args: [guardianAddress, amount],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "top up");
@@ -177,6 +179,7 @@ export function useEmergencyWithdraw(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "withdraw",
 				args: [token.address],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "withdraw");
@@ -216,6 +219,7 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "updateLimits",
 				args: [maxPerTx, dailyLimit],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "update limits");
@@ -253,6 +257,7 @@ export function useApprovePay(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "approvePay",
 				args: [proposalId],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "approve payment");
@@ -291,6 +296,7 @@ export function useRejectPay(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "rejectPay",
 				args: [proposalId],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "reject payment");
@@ -329,6 +335,7 @@ export function useAddToken(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "addToken",
 				args: [tokenAddress],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "add token");
