@@ -12,7 +12,7 @@ export default defineConfig({
 	reporter: "html",
 	globalSetup: "./e2e/global-setup.ts",
 	use: {
-		baseURL: "http://localhost:3000",
+		baseURL: process.env.BASE_URL || "http://localhost:11000",
 		trace: "on-first-retry",
 	},
 	projects: [
@@ -22,8 +22,8 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: `DATABASE_URL="${TEST_DB_URL}" bun run dev`,
-		url: "http://localhost:3000",
+		command: `DATABASE_URL="${TEST_DB_URL}" PORT=11000 bun run dev`,
+		url: process.env.BASE_URL || "http://localhost:11000",
 		reuseExistingServer: !process.env.CI,
 		timeout: 60_000,
 		env: {
