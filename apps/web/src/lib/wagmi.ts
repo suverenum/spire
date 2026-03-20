@@ -7,7 +7,7 @@ import { env } from "./env";
 const tempoChain: Chain = {
 	id: env.NEXT_PUBLIC_TEMPO_CHAIN_ID,
 	name: env.NEXT_PUBLIC_APP_ENV === "production" ? "Tempo" : "Tempo Testnet",
-	nativeCurrency: { name: "USD", symbol: "USD", decimals: 18 },
+	nativeCurrency: { name: "TEMPO", symbol: "TEMPO", decimals: 18 },
 	rpcUrls: {
 		default: { http: [env.NEXT_PUBLIC_TEMPO_RPC_HTTP] },
 	},

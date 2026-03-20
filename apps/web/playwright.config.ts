@@ -3,6 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 const TEST_DB_URL =
 	process.env.TEST_DATABASE_URL || "postgresql://postgres:testpass@localhost:5432/goldhord_test";
 
+const BASE_URL = process.env.BASE_URL || "http://localhost:11000";
+const PORT = new URL(BASE_URL).port || "11000";
+
 export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: true,
@@ -12,7 +15,7 @@ export default defineConfig({
 	reporter: "html",
 	globalSetup: "./e2e/global-setup.ts",
 	use: {
-		baseURL: process.env.BASE_URL || "http://localhost:11000",
+		baseURL: BASE_URL,
 		trace: "on-first-retry",
 	},
 	projects: [
@@ -22,8 +25,8 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: `DATABASE_URL="${TEST_DB_URL}" PORT=11000 bun run dev`,
-		url: process.env.BASE_URL || "http://localhost:11000",
+		command: `DATABASE_URL="${TEST_DB_URL}" PORT=${PORT} bun run dev`,
+		url: BASE_URL,
 		reuseExistingServer: !process.env.CI,
 		timeout: 60_000,
 		env: {
