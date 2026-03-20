@@ -1,12 +1,9 @@
-import { execSync } from "node:child_process";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
  * Integration test: verifies ALL non-template writeContract calls pass feeToken.
- *
- * This catches the bug where new writeContract calls are added without feeToken,
- * which would cause transactions to fail on chains where the default fee token
- * doesn't match what the user holds.
  *
  * Excluded files:
  * - code-snippet.ts: static template string, not executable
@@ -15,61 +12,79 @@ import { describe, expect, it } from "vitest";
  * - *.test.*: test files
  */
 
-const EXCLUDED_PATTERNS = ["code-snippet", "create-guarded-mppx", "send-payment-form", ".test."];
+const EXCLUDED = ["code-snippet", "create-guarded-mppx", "send-payment-form", ".test."];
+
+function walkDir(dir: string): string[] {
+	const results: string[] = [];
+	for (const entry of readdirSync(dir)) {
+		const full = join(dir, entry);
+		if (statSync(full).isDirectory()) {
+			if (entry === "node_modules") continue;
+			results.push(...walkDir(full));
+		} else if (/\.(ts|tsx)$/.test(entry)) {
+			results.push(full);
+		}
+	}
+	return results;
+}
+
+function findWriteContractCalls(srcDir: string) {
+	const files = walkDir(srcDir).filter((f) => !EXCLUDED.some((p) => f.includes(p)));
+	const calls: Array<{ file: string; line: number; hasFeeToken: boolean }> = [];
+
+	for (const file of files) {
+		const content = readFileSync(file, "utf-8");
+		const lines = content.split("\n");
+
+		for (let i = 0; i < lines.length; i++) {
+			if (lines[i].includes("writeContract({")) {
+				// Read next 20 lines to find feeToken within the call block
+				const block = lines.slice(i, i + 21).join("\n");
+				const hasClosing = block.includes("});") || block.includes("} as ");
+				if (hasClosing) {
+					calls.push({
+						file: file.replace(srcDir + "/", ""),
+						line: i + 1,
+						hasFeeToken: block.includes("feeToken"),
+					});
+				}
+			}
+		}
+	}
+	return calls;
+}
 
 describe("feeToken coverage", () => {
 	it("all non-template writeContract calls include feeToken spread", () => {
-		const cwd = process.cwd().replace(/\/apps\/web$/, "");
-		const grepResult = execSync(`grep -rn "writeContract({" apps/web/src/ || true`, {
-			encoding: "utf-8",
-			cwd,
-		});
+		// Resolve src dir relative to this test file
+		const srcDir = join(__dirname, "..");
+		const calls = findWriteContractCalls(srcDir);
 
-		const lines = grepResult
-			.split("\n")
-			.filter((l) => l.trim())
-			.filter((l) => !EXCLUDED_PATTERNS.some((p) => l.includes(p)));
+		expect(calls.length).toBeGreaterThan(0);
 
-		expect(lines.length).toBeGreaterThan(0);
-
-		const missing: string[] = [];
-
-		for (const line of lines) {
-			const [filePath, lineNoStr] = line.split(":");
-			const lineNo = Number.parseInt(lineNoStr, 10);
-
-			// Read the next 20 lines to find feeToken within the writeContract call
-			const context = execSync(`sed -n '${lineNo},${lineNo + 20}p' ${filePath}`, {
-				encoding: "utf-8",
-				cwd,
-			});
-
-			// Check for feeToken or closing of writeContract block
-			const hasClosingBrace = context.includes("});") || context.includes("} as ");
-			if (hasClosingBrace && !context.includes("feeToken")) {
-				missing.push(`${filePath}:${lineNo}`);
-			}
-		}
-
-		expect(missing).toEqual([]);
+		const missing = calls.filter((c) => !c.hasFeeToken);
+		expect(
+			missing,
+			`Missing feeToken in: ${missing.map((m) => `${m.file}:${m.line}`).join(", ")}`,
+		).toEqual([]);
 	});
 
-	it("FEE_TOKEN is imported from @/lib/wagmi in files using feeToken", () => {
-		const cwd = process.cwd().replace(/\/apps\/web$/, "");
-		const filesWithFeeToken = execSync(`grep -rl "feeToken: FEE_TOKEN" apps/web/src/ || true`, {
-			encoding: "utf-8",
-			cwd,
-		})
-			.split("\n")
-			.filter((l) => l.trim());
+	it("FEE_TOKEN is imported in files that use it", () => {
+		const srcDir = join(__dirname, "..");
+		const files = walkDir(srcDir).filter((f) => !f.includes(".test."));
 
-		for (const file of filesWithFeeToken) {
-			const content = execSync(`cat ${file}`, { encoding: "utf-8", cwd });
-			const hasFeeTokenImport =
+		const filesUsingFeeToken = files.filter((f) => {
+			const content = readFileSync(f, "utf-8");
+			return content.includes("feeToken: FEE_TOKEN");
+		});
+
+		for (const file of filesUsingFeeToken) {
+			const content = readFileSync(file, "utf-8");
+			const hasImport =
 				content.includes("import { FEE_TOKEN }") ||
 				content.includes("FEE_TOKEN }") ||
 				content.includes("FEE_TOKEN,");
-			expect(hasFeeTokenImport, `${file} uses FEE_TOKEN but doesn't import it`).toBe(true);
+			expect(hasImport, `${file} uses FEE_TOKEN but doesn't import it`).toBe(true);
 		}
 	});
 });

@@ -3,8 +3,15 @@ import { defineConfig, devices } from "@playwright/test";
 const TEST_DB_URL =
 	process.env.TEST_DATABASE_URL || "postgresql://postgres:testpass@localhost:5432/goldhord_test";
 
-const BASE_URL = process.env.BASE_URL || "http://localhost:11000";
-const PORT = new URL(BASE_URL).port || "11000";
+const DEFAULT_PORT = process.env.PORT || "11000";
+const BASE_URL = process.env.BASE_URL
+	? (() => {
+			const url = new URL(process.env.BASE_URL);
+			if (!url.port) url.port = DEFAULT_PORT;
+			return url.toString().replace(/\/$/, "");
+		})()
+	: `http://localhost:${DEFAULT_PORT}`;
+const PORT = new URL(BASE_URL).port || DEFAULT_PORT;
 
 export default defineConfig({
 	testDir: "./e2e",

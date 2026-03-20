@@ -11,7 +11,20 @@ function loadSessionSecret(): string {
 		const envPath = resolve(thisDir, "../../.env.local");
 		const content = readFileSync(envPath, "utf-8");
 		const match = content.match(/^SESSION_SECRET=(.+)$/m);
-		if (match) return match[1].trim();
+		if (match) {
+			let secret = match[1].trim();
+			// Strip surrounding quotes (dotenv semantics)
+			if (
+				(secret.startsWith('"') && secret.endsWith('"')) ||
+				(secret.startsWith("'") && secret.endsWith("'"))
+			) {
+				secret = secret.slice(1, -1);
+			}
+			// Strip inline comments
+			const commentIdx = secret.indexOf(" #");
+			if (commentIdx !== -1) secret = secret.slice(0, commentIdx).trim();
+			return secret;
+		}
 	} catch {
 		// fallback when .env.local not found
 	}

@@ -22,7 +22,7 @@ const tempoChain: Chain = {
 /**
  * Fee token address for gas payments.
  * Set via NEXT_PUBLIC_FEE_TOKEN env var (pathUSD on testnet, USDC.e on mainnet).
- * When set at chain level, ALL transactions automatically use this token for fees.
+ * Passed per writeContract call via `...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {})`.
  */
 export const FEE_TOKEN = env.NEXT_PUBLIC_FEE_TOKEN as `0x${string}` | undefined;
 
