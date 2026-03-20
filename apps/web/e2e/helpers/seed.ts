@@ -1,9 +1,7 @@
 import pg from "pg";
 
 const TEST_DB_URL =
-	process.env.TEST_DATABASE_URL ||
-	process.env.DATABASE_URL ||
-	"postgresql://postgres:testpass@localhost:5432/goldhord_test";
+	process.env.TEST_DATABASE_URL || "postgresql://postgres:testpass@localhost:5432/goldhord_test";
 
 // Known test data IDs (deterministic for test assertions)
 export const TEST_TREASURY_ID = "00000000-0000-0000-0000-000000000001";

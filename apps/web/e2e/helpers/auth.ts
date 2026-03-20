@@ -1,17 +1,19 @@
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { BrowserContext } from "@playwright/test";
 
 function loadSessionSecret(): string {
 	if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
 	try {
-		const envPath = resolve(__dirname, "../../.env.local");
+		const thisDir = dirname(fileURLToPath(import.meta.url));
+		const envPath = resolve(thisDir, "../../.env.local");
 		const content = readFileSync(envPath, "utf-8");
 		const match = content.match(/^SESSION_SECRET=(.+)$/m);
 		if (match) return match[1].trim();
 	} catch {
-		// fallback
+		// fallback when .env.local not found
 	}
 	return "dev-secret-change-in-production";
 }
