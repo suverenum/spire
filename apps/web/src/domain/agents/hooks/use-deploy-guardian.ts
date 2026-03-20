@@ -2,14 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import {
-	type Address,
-	keccak256,
-	type PublicClient,
-	parseEventLogs,
-	type TransactionReceipt,
-	toHex,
-} from "viem";
+import { type Address, keccak256, parseEventLogs, toHex } from "viem";
 import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
@@ -19,6 +12,7 @@ import {
 	MPP_ESCROW_ADDRESS,
 	SUPPORTED_TOKENS,
 } from "@/lib/constants";
+import { confirmTx } from "@/lib/tempo/confirm-tx";
 import { FEE_TOKEN } from "@/lib/wagmi";
 import {
 	type AgentWalletParams,
@@ -74,19 +68,6 @@ const GuardianReadAbi = [
 		stateMutability: "view",
 	},
 ] as const;
-
-/** Wait for tx receipt and throw if the transaction reverted on-chain. */
-async function confirmTx(
-	publicClient: PublicClient,
-	hash: `0x${string}`,
-	context: string,
-): Promise<TransactionReceipt> {
-	const receipt = await publicClient.waitForTransactionReceipt({ hash });
-	if (receipt.status === "reverted") {
-		throw new Error(`Transaction reverted during ${context} (tx: ${hash})`);
-	}
-	return receipt;
-}
 
 // ─── TIP-20 transfer for funding ──────────────────────────────────
 const Tip20Abi = [

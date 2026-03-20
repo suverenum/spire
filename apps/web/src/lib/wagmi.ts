@@ -2,7 +2,6 @@ import type { Chain } from "viem";
 import { withFeePayer } from "viem/tempo";
 import { createConfig, http } from "wagmi";
 import { KeyManager, webAuthn } from "wagmi/tempo";
-import { ACCOUNT_TOKENS } from "./constants";
 import { env } from "./env";
 
 const tempoChain: Chain = {
@@ -20,8 +19,12 @@ const tempoChain: Chain = {
 	},
 };
 
-/** Fee token address for gas payments (USDC on mainnet, AlphaUSD on testnet) */
-export const FEE_TOKEN = ACCOUNT_TOKENS[0]?.address;
+/**
+ * Fee token address for gas payments.
+ * Set via NEXT_PUBLIC_FEE_TOKEN env var (pathUSD on testnet, USDC.e on mainnet).
+ * When set at chain level, ALL transactions automatically use this token for fees.
+ */
+export const FEE_TOKEN = env.NEXT_PUBLIC_FEE_TOKEN as `0x${string}` | undefined;
 
 export const wagmiConfig = createConfig({
 	chains: [tempoChain],
