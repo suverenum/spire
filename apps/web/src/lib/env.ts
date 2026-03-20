@@ -21,7 +21,11 @@ const envSchema = z.object({
 	NEXT_PUBLIC_TEMPO_EXPLORER_URL: z.string().url(),
 
 	// Tokens (JSON string → parsed array)
-	NEXT_PUBLIC_TOKENS: z.string().transform((s) => z.array(tokenSchema).parse(JSON.parse(s))),
+	NEXT_PUBLIC_TOKENS: z.string().transform((s) => {
+		// Vercel may wrap the value in extra quotes — strip them
+		const cleaned = s.startsWith('"') && s.endsWith('"') ? s.slice(1, -1) : s;
+		return z.array(tokenSchema).parse(JSON.parse(cleaned));
+	}),
 	NEXT_PUBLIC_DEFAULT_TOKEN: z.string(),
 
 	// Contracts
