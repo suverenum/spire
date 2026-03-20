@@ -2,6 +2,7 @@ import { getTableName } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import {
 	accounts,
+	agentWallets,
 	multisigConfigs,
 	multisigConfirmations,
 	multisigTransactions,
@@ -54,6 +55,34 @@ describe("accounts schema", () => {
 		];
 		const columnNames = Object.keys(accounts);
 		for (const col of expectedColumns) {
+			expect(columnNames).toContain(col);
+		}
+	});
+});
+
+describe("agentWallets schema", () => {
+	it("has the expected table name", () => {
+		expect(getTableName(agentWallets)).toBe("agent_wallets");
+	});
+
+	it("has all required columns", () => {
+		const columnNames = Object.keys(agentWallets);
+		const expected = [
+			"id",
+			"accountId",
+			"label",
+			"guardianAddress",
+			"agentKeyAddress",
+			"encryptedKey",
+			"spendingCap",
+			"dailyLimit",
+			"maxPerTx",
+			"allowedVendors",
+			"status",
+			"deployedAt",
+			"createdAt",
+		];
+		for (const col of expected) {
 			expect(columnNames).toContain(col);
 		}
 	});

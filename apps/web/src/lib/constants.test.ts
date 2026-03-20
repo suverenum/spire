@@ -3,7 +3,9 @@ import {
 	ACCOUNT_TOKENS,
 	CACHE_KEYS,
 	DEX_ADDRESS,
+	GUARDIAN_FACTORY_ADDRESS,
 	KEYCHAIN_ADDRESS,
+	MPP_ESCROW_ADDRESS,
 	SESSION_COOKIE_NAME,
 	SESSION_MAX_AGE_MS,
 	SUPPORTED_TOKENS,
@@ -80,6 +82,22 @@ describe("KEYCHAIN_ADDRESS", () => {
 	});
 });
 
+describe("GUARDIAN_FACTORY_ADDRESS", () => {
+	it("is a valid hex address", () => {
+		expect(GUARDIAN_FACTORY_ADDRESS).toMatch(/^0x[a-fA-F0-9]{40}$/);
+	});
+});
+
+describe("MPP_ESCROW_ADDRESS", () => {
+	it("is a valid hex address", () => {
+		expect(MPP_ESCROW_ADDRESS).toMatch(/^0x[a-fA-F0-9]{40}$/);
+	});
+
+	it("matches the expected escrow address", () => {
+		expect(MPP_ESCROW_ADDRESS).toBe("0xca4e835F803cB0b7C428222B3A3B98518d4779Fe");
+	});
+});
+
 describe("CACHE_KEYS", () => {
 	it("generates balances key", () => {
 		expect(CACHE_KEYS.balances("0x123")).toEqual(["balances", "0x123"]);
@@ -99,5 +117,13 @@ describe("CACHE_KEYS", () => {
 			"0xwallet",
 			"0xtoken",
 		]);
+	});
+
+	it("generates agentWallets key", () => {
+		expect(CACHE_KEYS.agentWallets("t-1")).toEqual(["agent-wallets", "t-1"]);
+	});
+
+	it("generates agentConfig key", () => {
+		expect(CACHE_KEYS.agentConfig("w-1")).toEqual(["agent-config", "w-1"]);
 	});
 });
