@@ -13,7 +13,6 @@ import {
 	SUPPORTED_TOKENS,
 } from "@/lib/constants";
 import { confirmTx } from "@/lib/tempo/confirm-tx";
-import { FEE_TOKEN } from "@/lib/wagmi";
 import {
 	type AgentWalletParams,
 	assertCanCreateAgentWallet,
@@ -143,7 +142,6 @@ export function useDeployGuardian() {
 					[MPP_ESCROW_ADDRESS],
 					[tokenAddress],
 				],
-				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			} as Parameters<typeof walletClient.writeContract>[0]);
 			const deployReceipt = await confirmTx(publicClient, deployHash, "Guardian deployment");
 
@@ -189,7 +187,6 @@ export function useDeployGuardian() {
 					abi: Tip20Abi,
 					functionName: "transfer",
 					args: [guardianAddress, params.fundingAmount],
-					...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 				} as Parameters<typeof walletClient.writeContract>[0]);
 				await confirmTx(publicClient, fundHash, "fund Guardian");
 			}

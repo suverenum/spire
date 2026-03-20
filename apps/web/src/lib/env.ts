@@ -38,6 +38,12 @@ const envSchema = z.object({
 		z.string().regex(addressPattern).optional(),
 	),
 
+	// Fee token (gas payment token — pathUSD on testnet, USDC.e on mainnet)
+	NEXT_PUBLIC_FEE_TOKEN: z.preprocess(
+		emptyToUndefined,
+		z.string().regex(addressPattern).optional(),
+	),
+
 	// App
 	NEXT_PUBLIC_APP_ENV: z.preprocess(
 		emptyToUndefined,
@@ -59,6 +65,7 @@ const buildTimeFallback: Env = {
 	NEXT_PUBLIC_DEFAULT_TOKEN: "",
 	NEXT_PUBLIC_MULTISIG_FACTORY: undefined,
 	NEXT_PUBLIC_GUARD_FACTORY: undefined,
+	NEXT_PUBLIC_FEE_TOKEN: undefined,
 	NEXT_PUBLIC_APP_ENV: "development",
 	NEXT_PUBLIC_APP_URL: undefined,
 };
@@ -77,6 +84,7 @@ function getEnv(): Env {
 			NEXT_PUBLIC_DEFAULT_TOKEN: process.env.NEXT_PUBLIC_DEFAULT_TOKEN,
 			NEXT_PUBLIC_MULTISIG_FACTORY: process.env.NEXT_PUBLIC_MULTISIG_FACTORY,
 			NEXT_PUBLIC_GUARD_FACTORY: process.env.NEXT_PUBLIC_GUARD_FACTORY,
+			NEXT_PUBLIC_FEE_TOKEN: process.env.NEXT_PUBLIC_FEE_TOKEN,
 			NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
 			NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 		});
