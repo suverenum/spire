@@ -102,6 +102,8 @@ describe("multisigConfigs schema", () => {
 		expect(columnNames).toContain("tiersJson");
 		expect(columnNames).toContain("defaultConfirmations");
 		expect(columnNames).toContain("allowlistEnabled");
+		expect(columnNames).toContain("agentPrivateKey");
+		expect(columnNames).toContain("agentAddress");
 		expect(columnNames).toContain("createdAt");
 		expect(columnNames).toContain("updatedAt");
 	});

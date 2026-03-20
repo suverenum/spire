@@ -119,6 +119,14 @@ describe("CACHE_KEYS", () => {
 		]);
 	});
 
+	it("generates multisigConfig key", () => {
+		expect(CACHE_KEYS.multisigConfig("acc-1")).toEqual(["multisig-config", "acc-1"]);
+	});
+
+	it("generates pendingTransactions key", () => {
+		expect(CACHE_KEYS.pendingTransactions("acc-1")).toEqual(["pending-transactions", "acc-1"]);
+	});
+
 	it("generates agentWallets key", () => {
 		expect(CACHE_KEYS.agentWallets("t-1")).toEqual(["agent-wallets", "t-1"]);
 	});
