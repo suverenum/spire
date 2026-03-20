@@ -20,6 +20,7 @@ export default defineConfig({
 			NEXT_PUBLIC_TOKENS:
 				'[{"name":"AlphaUSD","symbol":"AUSD","decimals":6,"address":"0x20c0000000000000000000000000000000000001"},{"name":"BetaUSD","symbol":"BUSD","decimals":6,"address":"0x20c0000000000000000000000000000000000002"}]',
 			NEXT_PUBLIC_DEFAULT_TOKEN: "AlphaUSD",
+			NEXT_PUBLIC_FEE_TOKEN: "0x20c0000000000000000000000000000000000000",
 			NEXT_PUBLIC_APP_ENV: "development",
 		},
 		include: ["src/**/*.test.{ts,tsx}"],
