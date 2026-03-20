@@ -5,7 +5,7 @@ import { KeyManager, webAuthn } from "wagmi/tempo";
 import { ACCOUNT_TOKENS } from "./constants";
 import { env } from "./env";
 
-const tempoChain: Chain & { feeToken?: `0x${string}` } = {
+const tempoChain: Chain = {
 	id: env.NEXT_PUBLIC_TEMPO_CHAIN_ID,
 	name: env.NEXT_PUBLIC_APP_ENV === "production" ? "Tempo" : "Tempo Testnet",
 	nativeCurrency: { name: "TEMPO", symbol: "TEMPO", decimals: 18 },
@@ -18,8 +18,10 @@ const tempoChain: Chain & { feeToken?: `0x${string}` } = {
 			url: env.NEXT_PUBLIC_TEMPO_EXPLORER_URL,
 		},
 	},
-	feeToken: ACCOUNT_TOKENS[0]?.address,
 };
+
+/** Fee token address for gas payments (USDC on mainnet, AlphaUSD on testnet) */
+export const FEE_TOKEN = ACCOUNT_TOKENS[0]?.address;
 
 export const wagmiConfig = createConfig({
 	chains: [tempoChain],
