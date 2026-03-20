@@ -2,9 +2,10 @@ import type { Chain } from "viem";
 import { withFeePayer } from "viem/tempo";
 import { createConfig, http } from "wagmi";
 import { KeyManager, webAuthn } from "wagmi/tempo";
+import { ACCOUNT_TOKENS } from "./constants";
 import { env } from "./env";
 
-const tempoChain: Chain = {
+const tempoChain: Chain & { feeToken?: `0x${string}` } = {
 	id: env.NEXT_PUBLIC_TEMPO_CHAIN_ID,
 	name: env.NEXT_PUBLIC_APP_ENV === "production" ? "Tempo" : "Tempo Testnet",
 	nativeCurrency: { name: "TEMPO", symbol: "TEMPO", decimals: 18 },
@@ -17,6 +18,7 @@ const tempoChain: Chain = {
 			url: env.NEXT_PUBLIC_TEMPO_EXPLORER_URL,
 		},
 	},
+	feeToken: ACCOUNT_TOKENS[0]?.address,
 };
 
 export const wagmiConfig = createConfig({
