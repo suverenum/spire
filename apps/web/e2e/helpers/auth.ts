@@ -10,7 +10,7 @@ function loadSessionSecret(): string {
 		const thisDir = dirname(fileURLToPath(import.meta.url));
 		const envPath = resolve(thisDir, "../../.env.local");
 		const content = readFileSync(envPath, "utf-8");
-		const match = content.match(/^SESSION_SECRET=(.+)$/m);
+		const match = content.match(/^SESSION_SECRET\s*=\s*(.+)$/m);
 		if (match) {
 			let secret = match[1].trim();
 			// Strip surrounding quotes (dotenv semantics)
