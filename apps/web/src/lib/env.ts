@@ -92,10 +92,16 @@ function getEnv(): Env {
 		if (result.success) {
 			_env = result.data;
 		} else {
-			// During build (CI, next build), env vars may not be available.
-			// Use fallback to allow compilation; runtime will fail loudly if vars are missing.
-			console.warn("[env] Missing environment variables, using build-time fallback");
-			_env = buildTimeFallback;
+			// During `next build`, env vars may not be available — use fallback for compilation.
+			// At runtime, missing env vars are a fatal error — fail fast instead of silently degrading.
+			const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+			if (isBuildPhase) {
+				_env = buildTimeFallback;
+			} else {
+				throw new Error(
+					`[env] Required environment variables are missing or invalid.\n${result.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n")}`,
+				);
+			}
 		}
 	}
 	return _env;
