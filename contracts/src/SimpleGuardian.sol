@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ITIP20} from "./ITIP20.sol";
 
 /// @title SimpleGuardian
 /// @notice On-chain spending guardrails for AI agents with owner approval flow.
@@ -50,6 +51,7 @@ contract SimpleGuardian {
         address token;
         address to;
         uint256 amount;
+        bytes32 memo; // TIP-20 memo for payment binding (0 = no memo)
         uint8 status; // 0 = pending, 1 = approved, 2 = rejected
         uint256 createdAt;
     }
@@ -199,55 +201,39 @@ contract SimpleGuardian {
     }
 
     // ─── Payments ───────────────────────────────────────────────
-    /// @notice Execute a payment within limits (reverts if over limits)
+    /// @notice Execute a payment within limits (no memo — standard ERC-20 transfer)
     function pay(address token, address to, uint256 amount) external onlyAgent whenNotPaused {
-        if (!allowedTokens[token]) revert TokenNotAllowed(token);
-        if (!allowedRecipients[to]) revert RecipientNotAllowed(to);
-        if (amount > maxPerTx) revert ExceedsPerTxLimit(amount, maxPerTx);
-
-        _resetDayIfNeeded();
-        _enforceDailyAndCap(amount);
-
-        spentToday += amount;
-        totalSpent += amount;
-        IERC20(token).safeTransfer(to, amount);
-        emit PaymentExecuted(token, to, amount);
+        _validateAndPay(token, to, amount, bytes32(0));
     }
 
-    /// @notice Propose a payment. If within per-tx limit, executes immediately (still respects daily/cap).
-    ///         If over per-tx limit, creates a proposal for owner approval.
+    /// @notice Execute a payment within limits with a TIP-20 memo for payment binding
+    /// @param memo 32-byte memo (e.g. keccak256(invoiceId, nonce)) attached to the transfer
+    function payWithMemo(address token, address to, uint256 amount, bytes32 memo)
+        external
+        onlyAgent
+        whenNotPaused
+    {
+        _validateAndPay(token, to, amount, memo);
+    }
+
+    /// @notice Propose a payment (no memo). Auto-executes if within per-tx limit.
     function proposePay(address token, address to, uint256 amount)
         external
         onlyAgent
         whenNotPaused
         returns (uint256 proposalId, bool executed)
     {
-        if (!allowedTokens[token]) revert TokenNotAllowed(token);
-        if (!allowedRecipients[to]) revert RecipientNotAllowed(to);
+        return _proposePayInternal(token, to, amount, bytes32(0));
+    }
 
-        _resetDayIfNeeded();
-
-        // Execute immediately if within per-tx limit; still respects daily/cap
-        if (amount <= maxPerTx) {
-            _enforceDailyAndCap(amount);
-            spentToday += amount;
-            totalSpent += amount;
-            IERC20(token).safeTransfer(to, amount);
-            emit PaymentExecuted(token, to, amount);
-            return (0, true);
-        }
-
-        // Above per-tx threshold → proposal, but only if it can still fit daily/cap
-        _enforceDailyAndCap(amount);
-        if (pendingCount >= MAX_PENDING) revert PendingQueueFull(MAX_PENDING);
-
-        proposalCount++;
-        pendingCount++;
-        proposals[proposalCount] =
-            Proposal({token: token, to: to, amount: amount, status: 0, createdAt: block.timestamp});
-
-        emit PaymentProposed(proposalCount, token, to, amount);
-        return (proposalCount, false);
+    /// @notice Propose a payment with memo. Auto-executes if within per-tx limit.
+    function proposePayWithMemo(address token, address to, uint256 amount, bytes32 memo)
+        external
+        onlyAgent
+        whenNotPaused
+        returns (uint256 proposalId, bool executed)
+    {
+        return _proposePayInternal(token, to, amount, memo);
     }
 
     /// @notice Owner approves and executes a pending payment (enforces daily/cap)
@@ -263,7 +249,7 @@ contract SimpleGuardian {
         pendingCount--;
         spentToday += p.amount;
         totalSpent += p.amount;
-        IERC20(p.token).safeTransfer(p.to, p.amount);
+        _transferToken(p.token, p.to, p.amount, p.memo);
         emit PaymentApproved(proposalId, p.token, p.to, p.amount);
     }
 
@@ -298,5 +284,61 @@ contract SimpleGuardian {
         if (_max == 0 || _daily == 0 || _cap == 0) revert LimitsInvariantViolation();
         if (_max > _daily) revert LimitsInvariantViolation();
         if (_daily > _cap) revert LimitsInvariantViolation();
+    }
+
+    /// @dev Validates allowlists/limits and executes a payment with optional memo.
+    function _validateAndPay(address token, address to, uint256 amount, bytes32 memo) internal {
+        if (!allowedTokens[token]) revert TokenNotAllowed(token);
+        if (!allowedRecipients[to]) revert RecipientNotAllowed(to);
+        if (amount > maxPerTx) revert ExceedsPerTxLimit(amount, maxPerTx);
+
+        _resetDayIfNeeded();
+        _enforceDailyAndCap(amount);
+
+        spentToday += amount;
+        totalSpent += amount;
+        _transferToken(token, to, amount, memo);
+        emit PaymentExecuted(token, to, amount);
+    }
+
+    /// @dev Propose payment with optional memo. Auto-executes if within per-tx limit.
+    function _proposePayInternal(address token, address to, uint256 amount, bytes32 memo)
+        internal
+        returns (uint256 proposalId, bool executed)
+    {
+        if (!allowedTokens[token]) revert TokenNotAllowed(token);
+        if (!allowedRecipients[to]) revert RecipientNotAllowed(to);
+
+        _resetDayIfNeeded();
+
+        if (amount <= maxPerTx) {
+            _enforceDailyAndCap(amount);
+            spentToday += amount;
+            totalSpent += amount;
+            _transferToken(token, to, amount, memo);
+            emit PaymentExecuted(token, to, amount);
+            return (0, true);
+        }
+
+        _enforceDailyAndCap(amount);
+        if (pendingCount >= MAX_PENDING) revert PendingQueueFull(MAX_PENDING);
+
+        proposalCount++;
+        pendingCount++;
+        proposals[proposalCount] =
+            Proposal({token: token, to: to, amount: amount, memo: memo, status: 0, createdAt: block.timestamp});
+
+        emit PaymentProposed(proposalCount, token, to, amount);
+        return (proposalCount, false);
+    }
+
+    /// @dev Transfer tokens — uses TIP-20 transferWithMemo when memo is non-zero,
+    ///      otherwise falls back to standard ERC-20 safeTransfer.
+    function _transferToken(address token, address to, uint256 amount, bytes32 memo) internal {
+        if (memo != bytes32(0)) {
+            ITIP20(token).transferWithMemo(to, amount, memo);
+        } else {
+            IERC20(token).safeTransfer(to, amount);
+        }
     }
 }

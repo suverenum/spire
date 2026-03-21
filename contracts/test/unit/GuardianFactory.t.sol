@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {MockERC20} from "../helpers/MockERC20.sol";
 import {MockERC20False} from "../helpers/MockERC20False.sol";
+import {MockTIP20} from "../helpers/MockTIP20.sol";
 import {SimpleGuardian} from "../../src/SimpleGuardian.sol";
 import {GuardianFactory} from "../../src/GuardianFactory.sol";
 
@@ -751,5 +752,90 @@ contract GuardianFactoryTest is Test {
 
         vm.expectRevert(SimpleGuardian.ZeroAddress.selector);
         new SimpleGuardian(owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, recipients, emptyAddrs);
+    }
+
+    // =======================================================================
+    // NEW: payWithMemo — TIP-20 transferWithMemo support
+    // =======================================================================
+
+    function test_payWithMemo_callsTransferWithMemo() public {
+        MockTIP20 tip20 = new MockTIP20();
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(tip20));
+
+        vm.prank(owner);
+        address guardian =
+            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(200)), recipients, tokens);
+        tip20.mint(guardian, 50_000_000);
+
+        bytes32 memo = keccak256(abi.encodePacked("invoice-123", uint256(42)));
+
+        vm.prank(agentAddr);
+        SimpleGuardian(guardian).payWithMemo(address(tip20), vendor, 1_000_000, memo);
+
+        assertEq(tip20.balanceOf(vendor), 1_000_000);
+        assertEq(tip20.lastMemo(), memo, "Memo should be passed through to TIP-20");
+    }
+
+    function test_pay_withoutMemo_usesStandardTransfer() public {
+        address guardian = _deployGuardian(bytes32(uint256(201)));
+        usdc.mint(guardian, 50_000_000);
+
+        // Standard pay (no memo) — should work with regular ERC-20
+        vm.prank(agentAddr);
+        SimpleGuardian(guardian).pay(address(usdc), vendor, 1_000_000);
+
+        assertEq(usdc.balanceOf(vendor), 1_000_000, "Standard pay still works");
+    }
+
+    function test_proposePayWithMemo_storesMemo() public {
+        MockTIP20 tip20 = new MockTIP20();
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(tip20));
+
+        vm.prank(owner);
+        address guardian =
+            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(202)), recipients, tokens);
+        tip20.mint(guardian, 50_000_000);
+
+        bytes32 memo = keccak256(abi.encodePacked("invoice-456"));
+
+        // 5 USDC > 2 USDC per-tx cap → creates proposal
+        vm.prank(agentAddr);
+        (uint256 proposalId, bool executed) =
+            SimpleGuardian(guardian).proposePayWithMemo(address(tip20), vendor, 5_000_000, memo);
+
+        assertFalse(executed);
+        assertEq(proposalId, 1);
+
+        // Approve — should pass memo through to transferWithMemo
+        vm.prank(owner);
+        SimpleGuardian(guardian).approvePay(1);
+
+        assertEq(tip20.balanceOf(vendor), 5_000_000);
+        assertEq(tip20.lastMemo(), memo, "Memo should be passed through on approval");
+    }
+
+    function test_proposePayWithMemo_autoExecuteWithMemo() public {
+        MockTIP20 tip20 = new MockTIP20();
+        address[] memory recipients = _addr(vendor);
+        address[] memory tokens = _addr(address(tip20));
+
+        vm.prank(owner);
+        address guardian =
+            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(203)), recipients, tokens);
+        tip20.mint(guardian, 50_000_000);
+
+        bytes32 memo = keccak256(abi.encodePacked("small-payment"));
+
+        // 1 USDC <= 2 USDC per-tx cap → auto-executes
+        vm.prank(agentAddr);
+        (uint256 proposalId, bool executed) =
+            SimpleGuardian(guardian).proposePayWithMemo(address(tip20), vendor, 1_000_000, memo);
+
+        assertTrue(executed, "Should auto-execute within limit");
+        assertEq(proposalId, 0);
+        assertEq(tip20.balanceOf(vendor), 1_000_000);
+        assertEq(tip20.lastMemo(), memo, "Memo should be used even on auto-execute");
     }
 }
