@@ -5,7 +5,13 @@ import {SimpleGuardian} from "./SimpleGuardian.sol";
 
 /// @title GuardianFactory
 /// @notice Deploys SimpleGuardian instances via CREATE2 for deterministic addresses.
+///         Salt is combined with msg.sender to prevent front-running (EIP-1014).
 contract GuardianFactory {
+    error ZeroAddress();
+    error AllowlistTooLarge(uint256 max);
+
+    uint256 public constant MAX_ALLOWLIST = 64;
+
     event GuardianCreated(
         address indexed guardian,
         address indexed owner,
@@ -24,6 +30,16 @@ contract GuardianFactory {
         address[] calldata recipients,
         address[] calldata tokens
     ) external returns (address guardian) {
+        if (agent == address(0)) revert ZeroAddress();
+        if (recipients.length > MAX_ALLOWLIST || tokens.length > MAX_ALLOWLIST) {
+            revert AllowlistTooLarge(MAX_ALLOWLIST);
+        }
+        for (uint256 i = 0; i < recipients.length; i++) {
+            if (recipients[i] == address(0)) revert ZeroAddress();
+        }
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (tokens[i] == address(0)) revert ZeroAddress();
+        }
         bytes32 effectiveSalt = _effectiveSalt(msg.sender, salt);
         guardian = address(
             new SimpleGuardian{salt: effectiveSalt}(
