@@ -49,6 +49,9 @@ contract GuardianFactory {
         emit GuardianCreated(guardian, msg.sender, agent, maxPerTx, dailyLimit, spendingCap);
     }
 
+    /// @notice Compute the deterministic CREATE2 address for a Guardian before deployment.
+    /// @dev Uses EIP-1014 formula: keccak256(0xff ++ factory ++ salt ++ keccak256(initCode)).
+    ///      Salt is derived from deployer + user-salt to prevent front-running.
     function getGuardianAddress(
         address deployer,
         address agent,

@@ -6,3 +6,21 @@ test = "test"
 solc_version = "0.8.24"
 optimizer = true
 optimizer_runs = 200
+
+[fuzz]
+runs = 1000
+dictionary_weight = 80
+
+[invariant]
+runs = 256
+depth = 128
+fail_on_revert = false
+
+# CI profile — thorough testing before merge
+[profile.ci.fuzz]
+runs = 10000
+
+[profile.ci.invariant]
+runs = 1024
+depth = 256
+fail_on_revert = true

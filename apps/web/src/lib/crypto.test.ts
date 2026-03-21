@@ -2,17 +2,17 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { decrypt, encrypt } from "./crypto";
 
 describe("crypto", () => {
-	const originalEnv = process.env.SESSION_SECRET;
+	const originalEnv = process.env.ENCRYPTION_SECRET;
 
 	beforeEach(() => {
-		process.env.SESSION_SECRET = "test-secret-key-for-encryption-testing";
+		process.env.ENCRYPTION_SECRET = "test-secret-key-for-encryption-testing";
 	});
 
 	afterEach(() => {
 		if (originalEnv) {
-			process.env.SESSION_SECRET = originalEnv;
+			process.env.ENCRYPTION_SECRET = originalEnv;
 		} else {
-			delete process.env.SESSION_SECRET;
+			delete process.env.ENCRYPTION_SECRET;
 		}
 	});
 
@@ -43,7 +43,7 @@ describe("crypto", () => {
 
 	test("decrypt fails with wrong secret", () => {
 		const encrypted = encrypt("secret data");
-		process.env.SESSION_SECRET = "wrong-secret-key";
+		process.env.ENCRYPTION_SECRET = "wrong-secret-key";
 		expect(() => decrypt(encrypted)).toThrow();
 	});
 
@@ -53,20 +53,14 @@ describe("crypto", () => {
 		expect(() => decrypt(tampered)).toThrow();
 	});
 
-	test("throws if neither ENCRYPTION_SECRET nor SESSION_SECRET is set", () => {
-		delete process.env.SESSION_SECRET;
+	test("throws if ENCRYPTION_SECRET is not set", () => {
 		delete process.env.ENCRYPTION_SECRET;
 		expect(() => encrypt("test")).toThrow("ENCRYPTION_SECRET");
 	});
 
-	test("prefers ENCRYPTION_SECRET over SESSION_SECRET", () => {
-		process.env.ENCRYPTION_SECRET = "encryption-only-key";
-		process.env.SESSION_SECRET = "session-only-key";
+	test("different ENCRYPTION_SECRET cannot decrypt", () => {
 		const encrypted = encrypt("test data");
-		// Decrypt with ENCRYPTION_SECRET should work
-		expect(decrypt(encrypted)).toBe("test data");
-		// Decrypt with only SESSION_SECRET should fail
-		delete process.env.ENCRYPTION_SECRET;
+		process.env.ENCRYPTION_SECRET = "completely-different-key";
 		expect(() => decrypt(encrypted)).toThrow();
 	});
 

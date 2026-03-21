@@ -69,7 +69,7 @@ jobs:
           python3 -m pip install slither-analyzer
 
       - name: Slither scan
-        run: slither . --filter-paths "lib|test" || true
+        run: slither . --config-file slither.config.json
 
   secrets:
     name: Secret Scanning

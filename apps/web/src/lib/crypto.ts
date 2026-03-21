@@ -15,8 +15,11 @@ function deriveKey(secret: string, salt: Buffer): Buffer {
 }
 
 function getSecret(): string {
-	const secret = process.env.ENCRYPTION_SECRET ?? process.env.SESSION_SECRET;
-	if (!secret) throw new Error("ENCRYPTION_SECRET (or SESSION_SECRET) is required for encryption");
+	const secret = process.env.ENCRYPTION_SECRET;
+	if (!secret)
+		throw new Error(
+			"ENCRYPTION_SECRET must be set. Add it to .env.local or export it in your shell.",
+		);
 	return secret;
 }
 
