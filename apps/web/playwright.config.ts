@@ -28,7 +28,19 @@ export default defineConfig({
 	projects: [
 		{
 			name: "chromium",
+			testDir: "./e2e",
+			testIgnore: "**/testnet/**",
 			use: { ...devices["Desktop Chrome"], headless: true },
+		},
+		{
+			name: "testnet",
+			testDir: "./e2e/testnet",
+			timeout: 120_000,
+			retries: 1,
+			use: {
+				...devices["Desktop Chrome"],
+				headless: true,
+			},
 		},
 	],
 	webServer: {
