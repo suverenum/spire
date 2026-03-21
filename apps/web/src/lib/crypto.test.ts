@@ -53,9 +53,17 @@ describe("crypto", () => {
 		expect(() => decrypt(tampered)).toThrow();
 	});
 
-	test("throws if ENCRYPTION_SECRET is not set", () => {
+	test("throws if neither ENCRYPTION_SECRET nor SESSION_SECRET is set", () => {
 		delete process.env.ENCRYPTION_SECRET;
+		delete process.env.SESSION_SECRET;
 		expect(() => encrypt("test")).toThrow("ENCRYPTION_SECRET");
+	});
+
+	test("falls back to SESSION_SECRET when ENCRYPTION_SECRET is not set", () => {
+		delete process.env.ENCRYPTION_SECRET;
+		process.env.SESSION_SECRET = "session-fallback-key";
+		const encrypted = encrypt("legacy compat test");
+		expect(decrypt(encrypted)).toBe("legacy compat test");
 	});
 
 	test("different ENCRYPTION_SECRET cannot decrypt", () => {

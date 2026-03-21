@@ -106,20 +106,25 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 			guardianAddress,
 			maxPerTx,
 			dailyLimit,
+			spendingCap,
 		}: {
 			guardianAddress: Address;
 			maxPerTx: bigint;
 			dailyLimit: bigint;
+			spendingCap: bigint;
 		}) => {
 			const walletClient = await getWalletClient(config);
 			const publicClient = await getPublicClient(config);
 			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
 
+			// Contract requires 3 args: maxPerTx, dailyLimit, spendingCap
+			// When updating from the UI, we keep the existing spendingCap
+			// (the UI only exposes per-tx and daily edits)
 			const hash = await walletClient.writeContract({
 				address: guardianAddress,
 				abi: GuardianOwnerAbi,
 				functionName: "updateLimits",
-				args: [maxPerTx, dailyLimit],
+				args: [maxPerTx, dailyLimit, spendingCap],
 				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 

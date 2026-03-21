@@ -2,6 +2,7 @@ title = "Goldhord Gitleaks Config"
 
 [extend]
 # Use default rule set as base — covers generic private keys, AWS, API tokens, etc.
+useDefault = true
 
 [[rules]]
 id = "ethereum-private-key-inline"

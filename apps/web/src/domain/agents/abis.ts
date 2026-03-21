@@ -6,6 +6,7 @@ export const GuardianOwnerAbi = [
 		inputs: [
 			{ name: "_maxPerTx", type: "uint256" },
 			{ name: "_dailyLimit", type: "uint256" },
+			{ name: "_spendingCap", type: "uint256" },
 		],
 		outputs: [],
 		stateMutability: "nonpayable",

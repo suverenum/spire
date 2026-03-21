@@ -87,6 +87,7 @@ export function AgentDetailContent({
 				guardianAddress: wallet.guardianAddress as Address,
 				maxPerTx: maxPerTxRaw,
 				dailyLimit: dailyLimitRaw,
+				spendingCap: BigInt(wallet.spendingCap),
 			},
 			{
 				onSuccess: async () => {
