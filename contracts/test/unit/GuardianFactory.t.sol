@@ -752,4 +752,63 @@ contract GuardianFactoryTest is Test {
         vm.expectRevert(SimpleGuardian.ZeroAddress.selector);
         new SimpleGuardian(owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, recipients, emptyAddrs);
     }
+
+    // =======================================================================
+    // Edge cases: zero address on instance, zero amount, day boundary
+    // =======================================================================
+
+    function test_addRecipient_zeroAddress_reverts() public {
+        address guardian = _deployGuardian(bytes32(uint256(300)));
+
+        vm.prank(owner);
+        vm.expectRevert(SimpleGuardian.ZeroAddress.selector);
+        SimpleGuardian(guardian).addRecipient(address(0));
+    }
+
+    function test_addToken_zeroAddress_reverts() public {
+        address guardian = _deployGuardian(bytes32(uint256(301)));
+
+        vm.prank(owner);
+        vm.expectRevert(SimpleGuardian.ZeroAddress.selector);
+        SimpleGuardian(guardian).addToken(address(0));
+    }
+
+    function test_pay_zeroAmount_succeeds() public {
+        // Zero-amount pay is technically valid (no explicit check in contract).
+        // This documents the current behavior.
+        address guardian = _deployGuardian(bytes32(uint256(302)));
+        usdc.mint(guardian, 50_000_000);
+
+        vm.prank(agentAddr);
+        SimpleGuardian(guardian).pay(address(usdc), vendor, 0);
+
+        // Balance unchanged, but spentToday/totalSpent also unchanged
+        assertEq(usdc.balanceOf(vendor), 0);
+        assertEq(SimpleGuardian(guardian).spentToday(), 0);
+    }
+
+    function test_dailyLimit_resetsAtDayBoundary() public {
+        address guardian = _deployGuardian(bytes32(uint256(303)));
+        usdc.mint(guardian, 100_000_000);
+
+        // Spend 8 USDC on day 1
+        for (uint256 i = 0; i < 4; i++) {
+            vm.prank(agentAddr);
+            SimpleGuardian(guardian).pay(address(usdc), vendor, 2_000_000);
+        }
+        assertEq(SimpleGuardian(guardian).spentToday(), 8_000_000);
+
+        // Warp to exactly the next day boundary
+        uint256 currentDay = block.timestamp / 1 days;
+        uint256 nextDayStart = (currentDay + 1) * 1 days;
+        vm.warp(nextDayStart);
+
+        // Daily counter should reset — can spend again
+        vm.prank(agentAddr);
+        SimpleGuardian(guardian).pay(address(usdc), vendor, 2_000_000);
+        assertEq(SimpleGuardian(guardian).spentToday(), 2_000_000, "Daily counter should reset at day boundary");
+
+        // But totalSpent keeps accumulating
+        assertEq(SimpleGuardian(guardian).totalSpent(), 10_000_000, "Total spent should accumulate across days");
+    }
 }
