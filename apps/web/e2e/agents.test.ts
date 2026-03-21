@@ -26,6 +26,7 @@ test.describe("Agent Wallets E2E", () => {
 
 		test("shows Create Agent Wallet button", async ({ page }) => {
 			await page.goto("/agents");
+			await page.waitForLoadState("networkidle");
 			await expect(page.getByTestId("create-agent-btn")).toBeVisible({ timeout: 15000 });
 		});
 
