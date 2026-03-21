@@ -22,7 +22,10 @@ import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { tempo as tempoChain } from "viem/chains";
 
-const GUARDIAN_ABI = parseAbi(["function pay(address token, address to, uint256 amount) external"]);
+const GUARDIAN_ABI = parseAbi([
+	"function pay(address token, address to, uint256 amount) external",
+	"function payWithMemo(address token, address to, uint256 amount, bytes32 memo) external",
+]);
 
 const DEFAULT_RPC_URL = "https://rpc.moderato.tempo.xyz";
 const DEFAULT_CHAIN_ID = 42431;
@@ -48,7 +51,7 @@ export interface GuardedMppxParams {
  * 3. onChallenge intercepts: calls Guardian.pay() instead of direct USDC.transfer()
  * 4. Guardian checks all rules on-chain, then executes the transfer
  * 5. mppx retries with push-mode credential (tx hash)
- * 6. Server verifies the Transfer event and returns 200 OK
+ * 6. Server verifies the Transfer/TransferWithMemo event and returns 200 OK
  */
 export function createGuardedMppx(params: GuardedMppxParams) {
 	const rpcUrl = params.rpcUrl ?? DEFAULT_RPC_URL;
@@ -77,15 +80,28 @@ export function createGuardedMppx(params: GuardedMppxParams) {
 		],
 
 		async onChallenge(challenge) {
-			const { amount, currency, recipient } = challenge.request;
+			const { amount, currency, recipient, memo } = challenge.request;
 
-			// Route through Guardian contract instead of direct transfer
-			const hash = await walletClient.writeContract({
-				address: params.guardianAddress,
-				abi: GUARDIAN_ABI,
-				functionName: "pay",
-				args: [currency as `0x${string}`, recipient as `0x${string}`, BigInt(amount)],
-			});
+			// Route through Guardian contract — use payWithMemo when memo available
+			// for challenge/invoice binding (prevents payment attribution spoofing)
+			const hash = memo
+				? await walletClient.writeContract({
+						address: params.guardianAddress,
+						abi: GUARDIAN_ABI,
+						functionName: "payWithMemo",
+						args: [
+							currency as `0x${string}`,
+							recipient as `0x${string}`,
+							BigInt(amount),
+							memo as `0x${string}`,
+						],
+					})
+				: await walletClient.writeContract({
+						address: params.guardianAddress,
+						abi: GUARDIAN_ABI,
+						functionName: "pay",
+						args: [currency as `0x${string}`, recipient as `0x${string}`, BigInt(amount)],
+					});
 
 			// Wait for on-chain confirmation
 			await publicClient.waitForTransactionReceipt({ hash });
