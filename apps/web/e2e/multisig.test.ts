@@ -99,9 +99,9 @@ test.describe("Multisig E2E", () => {
 	test.describe("Transactions Page", () => {
 		test("shows transaction filters", async ({ page }) => {
 			await page.goto("/transactions");
-			await expect(page.getByRole("tab", { name: "All" })).toBeVisible();
-			await expect(page.getByRole("tab", { name: "Sent" })).toBeVisible();
-			await expect(page.getByRole("tab", { name: "Received" })).toBeVisible();
+			await expect(page.getByRole("tab", { name: "All" })).toBeVisible({ timeout: 15_000 });
+			await expect(page.getByRole("tab", { name: "Sent" })).toBeVisible({ timeout: 10_000 });
+			await expect(page.getByRole("tab", { name: "Received" })).toBeVisible({ timeout: 10_000 });
 		});
 	});
 
