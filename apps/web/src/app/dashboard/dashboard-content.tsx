@@ -8,10 +8,7 @@ import { PlusIcon, SendIcon, TransferIcon } from "@/components/icons";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Sheet } from "@/components/ui/sheet";
 import { AccountGrid } from "@/domain/accounts/components/account-grid";
-import { AccountSelector } from "@/domain/accounts/components/account-selector";
 import { CreateAccountForm } from "@/domain/accounts/components/create-account-form";
 import { DeleteDialog } from "@/domain/accounts/components/delete-dialog";
 import { RenameDialog } from "@/domain/accounts/components/rename-dialog";
@@ -29,6 +26,7 @@ import { ACCOUNT_TOKENS, CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord, AccountWithBalance } from "@/lib/tempo/types";
 import { formatBalance } from "@/lib/utils";
 import { DashboardRecentTransactions } from "./dashboard-recent-transactions";
+import { MoveFundsSheet } from "./move-funds-sheet";
 
 interface DashboardContentProps {
 	treasuryName: string;
@@ -285,7 +283,7 @@ export function DashboardContent({
 						}
 					}}
 				/>
-				<Sheet
+				<MoveFundsSheet
 					open={transferOpen}
 					onClose={() => {
 						setTransferOpen(false);
@@ -294,55 +292,21 @@ export function DashboardContent({
 						setTransferAmount("");
 						setTransferError("");
 					}}
-					title="Move Funds"
-				>
-					<div className="space-y-4">
-						<AccountSelector
-							accounts={accountsWithBalances}
-							selectedAccountId={transferFromId}
-							onSelect={(id) => {
-								setTransferFromId(id);
-								if (id === transferToId) setTransferToId("");
-							}}
-							label="From"
-						/>
-						{transferFromAccount && (
-							<p className="text-muted-foreground text-xs">
-								Available: {formatBalance(transferFromAccount.balance, 6)}{" "}
-								{transferFromAccount.tokenSymbol}
-							</p>
-						)}
-						<AccountSelector
-							accounts={accountsWithBalances}
-							selectedAccountId={transferToId}
-							onSelect={setTransferToId}
-							label="To"
-							excludeAccountId={transferFromId}
-						/>
-						<div>
-							<label htmlFor="transfer-amount" className="mb-1 block text-sm font-medium">
-								Amount
-							</label>
-							<Input
-								id="transfer-amount"
-								type="text"
-								inputMode="decimal"
-								placeholder="0.00"
-								value={transferAmount}
-								onChange={(e) => setTransferAmount(e.target.value)}
-							/>
-						</div>
-						{transferError && <p className="text-sm text-red-600">{transferError}</p>}
-						<Button
-							onClick={handleTransfer}
-							disabled={transferMutation.isPending}
-							className="w-full"
-							size="lg"
-						>
-							{transferMutation.isPending ? "Moving..." : "Move"}
-						</Button>
-					</div>
-				</Sheet>
+					accounts={accountsWithBalances}
+					fromId={transferFromId}
+					onFromSelect={(id) => {
+						setTransferFromId(id);
+						if (id === transferToId) setTransferToId("");
+					}}
+					toId={transferToId}
+					onToSelect={setTransferToId}
+					fromAccount={transferFromAccount}
+					amount={transferAmount}
+					onAmountChange={setTransferAmount}
+					error={transferError}
+					onSubmit={handleTransfer}
+					isPending={transferMutation.isPending}
+				/>
 			</SidebarLayout>
 		</SessionGuard>
 	);
