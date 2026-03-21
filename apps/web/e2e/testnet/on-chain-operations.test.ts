@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { createPublicClient, http, parseAbi } from "viem";
+import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { tempoModerato } from "viem/chains";
+import { withFeePayer } from "viem/tempo";
 
 const RPC_URL = "https://rpc.moderato.tempo.xyz";
 const ALPHA_USD = "0x20c0000000000000000000000000000000000001" as const;
@@ -88,7 +89,6 @@ test.describe("On-Chain Operations (Testnet)", () => {
 		expect(recipientBalanceBefore).toBe(0n);
 
 		// Transfer 1 AlphaUSD from sender to recipient
-		const { createWalletClient } = await import("viem");
 		const walletClient = createWalletClient({
 			account: sender,
 			chain: tempoModerato,
@@ -152,17 +152,19 @@ test.describe("On-Chain Operations (Testnet)", () => {
 			return;
 		}
 
-		const { createWalletClient } = await import("viem");
+		// Use fee payer transport (Tempo Moderato sponsor pays gas)
+		const SPONSOR_URL = "https://sponsor.moderato.tempo.xyz";
+		const transport = withFeePayer(http(RPC_URL), http(SPONSOR_URL));
 		const walletClient = createWalletClient({
 			account: deployer,
 			chain: tempoModerato,
-			transport: http(RPC_URL),
+			transport,
 		});
 
 		const hash = await walletClient.deployContract({
 			abi: artifact.abi as [],
 			bytecode: artifact.bytecode.object as `0x${string}`,
-			gas: 5_000_000n,
+			gas: 10_000_000n,
 		});
 
 		const receipt = await publicClient.waitForTransactionReceipt({ hash });
