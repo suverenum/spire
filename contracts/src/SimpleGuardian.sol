@@ -243,13 +243,8 @@ contract SimpleGuardian {
 
         proposalCount++;
         pendingCount++;
-        proposals[proposalCount] = Proposal({
-            token: token,
-            to: to,
-            amount: amount,
-            status: 0,
-            createdAt: block.timestamp
-        });
+        proposals[proposalCount] =
+            Proposal({token: token, to: to, amount: amount, status: 0, createdAt: block.timestamp});
 
         emit PaymentProposed(proposalCount, token, to, amount);
         return (proposalCount, false);

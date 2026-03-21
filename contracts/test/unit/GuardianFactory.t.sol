@@ -72,9 +72,8 @@ contract GuardianFactoryTest is Test {
         );
 
         vm.prank(owner);
-        address guardian = factory.createGuardian(
-            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs
-        );
+        address guardian =
+            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs);
 
         assertEq(guardian, predicted, "Deployed address should match prediction");
     }
@@ -131,14 +130,12 @@ contract GuardianFactoryTest is Test {
         bytes32 salt = bytes32(uint256(1));
 
         vm.prank(owner);
-        address g1 = factory.createGuardian(
-            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs
-        );
+        address g1 =
+            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs);
 
         vm.prank(stranger);
-        address g2 = factory.createGuardian(
-            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs
-        );
+        address g2 =
+            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, emptyAddrs, emptyAddrs);
 
         assertTrue(g1 != g2, "Different deployers should produce different addresses");
     }
@@ -159,9 +156,7 @@ contract GuardianFactoryTest is Test {
 
         vm.prank(owner);
         vm.expectRevert(GuardianFactory.ZeroAddress.selector);
-        factory.createGuardian(
-            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, emptyAddrs
-        );
+        factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, emptyAddrs);
     }
 
     function test_createGuardian_zeroToken_reverts() public {
@@ -327,9 +322,7 @@ contract GuardianFactoryTest is Test {
 
         // 6th payment should fail
         vm.prank(agentAddr);
-        vm.expectRevert(
-            abi.encodeWithSelector(SimpleGuardian.DailyLimitExceeded.selector, 11_000_000, DAILY_LIMIT)
-        );
+        vm.expectRevert(abi.encodeWithSelector(SimpleGuardian.DailyLimitExceeded.selector, 11_000_000, DAILY_LIMIT));
         SimpleGuardian(guardian).pay(address(usdc), vendor, 1_000_000);
     }
 
@@ -364,9 +357,7 @@ contract GuardianFactoryTest is Test {
 
         // Next payment of 2 USDC would make total=16 > cap=15
         vm.prank(agentAddr);
-        vm.expectRevert(
-            abi.encodeWithSelector(SimpleGuardian.SpendingCapExceeded.selector, 16_000_000, 15_000_000)
-        );
+        vm.expectRevert(abi.encodeWithSelector(SimpleGuardian.SpendingCapExceeded.selector, 16_000_000, 15_000_000));
         SimpleGuardian(guardian).pay(address(usdc), vendor, 2_000_000);
     }
 
@@ -415,7 +406,7 @@ contract GuardianFactoryTest is Test {
         usdc.mint(guardian, 50_000_000);
 
         vm.prank(agentAddr);
-        (uint256 proposalId, ) = SimpleGuardian(guardian).proposePay(address(usdc), vendor, 5_000_000);
+        (uint256 proposalId,) = SimpleGuardian(guardian).proposePay(address(usdc), vendor, 5_000_000);
         assertEq(proposalId, 1);
 
         vm.prank(owner);

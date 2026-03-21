@@ -37,6 +37,37 @@ jobs:
       - name: Build
         run: bunx turbo build
 
+  contracts:
+    name: Contracts (Foundry + Slither)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Forge fmt
+        run: forge fmt --check
+
+      - name: Forge build
+        run: forge build --sizes
+
+      - name: Forge tests
+        run: forge test -vvv
+
+      - name: Install Slither
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install slither-analyzer
+
+      - name: Slither scan
+        run: slither . --filter-paths "lib|test" || true
+
   secrets:
     name: Secret Scanning
     runs-on: ubuntu-latest
