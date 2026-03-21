@@ -125,4 +125,14 @@ export const MultisigAbi = [
 		outputs: [{ name: "transactionId", type: "uint256" }],
 		stateMutability: "nonpayable",
 	},
+	{
+		type: "event",
+		name: "TransactionSubmitted",
+		inputs: [
+			{ name: "txId", type: "uint256", indexed: true },
+			{ name: "to", type: "address", indexed: true },
+			{ name: "value", type: "uint256", indexed: false },
+			{ name: "data", type: "bytes", indexed: false },
+		],
+	},
 ] as const;
