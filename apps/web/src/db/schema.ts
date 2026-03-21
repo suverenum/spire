@@ -60,6 +60,7 @@ export const agentWallets = pgTable("agent_wallets", {
 	maxPerTx: bigint("max_per_tx", { mode: "bigint" }).notNull(),
 	allowedVendors: jsonb("allowed_vendors").notNull().$type<string[]>(),
 	status: text("status").notNull().default("active"), // "active" | "revoked"
+	keyExportedAt: timestamp("key_exported_at"), // null = never exported, set on first export
 	deployedAt: timestamp("deployed_at").defaultNow().notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });

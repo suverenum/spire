@@ -11,6 +11,7 @@ vi.mock("@/lib/crypto", () => ({
 
 const mockFindFirstWallet = vi.fn();
 const mockFindFirstAccount = vi.fn();
+const mockUpdate = vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => Promise.resolve()) })) }));
 
 vi.mock("@/db", () => ({
 	db: {
@@ -18,6 +19,7 @@ vi.mock("@/db", () => ({
 			agentWallets: { findFirst: (...args: unknown[]) => mockFindFirstWallet(...args) },
 			accounts: { findFirst: (...args: unknown[]) => mockFindFirstAccount(...args) },
 		},
+		update: () => mockUpdate(),
 	},
 }));
 
@@ -55,6 +57,17 @@ describe("revealAgentKey", () => {
 		const { revealAgentKey } = await import("./reveal-agent-key");
 		const result = await revealAgentKey("w-1");
 		expect(result.error).toBe("Not authorized");
+	});
+
+	test("rejects when key already exported", async () => {
+		mockFindFirstWallet.mockResolvedValue({
+			...WALLET,
+			keyExportedAt: new Date("2026-01-01"),
+		});
+		mockFindFirstAccount.mockResolvedValue(ACCOUNT);
+		const { revealAgentKey } = await import("./reveal-agent-key");
+		const result = await revealAgentKey("w-1");
+		expect(result.error).toContain("already exported");
 	});
 
 	test("returns error when decryption fails", async () => {

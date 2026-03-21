@@ -29,8 +29,20 @@ export async function revealAgentKey(
 		return { error: "Not authorized" };
 	}
 
+	// Enforce one-time export: if key was already exported, deny
+	if (wallet.keyExportedAt) {
+		return { error: "Key already exported. For security, agent keys can only be revealed once." };
+	}
+
 	try {
 		const privateKey = decrypt(wallet.encryptedKey);
+
+		// Mark as exported so it can never be revealed again
+		await db
+			.update(agentWallets)
+			.set({ keyExportedAt: new Date() })
+			.where(eq(agentWallets.id, walletId));
+
 		return { privateKey };
 	} catch {
 		return { error: "Failed to decrypt key" };
