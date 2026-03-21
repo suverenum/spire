@@ -40,7 +40,7 @@ console.log("\nDeploying GuardianFactory...");
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const artifact = JSON.parse(
 	readFileSync(
-		resolve(__dirname, "../../contracts/out/GuardianFactory.sol/GuardianFactory.json"),
+		resolve(__dirname, "../../../contracts/out/GuardianFactory.sol/GuardianFactory.json"),
 		"utf-8",
 	),
 );

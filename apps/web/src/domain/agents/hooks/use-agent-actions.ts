@@ -127,7 +127,14 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 					args: [maxPerTx, dailyLimit, spendingCap],
 					...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 				});
-			} catch {
+			} catch (err: unknown) {
+				// Only fall back for ABI/contract mismatch errors (revert, execution reverted).
+				// Rethrow user rejections and RPC failures to avoid masking errors.
+				const msg = (err as { shortMessage?: string })?.shortMessage ?? "";
+				const isContractError =
+					msg.includes("revert") || msg.includes("execution") || msg.includes("invalid opcode");
+				if (!isContractError) throw err;
+
 				// Legacy guardian with 2-arg updateLimits(maxPerTx, dailyLimit)
 				const legacyAbi = [
 					{

@@ -5,13 +5,15 @@ const TEST_DB_URL =
 
 const DEFAULT_PORT = process.env.PORT || "11000";
 const BASE_URL = process.env.BASE_URL
-	? (() => {
-			const url = new URL(process.env.BASE_URL);
-			if (!url.port) url.port = DEFAULT_PORT;
-			return url.toString().replace(/\/$/, "");
-		})()
+	? process.env.BASE_URL.replace(/\/$/, "")
 	: `http://localhost:${DEFAULT_PORT}`;
-const PORT = new URL(BASE_URL).port || DEFAULT_PORT;
+const PORT = (() => {
+	try {
+		return new URL(BASE_URL).port || DEFAULT_PORT;
+	} catch {
+		return DEFAULT_PORT;
+	}
+})();
 
 export default defineConfig({
 	testDir: "./e2e",
