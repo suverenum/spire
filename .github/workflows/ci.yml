@@ -60,6 +60,9 @@ jobs:
       - name: Forge tests
         run: forge test -vvv
 
+      - name: Forge coverage
+        run: forge coverage --report summary
+
       - name: Install Slither
         run: |
           python3 -m pip install --upgrade pip
