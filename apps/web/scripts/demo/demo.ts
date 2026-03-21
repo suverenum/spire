@@ -71,7 +71,7 @@ const DAILY_LIMIT = 10_000_000n; // $10
 const SPENDING_CAP = 50_000_000n; // $50
 
 const GuardianFactoryAbi = parseAbi([
-	"function createGuardian(address agent, uint256 maxPerTx, uint256 dailyLimit, uint256 spendingCap, bytes32 salt) external returns (address guardian)",
+	"function createGuardian(address agent, uint256 maxPerTx, uint256 dailyLimit, uint256 spendingCap, bytes32 salt, address[] recipients, address[] tokens) external returns (address guardian)",
 	"event GuardianCreated(address indexed guardian, address indexed owner, address indexed agent, uint256 maxPerTx, uint256 dailyLimit, uint256 spendingCap)",
 ]);
 
@@ -213,7 +213,7 @@ async function main() {
 		address: GUARDIAN_FACTORY,
 		abi: GuardianFactoryAbi,
 		functionName: "createGuardian",
-		args: [agentAccount.address, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt],
+		args: [agentAccount.address, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, salt, [vendorAccount.address], [PATHUSD]],
 	});
 
 	const deployReceipt = await waitForTransactionReceipt(publicClient, {

@@ -2,11 +2,12 @@ import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { readContract, waitForTransactionReceipt } from "viem/actions";
 import { tempoModerato } from "viem/chains";
+import { requireAddress, requireHexKey } from "./env";
 
-const AGENT_KEY = "0xe2b52d60ad2a7a53019f5f5a242999d74770c23b2bdf61bf971881c1cf3f8807";
-const GUARDIAN = "0x0dcF19D31643c721f7799e3b6142CB0788CA01CF" as const;
-const TOKEN = "0x20c0000000000000000000000000000000000001" as const; // AlphaUSD
-const ANTHROPIC = "0x0000000000000000000000000000000000000002" as const;
+const AGENT_KEY = requireHexKey("AGENT_KEY");
+const GUARDIAN = requireAddress("GUARDIAN_ADDRESS");
+const TOKEN = requireAddress("TOKEN_ADDRESS");
+const ANTHROPIC = requireAddress("VENDOR_ADDRESS");
 const RPC = "https://rpc.moderato.tempo.xyz";
 
 const agent = privateKeyToAccount(AGENT_KEY);

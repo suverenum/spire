@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { tempo } from "viem/chains";
@@ -38,9 +40,10 @@ if (balance === 0n) {
 
 // Deploy GuardianFactory
 console.log("\nDeploying GuardianFactory...");
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const artifact = JSON.parse(
 	readFileSync(
-		"/Users/ivorobiev/Desktop/repos/spire/contracts/out/GuardianFactory.sol/GuardianFactory.json",
+		resolve(__dirname, "../../contracts/out/GuardianFactory.sol/GuardianFactory.json"),
 		"utf-8",
 	),
 );

@@ -1,0 +1,20 @@
+title = "Goldhord Gitleaks Config"
+
+[extend]
+# Use default rule set as base
+
+[[rules]]
+id = "ethereum-private-key-inline"
+description = "Ethereum/Tempo private key passed to privateKeyToAccount or similar"
+regex = '''privateKeyToAccount\s*\(\s*["']0x[0-9a-fA-F]{64}["']'''
+tags = ["key", "ethereum"]
+
+[allowlist]
+paths = [
+  '''node_modules/''',
+  '''contracts/lib/''',
+  '''\.env\..*example''',
+  '''specs/redesign-code-base/''',
+  '''\.gitleaks\.toml''',
+  '''bun\.lock''',
+]

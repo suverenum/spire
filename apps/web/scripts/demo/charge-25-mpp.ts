@@ -6,11 +6,12 @@ import { tempoModerato } from "viem/chains";
 import { Mppx as Mppx_client, tempo as tempo_client } from "./src/client/index.js";
 import { Credential } from "./src/index.js";
 import { Mppx as Mppx_server, tempo as tempo_server } from "./src/server/index.js";
+import { requireAddress, requireHexKey } from "./env";
 
-const AGENT_KEY = "0xa84f44f65204722fdb59cd33abb1555a86ff85fe0958d1dd94dc71e6123ff9b1";
-const GUARDIAN = "0x9CA7B94a0322f225e8e35cf87aA70FC515F4B049" as `0x${string}`;
-const TOKEN = "0x20c0000000000000000000000000000000000001" as const;
-const VENDOR = "0x0000000000000000000000000000000000000001" as const;
+const AGENT_KEY = requireHexKey("AGENT_KEY");
+const GUARDIAN = requireAddress("GUARDIAN_ADDRESS");
+const TOKEN = requireAddress("TOKEN_ADDRESS");
+const VENDOR = requireAddress("VENDOR_ADDRESS");
 const EXPLORER = "https://explore.moderato.tempo.xyz";
 const RPC = "https://rpc.moderato.tempo.xyz";
 
