@@ -74,7 +74,7 @@ test.describe("Real Testnet - Authenticated Navigation", () => {
 
 	test("agents page loads", async ({ page }) => {
 		await page.goto("/agents");
-		await page.waitForTimeout(3_000);
+		await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 		expect(page.url()).toContain("/agents");
 	});
 

@@ -45,36 +45,41 @@ export default defineConfig({
 			},
 		},
 	],
-	webServer: {
-		command: `DATABASE_URL="${TEST_DB_URL}" PORT=${PORT} bun run dev`,
-		url: BASE_URL,
-		reuseExistingServer: !process.env.CI,
-		timeout: 60_000,
-		env: {
-			DATABASE_URL: TEST_DB_URL,
-			SESSION_SECRET: "playwright-session-secret",
-			ENCRYPTION_SECRET: "playwright-encryption-secret",
-			NEXT_PUBLIC_TEMPO_CHAIN_ID: "42431",
-			NEXT_PUBLIC_TEMPO_RPC_HTTP: "https://rpc.moderato.tempo.xyz",
-			NEXT_PUBLIC_TEMPO_RPC_WS: "wss://rpc.moderato.tempo.xyz",
-			NEXT_PUBLIC_TEMPO_SPONSOR_URL: "https://sponsor.moderato.tempo.xyz",
-			NEXT_PUBLIC_TEMPO_EXPLORER_URL: "https://explore.tempo.xyz",
-			NEXT_PUBLIC_TOKENS: JSON.stringify([
-				{
-					name: "AlphaUSD",
-					symbol: "AUSD",
-					decimals: 6,
-					address: "0x20c0000000000000000000000000000000000001",
+	// Skip local dev server when targeting an external BASE_URL
+	...(process.env.BASE_URL
+		? {}
+		: {
+				webServer: {
+					command: `DATABASE_URL="${TEST_DB_URL}" PORT=${PORT} bun run dev`,
+					url: BASE_URL,
+					reuseExistingServer: !process.env.CI,
+					timeout: 60_000,
+					env: {
+						DATABASE_URL: TEST_DB_URL,
+						SESSION_SECRET: "playwright-session-secret",
+						ENCRYPTION_SECRET: "playwright-encryption-secret",
+						NEXT_PUBLIC_TEMPO_CHAIN_ID: "42431",
+						NEXT_PUBLIC_TEMPO_RPC_HTTP: "https://rpc.moderato.tempo.xyz",
+						NEXT_PUBLIC_TEMPO_RPC_WS: "wss://rpc.moderato.tempo.xyz",
+						NEXT_PUBLIC_TEMPO_SPONSOR_URL: "https://sponsor.moderato.tempo.xyz",
+						NEXT_PUBLIC_TEMPO_EXPLORER_URL: "https://explore.tempo.xyz",
+						NEXT_PUBLIC_TOKENS: JSON.stringify([
+							{
+								name: "AlphaUSD",
+								symbol: "AUSD",
+								decimals: 6,
+								address: "0x20c0000000000000000000000000000000000001",
+							},
+							{
+								name: "BetaUSD",
+								symbol: "BUSD",
+								decimals: 6,
+								address: "0x20c0000000000000000000000000000000000002",
+							},
+						]),
+						NEXT_PUBLIC_DEFAULT_TOKEN: "AlphaUSD",
+						NEXT_PUBLIC_APP_ENV: "development",
+					},
 				},
-				{
-					name: "BetaUSD",
-					symbol: "BUSD",
-					decimals: 6,
-					address: "0x20c0000000000000000000000000000000000002",
-				},
-			]),
-			NEXT_PUBLIC_DEFAULT_TOKEN: "AlphaUSD",
-			NEXT_PUBLIC_APP_ENV: "development",
-		},
-	},
+			}),
 });
