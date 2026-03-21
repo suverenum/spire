@@ -117,16 +117,38 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 			const publicClient = await getPublicClient(config);
 			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
 
-			// Contract requires 3 args: maxPerTx, dailyLimit, spendingCap
-			// When updating from the UI, we keep the existing spendingCap
-			// (the UI only exposes per-tx and daily edits)
-			const hash = await walletClient.writeContract({
-				address: guardianAddress,
-				abi: GuardianOwnerAbi,
-				functionName: "updateLimits",
-				args: [maxPerTx, dailyLimit, spendingCap],
-				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
-			});
+			// Try 3-arg updateLimits first (new contract), fall back to 2-arg (legacy)
+			let hash: `0x${string}`;
+			try {
+				hash = await walletClient.writeContract({
+					address: guardianAddress,
+					abi: GuardianOwnerAbi,
+					functionName: "updateLimits",
+					args: [maxPerTx, dailyLimit, spendingCap],
+					...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
+				});
+			} catch {
+				// Legacy guardian with 2-arg updateLimits(maxPerTx, dailyLimit)
+				const legacyAbi = [
+					{
+						type: "function" as const,
+						name: "updateLimits",
+						inputs: [
+							{ name: "_maxPerTx", type: "uint256" },
+							{ name: "_dailyLimit", type: "uint256" },
+						],
+						outputs: [],
+						stateMutability: "nonpayable" as const,
+					},
+				];
+				hash = await walletClient.writeContract({
+					address: guardianAddress,
+					abi: legacyAbi,
+					functionName: "updateLimits",
+					args: [maxPerTx, dailyLimit],
+					...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
+				});
+			}
 
 			await confirmTx(publicClient, hash, "update limits");
 			return hash;

@@ -11,7 +11,13 @@ vi.mock("@/lib/crypto", () => ({
 
 const mockFindFirstWallet = vi.fn();
 const mockFindFirstAccount = vi.fn();
-const mockUpdate = vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => Promise.resolve()) })) }));
+const mockUpdate = vi.fn(() => ({
+	set: vi.fn(() => ({
+		where: vi.fn(() => ({
+			returning: vi.fn(() => Promise.resolve([{ id: "w-1" }])),
+		})),
+	})),
+}));
 
 vi.mock("@/db", () => ({
 	db: {
