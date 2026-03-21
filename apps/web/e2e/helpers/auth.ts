@@ -53,11 +53,19 @@ function forgeSessionCookie(data: SessionData): string {
  */
 export async function authenticateContext(
 	context: BrowserContext,
-	opts: { treasuryId: string; tempoAddress: string; treasuryName: string },
+	opts: {
+		treasuryId: string;
+		tempoAddress: string;
+		treasuryName: string;
+		/** Override authenticatedAt for expiry testing. Defaults to Date.now(). */
+		authenticatedAt?: number;
+	},
 ): Promise<void> {
 	const cookie = forgeSessionCookie({
-		...opts,
-		authenticatedAt: Date.now(),
+		treasuryId: opts.treasuryId,
+		tempoAddress: opts.tempoAddress,
+		treasuryName: opts.treasuryName,
+		authenticatedAt: opts.authenticatedAt ?? Date.now(),
 	});
 
 	await context.addCookies([
