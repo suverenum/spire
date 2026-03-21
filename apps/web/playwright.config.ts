@@ -22,7 +22,8 @@ export default defineConfig({
 	retries: process.env.CI ? 2 : 0,
 	workers: process.env.CI ? 1 : undefined,
 	reporter: "html",
-	globalSetup: "./e2e/global-setup.ts",
+	// Skip DB seeding when targeting external BASE_URL (no local Postgres needed)
+	...(process.env.BASE_URL ? {} : { globalSetup: "./e2e/global-setup.ts" }),
 	use: {
 		baseURL: BASE_URL,
 		trace: "on-first-retry",

@@ -45,8 +45,9 @@ function getCookieDomain(): string {
 }
 
 const DEV_SECRET = loadSessionSecret();
-const COOKIE_NAME = "goldhord-session";
 const COOKIE_DOMAIN = getCookieDomain();
+// Production deployments use __Host- prefix; localhost uses plain name
+const COOKIE_NAME = COOKIE_DOMAIN !== "localhost" ? "__Host-goldhord-session" : "goldhord-session";
 
 interface SessionData {
 	treasuryId: string;
@@ -83,14 +84,17 @@ export async function authenticateContext(
 		authenticatedAt: opts.authenticatedAt ?? Date.now(),
 	});
 
+	const isExternal = COOKIE_DOMAIN !== "localhost";
+	const baseUrl = process.env.BASE_URL || "http://localhost:11000";
 	await context.addCookies([
 		{
 			name: COOKIE_NAME,
 			value: cookie,
-			domain: COOKIE_DOMAIN,
+			// __Host- cookies: use url (no domain). Localhost: use domain.
+			...(isExternal ? { url: baseUrl } : { domain: COOKIE_DOMAIN }),
 			path: "/",
 			httpOnly: true,
-			secure: COOKIE_DOMAIN !== "localhost",
+			secure: isExternal,
 			sameSite: "Lax",
 		},
 	]);
