@@ -35,4 +35,5 @@ paths = [
   '''ecosystem\.config''',
   '''\.test\.ts''',
   '''\.test\.tsx''',
+  '''README\.md''',
 ]
