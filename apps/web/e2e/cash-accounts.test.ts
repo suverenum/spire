@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { authenticateContext } from "./helpers/auth";
+import { mockTempoRPC } from "./helpers/rpc-mock";
 import {
 	TEST_EOA_ACCOUNT_ID,
 	TEST_TEMPO_ADDRESS,
@@ -13,30 +14,7 @@ test.beforeEach(async ({ context, page }) => {
 		tempoAddress: TEST_TEMPO_ADDRESS,
 		treasuryName: TEST_TREASURY_NAME,
 	});
-
-	// Mock RPC to prevent real chain call timeouts for test wallet addresses
-	await page.route("**/rpc.moderato.tempo.xyz**", async (route) => {
-		const body = route.request().postDataJSON?.();
-		if (body?.method === "eth_call") {
-			await route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify({
-					jsonrpc: "2.0",
-					id: body.id,
-					result: "0x0000000000000000000000000000000000000000000000000000000000000000",
-				}),
-			});
-		} else if (body?.method === "eth_getTransactionCount") {
-			await route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify({ jsonrpc: "2.0", id: body.id, result: "0x0" }),
-			});
-		} else {
-			await route.continue();
-		}
-	});
+	await mockTempoRPC(page);
 });
 
 test.describe("Cash Account Lifecycle", () => {

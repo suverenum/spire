@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { authenticateContext } from "./helpers/auth";
+import { mockTempoRPC } from "./helpers/rpc-mock";
 import { TEST_TEMPO_ADDRESS, TEST_TREASURY_ID, TEST_TREASURY_NAME } from "./helpers/seed";
 
 test.beforeEach(async ({ context, page }) => {
@@ -8,34 +9,7 @@ test.beforeEach(async ({ context, page }) => {
 		tempoAddress: TEST_TEMPO_ADDRESS,
 		treasuryName: TEST_TREASURY_NAME,
 	});
-
-	// Mock Tempo RPC calls to prevent real chain interactions
-	await page.route("**/rpc.moderato.tempo.xyz**", async (route) => {
-		const body = route.request().postDataJSON?.();
-		if (body?.method === "eth_call") {
-			await route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify({
-					jsonrpc: "2.0",
-					id: body.id,
-					result: "0x0000000000000000000000000000000000000000000000000000000000000000",
-				}),
-			});
-		} else if (body?.method === "eth_getTransactionCount") {
-			await route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify({ jsonrpc: "2.0", id: body.id, result: "0x0" }),
-			});
-		} else {
-			await route.continue();
-		}
-	});
-
-	await page.route("**/sponsor.moderato.tempo.xyz**", async (route) => {
-		await route.continue();
-	});
+	await mockTempoRPC(page);
 });
 
 test.describe("Agent Wallets E2E", () => {

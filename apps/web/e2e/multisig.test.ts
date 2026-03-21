@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { authenticateContext } from "./helpers/auth";
+import { mockTempoRPC } from "./helpers/rpc-mock";
 import { TEST_TEMPO_ADDRESS, TEST_TREASURY_ID, TEST_TREASURY_NAME } from "./helpers/seed";
 
 test.beforeEach(async ({ context, page }) => {
@@ -8,38 +9,7 @@ test.beforeEach(async ({ context, page }) => {
 		tempoAddress: TEST_TEMPO_ADDRESS,
 		treasuryName: TEST_TREASURY_NAME,
 	});
-
-	// Intercept Tempo RPC calls to return mock balance data
-	// This prevents timeouts from fake wallet addresses hitting real RPC
-	await page.route("**/rpc.moderato.tempo.xyz**", async (route) => {
-		const body = route.request().postDataJSON?.();
-		if (body?.method === "eth_call") {
-			// Return 0 balance for any ERC20 balanceOf call
-			await route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify({
-					jsonrpc: "2.0",
-					id: body.id,
-					result: "0x0000000000000000000000000000000000000000000000000000000000000000",
-				}),
-			});
-		} else if (body?.method === "eth_getTransactionCount") {
-			await route.fulfill({
-				status: 200,
-				contentType: "application/json",
-				body: JSON.stringify({ jsonrpc: "2.0", id: body.id, result: "0x0" }),
-			});
-		} else {
-			// Let other calls through
-			await route.continue();
-		}
-	});
-
-	// Also intercept the fee sponsor RPC
-	await page.route("**/sponsor.moderato.tempo.xyz**", async (route) => {
-		await route.continue();
-	});
+	await mockTempoRPC(page);
 });
 
 test.describe("Multisig E2E", () => {
