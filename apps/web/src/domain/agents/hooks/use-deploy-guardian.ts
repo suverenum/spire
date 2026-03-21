@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants";
 import { confirmTx } from "@/lib/tempo/confirm-tx";
 import { FEE_TOKEN } from "@/lib/wagmi";
+import { Tip20Abi } from "../abis";
 import {
 	type AgentWalletParams,
 	assertCanCreateAgentWallet,
@@ -69,19 +70,7 @@ const GuardianReadAbi = [
 	},
 ] as const;
 
-// ─── TIP-20 transfer for funding ──────────────────────────────────
-const Tip20Abi = [
-	{
-		type: "function",
-		name: "transfer",
-		inputs: [
-			{ name: "to", type: "address" },
-			{ name: "amount", type: "uint256" },
-		],
-		outputs: [{ name: "", type: "bool" }],
-		stateMutability: "nonpayable",
-	},
-] as const;
+// Tip20Abi imported from ../abis
 
 // ─── Creation steps ───────────────────────────────────────────────
 

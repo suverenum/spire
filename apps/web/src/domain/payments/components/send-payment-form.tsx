@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toast";
+import { Tip20Abi } from "@/domain/agents/abis";
 import {
 	addMultisigConfirmation,
 	upsertMultisigTransaction,
@@ -21,19 +22,6 @@ import { formatBalance } from "@/lib/utils";
 import { sendPaymentSchema } from "@/lib/validations";
 import { useBalances } from "../hooks/use-balances";
 import { useSendPayment } from "../hooks/use-send-payment";
-
-const Tip20Abi = [
-	{
-		type: "function",
-		name: "transfer",
-		inputs: [
-			{ name: "to", type: "address" },
-			{ name: "value", type: "uint256" },
-		],
-		outputs: [{ name: "", type: "bool" }],
-		stateMutability: "nonpayable",
-	},
-] as const;
 
 const MultisigSubmitAbi = [
 	{
