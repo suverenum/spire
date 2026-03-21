@@ -4,6 +4,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { BrowserContext } from "@playwright/test";
 
+/** Must match SESSION_SECRET in playwright.config.ts webServer.env */
+const PLAYWRIGHT_SESSION_SECRET = "playwright-session-secret";
+
 function loadSessionSecret(): string {
 	if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
 	try {
@@ -13,26 +16,37 @@ function loadSessionSecret(): string {
 		const match = content.match(/^SESSION_SECRET\s*=\s*(.+)$/m);
 		if (match) {
 			let secret = match[1].trim();
-			// Strip surrounding quotes (dotenv semantics)
 			if (
 				(secret.startsWith('"') && secret.endsWith('"')) ||
 				(secret.startsWith("'") && secret.endsWith("'"))
 			) {
 				secret = secret.slice(1, -1);
 			}
-			// Strip inline comments
 			const commentIdx = secret.indexOf(" #");
 			if (commentIdx !== -1) secret = secret.slice(0, commentIdx).trim();
 			return secret;
 		}
 	} catch {
-		// fallback when .env.local not found
+		// .env.local not found — use the same secret as playwright.config.ts
 	}
-	return "dev-secret-change-in-production";
+	return PLAYWRIGHT_SESSION_SECRET;
+}
+
+function getCookieDomain(): string {
+	const baseUrl = process.env.BASE_URL;
+	if (baseUrl) {
+		try {
+			return new URL(baseUrl).hostname;
+		} catch {
+			// fall through
+		}
+	}
+	return "localhost";
 }
 
 const DEV_SECRET = loadSessionSecret();
 const COOKIE_NAME = "goldhord-session";
+const COOKIE_DOMAIN = getCookieDomain();
 
 interface SessionData {
 	treasuryId: string;
@@ -50,6 +64,7 @@ function forgeSessionCookie(data: SessionData): string {
 /**
  * Set a forged auth session cookie on a Playwright browser context.
  * Uses the dev HMAC secret to create a valid session without passkey auth.
+ * Cookie domain is derived from BASE_URL env var (defaults to localhost).
  */
 export async function authenticateContext(
 	context: BrowserContext,
@@ -72,10 +87,10 @@ export async function authenticateContext(
 		{
 			name: COOKIE_NAME,
 			value: cookie,
-			domain: "localhost",
+			domain: COOKIE_DOMAIN,
 			path: "/",
 			httpOnly: true,
-			secure: false,
+			secure: COOKIE_DOMAIN !== "localhost",
 			sameSite: "Lax",
 		},
 	]);
