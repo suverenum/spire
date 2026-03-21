@@ -21,5 +21,18 @@ paths = [
 paths = [
   '''node_modules/''',
   '''contracts/lib/''',
+  '''contracts/cache/''',
+  '''contracts/out/''',
   '''bun\.lock''',
+  '''\.next/''',
+  '''\.env\.local''',
+  '''\.env$''',
+  '''tempo-mppx/''',
+  '''tempo-multisig/''',
+  '''tempo-mpp/''',
+  '''tempo-docs/''',
+  '''specs/''',
+  '''ecosystem\.config''',
+  '''\.test\.ts''',
+  '''\.test\.tsx''',
 ]

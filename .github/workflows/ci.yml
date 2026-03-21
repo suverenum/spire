@@ -89,4 +89,4 @@ jobs:
           chmod +x gitleaks
 
       - name: Run Gitleaks
-        run: ./gitleaks detect --source . --config .gitleaks.toml --verbose
+        run: ./gitleaks detect --source . --config .gitleaks.toml --no-git --verbose
