@@ -19,8 +19,6 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"dependencies": {
-		"@goldhord/ui": "workspace:*",
-		"@goldhord/utils": "workspace:*",
 		"@neondatabase/serverless": "^1.0.2",
 		"@sentry/nextjs": "^10",
 		"@serwist/next": "^9.5.7",

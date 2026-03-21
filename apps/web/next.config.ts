@@ -4,7 +4,7 @@ import withSerwist from "@serwist/next";
 const nextConfig = {
 	reactCompiler: true,
 	cacheComponents: true,
-	transpilePackages: ["@goldhord/ui", "@goldhord/utils"],
+	transpilePackages: [],
 	turbopack: {},
 	experimental: {
 		viewTransition: true,
