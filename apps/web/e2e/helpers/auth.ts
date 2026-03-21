@@ -1,17 +1,20 @@
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import type { BrowserContext } from "@playwright/test";
 
-/** Must match SESSION_SECRET in playwright.config.ts webServer.env */
-const PLAYWRIGHT_SESSION_SECRET = "playwright-session-secret";
-
+/**
+ * Load the session secret that matches what the app server is using.
+ *
+ * Priority order:
+ * 1. SESSION_SECRET env var (explicitly set — used in CI and external runs)
+ * 2. .env.local file (developer's local secret — matches reused dev server)
+ * 3. "playwright-session-secret" (matches playwright.config.ts webServer.env — CI fallback)
+ */
 function loadSessionSecret(): string {
 	if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
 	try {
-		const thisDir = dirname(fileURLToPath(import.meta.url));
-		const envPath = resolve(thisDir, "../../.env.local");
+		const envPath = resolve(process.cwd(), ".env.local");
 		const content = readFileSync(envPath, "utf-8");
 		const match = content.match(/^SESSION_SECRET\s*=\s*(.+)$/m);
 		if (match) {
@@ -27,9 +30,10 @@ function loadSessionSecret(): string {
 			return secret;
 		}
 	} catch {
-		// .env.local not found — use the same secret as playwright.config.ts
+		// .env.local not found
 	}
-	return PLAYWRIGHT_SESSION_SECRET;
+	// Fallback: matches SESSION_SECRET in playwright.config.ts webServer.env
+	return "playwright-session-secret";
 }
 
 function getCookieDomain(): string {
@@ -46,7 +50,6 @@ function getCookieDomain(): string {
 
 const DEV_SECRET = loadSessionSecret();
 const COOKIE_DOMAIN = getCookieDomain();
-// Production deployments use __Host- prefix; localhost uses plain name
 const COOKIE_NAME = COOKIE_DOMAIN !== "localhost" ? "__Host-goldhord-session" : "goldhord-session";
 
 interface SessionData {
@@ -64,8 +67,8 @@ function forgeSessionCookie(data: SessionData): string {
 
 /**
  * Set a forged auth session cookie on a Playwright browser context.
- * Uses the dev HMAC secret to create a valid session without passkey auth.
- * Cookie domain is derived from BASE_URL env var (defaults to localhost).
+ * Uses the session secret to create a valid session without passkey auth.
+ * Cookie domain and name adapt to BASE_URL for external environments.
  */
 export async function authenticateContext(
 	context: BrowserContext,
@@ -73,7 +76,6 @@ export async function authenticateContext(
 		treasuryId: string;
 		tempoAddress: string;
 		treasuryName: string;
-		/** Override authenticatedAt for expiry testing. Defaults to Date.now(). */
 		authenticatedAt?: number;
 	},
 ): Promise<void> {
@@ -90,7 +92,6 @@ export async function authenticateContext(
 		{
 			name: COOKIE_NAME,
 			value: cookie,
-			// __Host- cookies: use url (no domain). Localhost: use domain.
 			...(isExternal ? { url: baseUrl } : { domain: COOKIE_DOMAIN }),
 			path: "/",
 			httpOnly: true,

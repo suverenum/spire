@@ -34,20 +34,18 @@ test.describe("Agent Wallet Flows E2E", () => {
 
 	test("create agent wallet dialog has required fields", async ({ page }) => {
 		await page.goto("/agents");
+		await page.waitForLoadState("networkidle");
 		await expect(page.getByRole("heading", { name: "Agent Wallets" })).toBeVisible({
 			timeout: 15_000,
 		});
 
 		// Open create dialog
 		const createBtn = page.getByTestId("create-agent-btn");
-		if (await createBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
-			await createBtn.click();
+		await expect(createBtn).toBeVisible({ timeout: 10_000 });
+		await createBtn.click();
 
-			// Form should have label, spending limit, daily limit fields
-			await expect(page.locator("#agent-label, #label, [name='label']").first()).toBeVisible({
-				timeout: 5_000,
-			});
-		}
+		// Wait for dialog to open, then check for form fields
+		await expect(page.getByTestId("create-agent-form")).toBeVisible({ timeout: 10_000 });
 	});
 
 	test("agent detail page shows spending limits", async ({ page }) => {
