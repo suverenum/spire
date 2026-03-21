@@ -16,11 +16,12 @@ describe("crypto", () => {
 		}
 	});
 
-	test("encrypt returns a base64 string", () => {
+	test("encrypt returns a versioned base64 string", () => {
 		const result = encrypt("hello world");
 		expect(typeof result).toBe("string");
-		// Verify it's valid base64
-		expect(() => Buffer.from(result, "base64")).not.toThrow();
+		// Verify versioned format: v1:<base64>
+		expect(result.startsWith("v1:")).toBe(true);
+		expect(() => Buffer.from(result.slice(3), "base64")).not.toThrow();
 	});
 
 	test("decrypt recovers original plaintext", () => {
@@ -52,8 +53,29 @@ describe("crypto", () => {
 		expect(() => decrypt(tampered)).toThrow();
 	});
 
-	test("throws if SESSION_SECRET is not set", () => {
+	test("throws if neither ENCRYPTION_SECRET nor SESSION_SECRET is set", () => {
 		delete process.env.SESSION_SECRET;
-		expect(() => encrypt("test")).toThrow("SESSION_SECRET is required");
+		delete process.env.ENCRYPTION_SECRET;
+		expect(() => encrypt("test")).toThrow("ENCRYPTION_SECRET");
+	});
+
+	test("prefers ENCRYPTION_SECRET over SESSION_SECRET", () => {
+		process.env.ENCRYPTION_SECRET = "encryption-only-key";
+		process.env.SESSION_SECRET = "session-only-key";
+		const encrypted = encrypt("test data");
+		// Decrypt with ENCRYPTION_SECRET should work
+		expect(decrypt(encrypted)).toBe("test data");
+		// Decrypt with only SESSION_SECRET should fail
+		delete process.env.ENCRYPTION_SECRET;
+		expect(() => decrypt(encrypted)).toThrow();
+	});
+
+	test("decrypts legacy unversioned ciphertext", () => {
+		// Simulate legacy format by stripping v1: prefix from new ciphertext
+		// This tests backward compatibility
+		const encrypted = encrypt("legacy data");
+		const legacyFormat = encrypted.slice(3); // Remove "v1:"
+		// Should still decrypt (backward compatible)
+		expect(decrypt(legacyFormat)).toBe("legacy data");
 	});
 });

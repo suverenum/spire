@@ -12,10 +12,7 @@ export interface SessionData {
 function getSessionSecret(): string {
 	const secret = process.env.SESSION_SECRET;
 	if (!secret) {
-		if (process.env.NODE_ENV === "production") {
-			throw new Error("SESSION_SECRET must be set in production");
-		}
-		return "dev-secret-change-in-production";
+		throw new Error("SESSION_SECRET must be set. Add it to .env.local or export it in your shell.");
 	}
 	return secret;
 }
