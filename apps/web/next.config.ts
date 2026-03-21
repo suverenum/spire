@@ -33,7 +33,8 @@ const nextConfig = {
 						key: "Content-Security-Policy",
 						value: [
 							"default-src 'self'",
-							"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://us-assets.i.posthog.com",
+							// unsafe-eval only in dev (React needs it for debugging); unsafe-inline kept until nonce migration
+							`script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""} https://vercel.live https://us-assets.i.posthog.com`,
 							"style-src 'self' 'unsafe-inline'",
 							"img-src 'self' data: blob:",
 							"font-src 'self'",
