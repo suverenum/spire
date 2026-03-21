@@ -208,11 +208,7 @@ contract SimpleGuardian {
 
     /// @notice Execute a payment within limits with a TIP-20 memo for payment binding
     /// @param memo 32-byte memo (e.g. keccak256(invoiceId, nonce)) attached to the transfer
-    function payWithMemo(address token, address to, uint256 amount, bytes32 memo)
-        external
-        onlyAgent
-        whenNotPaused
-    {
+    function payWithMemo(address token, address to, uint256 amount, bytes32 memo) external onlyAgent whenNotPaused {
         _validateAndPay(token, to, amount, memo);
     }
 

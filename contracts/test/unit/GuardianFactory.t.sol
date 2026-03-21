@@ -764,8 +764,9 @@ contract GuardianFactoryTest is Test {
         address[] memory tokens = _addr(address(tip20));
 
         vm.prank(owner);
-        address guardian =
-            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(200)), recipients, tokens);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(200)), recipients, tokens
+        );
         tip20.mint(guardian, 50_000_000);
 
         bytes32 memo = keccak256(abi.encodePacked("invoice-123", uint256(42)));
@@ -794,8 +795,9 @@ contract GuardianFactoryTest is Test {
         address[] memory tokens = _addr(address(tip20));
 
         vm.prank(owner);
-        address guardian =
-            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(202)), recipients, tokens);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(202)), recipients, tokens
+        );
         tip20.mint(guardian, 50_000_000);
 
         bytes32 memo = keccak256(abi.encodePacked("invoice-456"));
@@ -822,8 +824,9 @@ contract GuardianFactoryTest is Test {
         address[] memory tokens = _addr(address(tip20));
 
         vm.prank(owner);
-        address guardian =
-            factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(203)), recipients, tokens);
+        address guardian = factory.createGuardian(
+            agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(uint256(203)), recipients, tokens
+        );
         tip20.mint(guardian, 50_000_000);
 
         bytes32 memo = keccak256(abi.encodePacked("small-payment"));
