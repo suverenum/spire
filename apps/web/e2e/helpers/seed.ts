@@ -37,6 +37,11 @@ export async function seedTestData(): Promise<void> {
 	await client.connect();
 
 	try {
+		// Ensure schema matches (key_exported_at may not exist if migration hasn't run)
+		await client.query(
+			"ALTER TABLE agent_wallets ADD COLUMN IF NOT EXISTS key_exported_at TIMESTAMP",
+		);
+
 		// Clean slate
 		await client.query("DELETE FROM agent_wallets");
 		await client.query("DELETE FROM multisig_confirmations");

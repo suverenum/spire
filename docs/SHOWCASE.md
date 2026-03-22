@@ -78,7 +78,9 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { tempoModerato } from 'viem/chains';
 
 // Use any funded account to send fee tokens to the new agent
-const funder = privateKeyToAccount('0xd3f223a2f5ea1f30f70042fbb50cfa575273ddb0cefcecd2c1ce9c990fca8861');
+const FUNDER_KEY = process.env.FUNDER_KEY;
+if (!FUNDER_KEY) throw new Error('Set FUNDER_KEY env var');
+const funder = privateKeyToAccount(FUNDER_KEY as \`0x\${string}\`);
 const pub = createPublicClient({ chain: tempoModerato, transport: http('https://rpc.moderato.tempo.xyz') });
 const w = createWalletClient({ account: funder, chain: tempoModerato, transport: http('https://rpc.moderato.tempo.xyz') });
 

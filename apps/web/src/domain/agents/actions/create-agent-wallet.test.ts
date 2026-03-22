@@ -1,17 +1,23 @@
 import { describe, expect, test, vi } from "vitest";
+import { DEFAULT_SESSION } from "@/test/mocks";
 import type { AgentWalletParams } from "./create-agent-wallet";
 
 // Mock getSession to return a valid session
 vi.mock("@/lib/session", () => ({
-	getSession: vi.fn(() =>
-		Promise.resolve({
-			treasuryId: "test-treasury-id",
-			tempoAddress: "0x1234",
-			treasuryName: "Test Treasury",
-			authenticatedAt: new Date().toISOString(),
-		}),
-	),
+	getSession: vi.fn(() => Promise.resolve(DEFAULT_SESSION)),
 }));
+
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/crypto", () => ({ encrypt: vi.fn(() => "encrypted-key-data") }));
+vi.mock("viem/accounts", () => ({
+	privateKeyToAccount: vi.fn(() => ({
+		address: "0x3333333333333333333333333333333333333333",
+	})),
+}));
+
+const mockInsertReturning = vi.fn().mockResolvedValue([{ id: "new-acc-id" }]);
+const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
+const mockInsert = vi.fn().mockReturnValue({ values: mockInsertValues });
 
 // Mock DB to return no existing accounts
 vi.mock("@/db", () => ({
@@ -21,6 +27,7 @@ vi.mock("@/db", () => ({
 				findFirst: vi.fn(() => Promise.resolve(null)),
 			},
 		},
+		insert: (...args: unknown[]) => mockInsert(...args),
 	},
 }));
 
@@ -104,5 +111,77 @@ describe("assertCanCreateAgentWallet", () => {
 			treasuryId: "wrong-treasury",
 		});
 		expect(result.error).toBe("Treasury mismatch");
+	});
+});
+
+describe("finalizeAgentWalletCreate", () => {
+	const validFinalize = {
+		treasuryId: DEFAULT_SESSION.treasuryId,
+		label: "Marketing Bot",
+		tokenSymbol: "AlphaUSD",
+		guardianAddress: "0x4444444444444444444444444444444444444444",
+		allowedVendors: ["0x0000000000000000000000000000000000000001"],
+		spendingCap: "50000000",
+		dailyLimit: "10000000",
+		maxPerTx: "2000000",
+		agentPrivateKey:
+			"0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as `0x${string}`,
+	};
+
+	test("creates account and agent wallet on success", async () => {
+		mockInsertReturning.mockResolvedValueOnce([{ id: "new-acc-id" }]);
+		const { finalizeAgentWalletCreate } = await import("./create-agent-wallet");
+		const result = await finalizeAgentWalletCreate(validFinalize);
+		expect(result.error).toBeUndefined();
+		expect(result.account?.id).toBe("new-acc-id");
+		expect(result.rawPrivateKey).toBe(validFinalize.agentPrivateKey);
+	});
+
+	test("rejects treasury mismatch", async () => {
+		const { finalizeAgentWalletCreate } = await import("./create-agent-wallet");
+		const result = await finalizeAgentWalletCreate({
+			...validFinalize,
+			treasuryId: "wrong",
+		});
+		expect(result.error).toBe("Treasury mismatch");
+	});
+
+	test("rejects invalid token symbol", async () => {
+		const { finalizeAgentWalletCreate } = await import("./create-agent-wallet");
+		const result = await finalizeAgentWalletCreate({
+			...validFinalize,
+			tokenSymbol: "FAKEUSD",
+		});
+		expect(result.error).toBe("Invalid token");
+	});
+
+	test("rejects invalid guardian address format", async () => {
+		const { finalizeAgentWalletCreate } = await import("./create-agent-wallet");
+		const result = await finalizeAgentWalletCreate({
+			...validFinalize,
+			guardianAddress: "not-an-address",
+		});
+		expect(result.error).toBe("Invalid guardian address");
+	});
+
+	test("returns error on PG unique constraint violation", async () => {
+		mockInsertReturning.mockRejectedValueOnce({ code: "23505" });
+		const { finalizeAgentWalletCreate } = await import("./create-agent-wallet");
+		const result = await finalizeAgentWalletCreate(validFinalize);
+		expect(result.error).toBe("Guardian address already registered");
+	});
+
+	test("re-throws non-constraint errors", async () => {
+		mockInsertReturning.mockRejectedValueOnce(new Error("DB connection lost"));
+		const { finalizeAgentWalletCreate } = await import("./create-agent-wallet");
+		await expect(finalizeAgentWalletCreate(validFinalize)).rejects.toThrow("DB connection lost");
+	});
+
+	test("rejects when no session", async () => {
+		const { getSession } = await import("@/lib/session");
+		vi.mocked(getSession).mockResolvedValueOnce(null);
+		const { finalizeAgentWalletCreate } = await import("./create-agent-wallet");
+		const result = await finalizeAgentWalletCreate(validFinalize);
+		expect(result.error).toBe("Not authenticated");
 	});
 });

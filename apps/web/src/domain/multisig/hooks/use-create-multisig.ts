@@ -17,6 +17,7 @@ import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS } from "@/lib/constants";
 import { env } from "@/lib/env";
+import { FEE_TOKEN } from "@/lib/wagmi";
 import {
 	assertCanCreateMultisigAccount,
 	finalizeMultisigAccountCreate,
@@ -38,99 +39,7 @@ function getGuardFactoryAddress(): Address {
 	return env.NEXT_PUBLIC_GUARD_FACTORY as Address;
 }
 
-// ─── Minimal ABIs (inlined to avoid SDK import dependency) ──────────
-const MultisigFactoryAbi = [
-	{
-		type: "function",
-		name: "createWallet",
-		inputs: [
-			{ name: "owners", type: "address[]" },
-			{ name: "threshold", type: "uint256" },
-			{ name: "salt", type: "bytes32" },
-		],
-		outputs: [{ name: "wallet", type: "address" }],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "event",
-		name: "WalletCreated",
-		inputs: [
-			{ name: "wallet", type: "address", indexed: true },
-			{ name: "owners", type: "address[]", indexed: false },
-			{ name: "threshold", type: "uint256", indexed: false },
-		],
-	},
-] as const;
-
-const PolicyGuardFactoryAbi = [
-	{
-		type: "function",
-		name: "createGuard",
-		inputs: [
-			{ name: "multisig_", type: "address" },
-			{
-				name: "tiers_",
-				type: "tuple[]",
-				components: [
-					{ name: "maxValue", type: "uint256" },
-					{ name: "requiredConfirmations", type: "uint256" },
-				],
-			},
-			{ name: "defaultConfirmations_", type: "uint256" },
-			{ name: "allowlistEnabled_", type: "bool" },
-			{ name: "initialAllowlist_", type: "address[]" },
-		],
-		outputs: [{ name: "guard", type: "address" }],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "event",
-		name: "GuardCreated",
-		inputs: [
-			{ name: "multisig", type: "address", indexed: true },
-			{ name: "guard", type: "address", indexed: true },
-			{ name: "deployer", type: "address", indexed: true },
-		],
-	},
-] as const;
-
-const MultisigSingletonAbi = [
-	{
-		type: "function",
-		name: "submitTransaction",
-		inputs: [
-			{ name: "to", type: "address" },
-			{ name: "value", type: "uint256" },
-			{ name: "data", type: "bytes" },
-		],
-		outputs: [{ name: "txId", type: "uint256" }],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "executeTransaction",
-		inputs: [{ name: "txId", type: "uint256" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "setGuard",
-		inputs: [{ name: "_guard", type: "address" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "event",
-		name: "TransactionSubmitted",
-		inputs: [
-			{ name: "txId", type: "uint256", indexed: true },
-			{ name: "to", type: "address", indexed: true },
-			{ name: "value", type: "uint256", indexed: false },
-			{ name: "data", type: "bytes", indexed: false },
-		],
-	},
-] as const;
+import { MultisigFactoryAbi, MultisigSingletonAbi, PolicyGuardFactoryAbi } from "../abis";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -172,6 +81,7 @@ async function deployMultisigWallet(
 		abi: MultisigFactoryAbi,
 		functionName: "createWallet",
 		args: [owners, 1n, salt], // threshold=1, guard is the real policy engine
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	const receipt = await publicClient.waitForTransactionReceipt({ hash });
 	const logs = parseEventLogs({
@@ -208,6 +118,7 @@ async function deployPolicyGuard(
 			allowlistEnabled,
 			initialAllowlist,
 		],
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	const receipt = await publicClient.waitForTransactionReceipt({ hash });
 	const logs = parseEventLogs({
@@ -240,6 +151,7 @@ async function setGuardOnWallet(
 		abi: MultisigSingletonAbi,
 		functionName: "submitTransaction",
 		args: [walletAddress, 0n, setGuardData],
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	const submitReceipt = await publicClient.waitForTransactionReceipt({
 		hash: submitHash,
@@ -260,6 +172,7 @@ async function setGuardOnWallet(
 		abi: MultisigSingletonAbi,
 		functionName: "executeTransaction",
 		args: [txId],
+		...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 	});
 	await publicClient.waitForTransactionReceipt({ hash: execHash });
 }

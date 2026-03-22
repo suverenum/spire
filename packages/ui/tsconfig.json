@@ -1,9 +1,0 @@
-{
-	"extends": "@goldhord/tsconfig/react.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"paths": {}
-	},
-	"include": ["src", "*.ts", "*.mjs"],
-	"exclude": ["node_modules"]
-}

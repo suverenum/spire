@@ -2,14 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import {
-	type Address,
-	keccak256,
-	type PublicClient,
-	parseEventLogs,
-	type TransactionReceipt,
-	toHex,
-} from "viem";
+import { type Address, keccak256, parseEventLogs, toHex } from "viem";
 import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
@@ -19,7 +12,10 @@ import {
 	MPP_ESCROW_ADDRESS,
 	SUPPORTED_TOKENS,
 } from "@/lib/constants";
+import { tip20Abi } from "@/lib/tempo/abi";
+import { confirmTx } from "@/lib/tempo/confirm-tx";
 import { FEE_TOKEN } from "@/lib/wagmi";
+import { Tip20Abi } from "../abis";
 import {
 	type AgentWalletParams,
 	assertCanCreateAgentWallet,
@@ -75,38 +71,49 @@ const GuardianReadAbi = [
 	},
 ] as const;
 
-/** Wait for tx receipt and throw if the transaction reverted on-chain. */
-async function confirmTx(
-	publicClient: PublicClient,
-	hash: `0x${string}`,
-	context: string,
-): Promise<TransactionReceipt> {
-	const receipt = await publicClient.waitForTransactionReceipt({ hash });
-	if (receipt.status === "reverted") {
-		throw new Error(`Transaction reverted during ${context} (tx: ${hash})`);
-	}
-	return receipt;
-}
+// Tip20Abi imported from ../abis
 
-// ─── TIP-20 transfer for funding ──────────────────────────────────
-const Tip20Abi = [
-	{
-		type: "function",
-		name: "transfer",
-		inputs: [
-			{ name: "to", type: "address" },
-			{ name: "amount", type: "uint256" },
-		],
-		outputs: [{ name: "", type: "bool" }],
-		stateMutability: "nonpayable",
-	},
-] as const;
+// ─── Gas buffer ──────────────────────────────────────────────────
+
+/**
+ * Minimum fee token balance required to cover gas for Guardian deployment + funding.
+ * Tempo charges gas in stablecoins (6 decimals). $1.00 is a conservative buffer —
+ * actual cost is typically <$0.01, but the sponsor may require a minimum balance.
+ */
+const MIN_FEE_TOKEN_BALANCE = 1_000_000n; // 1.00 USD in 6-decimal stablecoin
+
+// ─── Error classification ────────────────────────────────────────
+
+/** Translate raw RPC/sponsor errors into user-friendly messages. */
+function classifyError(error: unknown): string {
+	const raw = error instanceof Error ? error.message : String(error);
+	const short = (error as { shortMessage?: string })?.shortMessage ?? "";
+	const text = `${raw} ${short}`.toLowerCase();
+
+	if (text.includes("fee payer") || text.includes("sponsor")) {
+		if (text.includes("rate limit")) {
+			return "Transaction sponsor is rate-limiting requests. Please wait a minute and try again.";
+		}
+		if (text.includes("insufficient") || text.includes("balance")) {
+			return "Transaction sponsor has insufficient funds. Please try again later or contact support.";
+		}
+		return "Transaction was rejected by the fee sponsor. Please try again or contact support.";
+	}
+	if (text.includes("user rejected") || text.includes("user denied")) {
+		return "Transaction was cancelled.";
+	}
+	if (text.includes("execution reverted")) {
+		return "Transaction failed on-chain. The contract reverted — please verify your parameters.";
+	}
+	return raw.length > 200 ? `${raw.slice(0, 200)}...` : raw;
+}
 
 // ─── Creation steps ───────────────────────────────────────────────
 
 export type AgentCreationStep =
 	| "idle"
 	| "validating"
+	| "preflight"
 	| "deploying"
 	| "funding"
 	| "persisting"
@@ -137,6 +144,43 @@ export function useDeployGuardian() {
 			const walletClient = await getWalletClient(config);
 			const publicClient = await getPublicClient(config);
 			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
+
+			// Step 1.5: Pre-flight balance checks
+			setStep("preflight");
+			const userAddress = walletClient.account.address;
+
+			if (FEE_TOKEN) {
+				const feeBalance = await publicClient.readContract({
+					address: FEE_TOKEN,
+					abi: tip20Abi,
+					functionName: "balanceOf",
+					args: [userAddress],
+				});
+				if (feeBalance < MIN_FEE_TOKEN_BALANCE) {
+					throw new Error(
+						"Insufficient gas token balance. You need at least $1.00 of fee tokens to cover transaction fees.",
+					);
+				}
+			}
+
+			if (params.fundingAmount > 0n) {
+				const fundToken = SUPPORTED_TOKENS[params.tokenSymbol as keyof typeof SUPPORTED_TOKENS];
+				if (fundToken) {
+					const tokenBalance = await publicClient.readContract({
+						address: fundToken.address,
+						abi: tip20Abi,
+						functionName: "balanceOf",
+						args: [userAddress],
+					});
+					if (tokenBalance < params.fundingAmount) {
+						const needed = Number(params.fundingAmount) / 1_000_000;
+						const have = Number(tokenBalance) / 1_000_000;
+						throw new Error(
+							`Insufficient ${params.tokenSymbol} balance for initial funding. Need $${needed.toFixed(2)}, have $${have.toFixed(2)}.`,
+						);
+					}
+				}
+			}
 
 			// Step 2: Deploy Guardian via factory with allowlists in constructor
 			// This configures recipients + tokens in a single tx, avoiding the
@@ -247,7 +291,7 @@ export function useDeployGuardian() {
 		},
 		onError: (error) => {
 			setStep("error");
-			toast(error.message, "error");
+			toast(classifyError(error), "error");
 		},
 	});
 

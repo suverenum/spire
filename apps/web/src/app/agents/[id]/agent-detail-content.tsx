@@ -1,23 +1,12 @@
 "use client";
 
-import {
-	AlertTriangle,
-	ArrowLeft,
-	Bot,
-	ClipboardList,
-	DollarSign,
-	Eye,
-	Plus,
-	ShieldOff,
-	Upload,
-} from "lucide-react";
+import { ArrowLeft, Bot, ClipboardList, Eye, ShieldOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { Address } from "viem";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { revokeAgentKey } from "@/domain/agents/actions/revoke-agent-key";
 import { updateAgentLimits } from "@/domain/agents/actions/update-agent-limits";
@@ -35,17 +24,14 @@ import { useGuardianState } from "@/domain/agents/hooks/use-guardian-state";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
 import { SUPPORTED_TOKENS } from "@/lib/constants";
 import { getVendorByAddress } from "@/lib/vendors";
+import { FundManagementCard } from "./fund-management-card";
+import { SpendingLimitsCard } from "./spending-limits-card";
 
 interface AgentDetailContentProps {
 	walletId: string;
 	treasuryName: string;
 	authenticatedAt: number;
 	treasuryId: string;
-}
-
-function formatAmount(raw: string, decimals = 6): string {
-	const n = Number(raw) / 10 ** decimals;
-	return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function truncateAddress(addr: string): string {
@@ -101,6 +87,7 @@ export function AgentDetailContent({
 				guardianAddress: wallet.guardianAddress as Address,
 				maxPerTx: maxPerTxRaw,
 				dailyLimit: dailyLimitRaw,
+				spendingCap: BigInt(wallet.spendingCap),
 			},
 			{
 				onSuccess: async () => {
@@ -180,91 +167,25 @@ export function AgentDetailContent({
 								</span>
 							</div>
 
-							{/* Spending limits */}
-							<Card>
-								<div className="flex items-center justify-between p-4">
-									<h2 className="flex items-center gap-2 font-semibold">
-										<DollarSign className="h-4 w-4" /> Spending Limits
-									</h2>
-									{!editingLimits && isActive && (
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => {
-												setNewMaxPerTx(String(Number(wallet.maxPerTx) / 1_000_000));
-												setNewDailyLimit(String(Number(wallet.dailyLimit) / 1_000_000));
-												setEditingLimits(true);
-											}}
-											data-testid="edit-limits-btn"
-										>
-											Edit
-										</Button>
-									)}
-								</div>
-								{editingLimits ? (
-									<div className="border-border space-y-3 border-t p-4">
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label
-													htmlFor="edit-max-per-tx"
-													className="text-muted-foreground mb-1 block text-xs font-medium"
-												>
-													Per-tx cap ($)
-												</label>
-												<Input
-													id="edit-max-per-tx"
-													type="number"
-													value={newMaxPerTx}
-													onChange={(e) => setNewMaxPerTx(e.target.value)}
-												/>
-											</div>
-											<div>
-												<label
-													htmlFor="edit-daily-limit"
-													className="text-muted-foreground mb-1 block text-xs font-medium"
-												>
-													Daily limit ($)
-												</label>
-												<Input
-													id="edit-daily-limit"
-													type="number"
-													value={newDailyLimit}
-													onChange={(e) => setNewDailyLimit(e.target.value)}
-												/>
-											</div>
-										</div>
-										<div className="flex gap-2">
-											<Button
-												size="sm"
-												onClick={handleSaveLimits}
-												disabled={updateLimitsMutation.isPending}
-											>
-												{updateLimitsMutation.isPending
-													? "Updating on-chain..."
-													: "Save & Update On-Chain"}
-											</Button>
-											<Button size="sm" variant="outline" onClick={() => setEditingLimits(false)}>
-												Cancel
-											</Button>
-										</div>
-									</div>
-								) : (
-									<div className="border-border grid grid-cols-3 gap-4 border-t p-4 text-center">
-										<div>
-											<p className="text-muted-foreground text-xs">Per-tx cap</p>
-											<p className="text-lg font-semibold">${formatAmount(wallet.maxPerTx)}</p>
-										</div>
-										<div>
-											<p className="text-muted-foreground text-xs">Daily limit</p>
-											<p className="text-lg font-semibold">${formatAmount(wallet.dailyLimit)}</p>
-										</div>
-										<div>
-											<p className="text-muted-foreground text-xs">Total cap</p>
-											<p className="text-lg font-semibold">${formatAmount(wallet.spendingCap)}</p>
-										</div>
-									</div>
-								)}
-							</Card>
+							<SpendingLimitsCard
+								maxPerTx={wallet.maxPerTx}
+								dailyLimit={wallet.dailyLimit}
+								spendingCap={wallet.spendingCap}
+								isActive={isActive}
+								editingLimits={editingLimits}
+								newMaxPerTx={newMaxPerTx}
+								newDailyLimit={newDailyLimit}
+								onSetNewMaxPerTx={setNewMaxPerTx}
+								onSetNewDailyLimit={setNewDailyLimit}
+								onStartEditing={() => {
+									setNewMaxPerTx(String(Number(wallet.maxPerTx) / 1_000_000));
+									setNewDailyLimit(String(Number(wallet.dailyLimit) / 1_000_000));
+									setEditingLimits(true);
+								}}
+								onSave={handleSaveLimits}
+								onCancel={() => setEditingLimits(false)}
+								isSaving={updateLimitsMutation.isPending}
+							/>
 
 							{/* Agent info */}
 							<Card>
@@ -319,86 +240,21 @@ export function AgentDetailContent({
 								</Card>
 							)}
 
-							{/* Fund management */}
 							{isActive && (
-								<Card>
-									<div className="p-4">
-										<h2 className="mb-3 flex items-center gap-2 font-semibold">
-											<Upload className="h-4 w-4" /> Fund Management
-										</h2>
-										<div className="flex flex-wrap gap-3">
-											{showTopUp ? (
-												<div className="flex items-end gap-2">
-													<div>
-														<label
-															htmlFor="top-up-amount"
-															className="text-muted-foreground mb-1 block text-xs"
-														>
-															Amount ($)
-														</label>
-														<Input
-															id="top-up-amount"
-															type="number"
-															placeholder="10.00"
-															value={topUpAmount}
-															onChange={(e) => setTopUpAmount(e.target.value)}
-															className="w-32"
-														/>
-													</div>
-													<Button
-														size="sm"
-														onClick={handleTopUp}
-														disabled={topUpMutation.isPending || !topUpAmount}
-													>
-														{topUpMutation.isPending ? "Sending..." : "Top Up"}
-													</Button>
-													<Button size="sm" variant="outline" onClick={() => setShowTopUp(false)}>
-														Cancel
-													</Button>
-												</div>
-											) : (
-												<Button
-													variant="outline"
-													onClick={() => setShowTopUp(true)}
-													data-testid="top-up-btn"
-												>
-													<Plus className="mr-1 h-4 w-4" /> Top Up
-												</Button>
-											)}
-
-											{showWithdrawConfirm ? (
-												<div className="border-border bg-muted flex items-center gap-2 rounded-lg border p-3">
-													<AlertTriangle className="h-5 w-5 text-red-400" />
-													<span className="text-sm text-red-400">Pull ALL funds back?</span>
-													<Button
-														size="sm"
-														onClick={handleWithdraw}
-														disabled={withdrawMutation.isPending}
-														className="bg-red-600 hover:bg-red-700"
-													>
-														{withdrawMutation.isPending ? "Withdrawing..." : "Confirm"}
-													</Button>
-													<Button
-														size="sm"
-														variant="outline"
-														onClick={() => setShowWithdrawConfirm(false)}
-													>
-														Cancel
-													</Button>
-												</div>
-											) : (
-												<Button
-													variant="outline"
-													onClick={() => setShowWithdrawConfirm(true)}
-													className="text-red-400 hover:bg-red-500/10"
-													data-testid="emergency-withdraw-btn"
-												>
-													<AlertTriangle className="mr-1 h-4 w-4" /> Emergency Withdraw
-												</Button>
-											)}
-										</div>
-									</div>
-								</Card>
+								<FundManagementCard
+									showTopUp={showTopUp}
+									topUpAmount={topUpAmount}
+									onSetTopUpAmount={setTopUpAmount}
+									onShowTopUp={() => setShowTopUp(true)}
+									onHideTopUp={() => setShowTopUp(false)}
+									onTopUp={handleTopUp}
+									isTopUpPending={topUpMutation.isPending}
+									showWithdrawConfirm={showWithdrawConfirm}
+									onShowWithdraw={() => setShowWithdrawConfirm(true)}
+									onHideWithdraw={() => setShowWithdrawConfirm(false)}
+									onWithdraw={handleWithdraw}
+									isWithdrawPending={withdrawMutation.isPending}
+								/>
 							)}
 
 							{/* Pending Approvals */}

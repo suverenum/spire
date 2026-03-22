@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, Bot, Copy, Key, Shield, Users } from "lucide-react";
+import { ArrowLeftRight, Copy } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
 import { useConfig } from "wagmi";
@@ -10,42 +10,24 @@ import { DashboardRecentTransactions } from "@/app/dashboard/dashboard-recent-tr
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Sheet } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toast";
-import { AccountSelector } from "@/domain/accounts/components/account-selector";
 import { useAllBalances } from "@/domain/accounts/hooks/use-all-balances";
 import { useAllTransactions } from "@/domain/accounts/hooks/use-all-transactions";
 import { useInternalTransfer } from "@/domain/accounts/hooks/use-internal-transfer";
 import { getAccounts } from "@/domain/accounts/queries/get-accounts";
+import { MultisigAbi } from "@/domain/agents/abis";
 import { SessionGuard } from "@/domain/auth/components/session-guard";
 import {
 	addMultisigConfirmation,
 	upsertMultisigTransaction,
 } from "@/domain/multisig/actions/sync-multisig-state";
-import { PendingTransactions } from "@/domain/multisig/components/pending-transactions";
 import { getMultisigConfig } from "@/domain/multisig/queries/get-multisig-config";
 import { getPendingTransactions } from "@/domain/multisig/queries/get-pending-transactions";
 import { CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord } from "@/lib/tempo/types";
-import { formatBalance, truncateAddress } from "@/lib/utils";
-
-const MultisigAbi = [
-	{
-		type: "function",
-		name: "confirmTransaction",
-		inputs: [{ name: "txId", type: "uint256" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "executeTransaction",
-		inputs: [{ name: "txId", type: "uint256" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-] as const;
+import { FEE_TOKEN } from "@/lib/wagmi";
+import { MultisigInfoSection } from "./multisig-info-section";
+import { TransferSheet } from "./transfer-sheet";
 
 interface AccountDetailContentProps {
 	accountId: string;
@@ -113,6 +95,7 @@ export function AccountDetailContent({
 				abi: MultisigAbi,
 				functionName: "confirmTransaction",
 				args: [BigInt(onChainTxId)],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 			await publicClient.waitForTransactionReceipt({ hash });
 			// Sync confirmation to DB
@@ -158,6 +141,7 @@ export function AccountDetailContent({
 				abi: MultisigAbi,
 				functionName: "executeTransaction",
 				args: [BigInt(onChainTxId)],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 			await publicClient.waitForTransactionReceipt({ hash });
 			// Mark as executed in DB
@@ -279,89 +263,14 @@ export function AccountDetailContent({
 				</div>
 
 				{isMultisig && multisigConfig && (
-					<div className="mb-6 space-y-4">
-						{/* Agent Info */}
-						{multisigConfig.agentAddress && (
-							<Card>
-								<div className="mb-2 flex items-center gap-2">
-									<Bot className="h-4 w-4 text-blue-600" />
-									<p className="text-sm font-medium">Agent</p>
-								</div>
-								<div className="space-y-2">
-									<div>
-										<p className="text-muted-foreground text-xs">Agent Address</p>
-										<p className="text-muted-foreground font-mono text-xs">
-											{multisigConfig.agentAddress}
-										</p>
-									</div>
-									{multisigConfig.agentPrivateKey && (
-										<div>
-											<p className="text-muted-foreground text-xs">
-												<Key className="mr-1 inline h-3 w-3" />
-												Agent Private Key
-											</p>
-											<p className="bg-background text-muted-foreground rounded-md px-2 py-1 font-mono text-xs break-all">
-												{multisigConfig.agentPrivateKey}
-											</p>
-										</div>
-									)}
-								</div>
-							</Card>
-						)}
-
-						{/* Signers */}
-						<Card>
-							<div className="mb-2 flex items-center gap-2">
-								<Users className="text-muted-foreground h-4 w-4" />
-								<p className="text-sm font-medium">Signers ({multisigConfig.owners.length})</p>
-							</div>
-							<div className="space-y-1">
-								{multisigConfig.owners.map((owner) => (
-									<p key={owner} className="text-muted-foreground font-mono text-xs">
-										{truncateAddress(owner)}
-										{owner.toLowerCase() === tempoAddress.toLowerCase() && " (you)"}
-										{owner.toLowerCase() === multisigConfig.agentAddress?.toLowerCase() &&
-											" (agent)"}
-									</p>
-								))}
-							</div>
-						</Card>
-
-						{/* Approval Policy */}
-						<Card>
-							<div className="mb-2 flex items-center gap-2">
-								<Shield className="h-4 w-4 text-blue-600" />
-								<p className="text-sm font-medium">Approval Policy</p>
-							</div>
-							<div className="text-muted-foreground space-y-1 text-sm">
-								{multisigConfig.tiersJson.map((tier) => (
-									<p key={tier.maxValue}>
-										Up to {(Number(tier.maxValue) / 1e6).toLocaleString()} AlphaUSD:{" "}
-										{tier.requiredConfirmations}/{multisigConfig.owners.length} approvals
-									</p>
-								))}
-								<p>
-									Above all tiers: {multisigConfig.defaultConfirmations}/
-									{multisigConfig.owners.length} approvals
-								</p>
-								{multisigConfig.allowlistEnabled && (
-									<p className="text-amber-600">Only allowlisted addresses can receive</p>
-								)}
-							</div>
-						</Card>
-
-						{/* Pending Transactions */}
-						<div>
-							<h2 className="mb-2 text-lg font-semibold">Pending Approvals</h2>
-							<PendingTransactions
-								transactions={pendingTxs}
-								walletAddress={account.walletAddress}
-								currentUserAddress={tempoAddress}
-								onConfirm={handleConfirm}
-								onExecute={handleExecute}
-							/>
-						</div>
-					</div>
+					<MultisigInfoSection
+						multisigConfig={multisigConfig}
+						pendingTxs={pendingTxs}
+						walletAddress={account.walletAddress}
+						tempoAddress={tempoAddress}
+						onConfirm={handleConfirm}
+						onExecute={handleExecute}
+					/>
 				)}
 
 				{sameTokenAccounts.length > 0 && (
@@ -375,46 +284,22 @@ export function AccountDetailContent({
 
 				<DashboardRecentTransactions transactions={scopedTransactions} accountId={accountId} />
 
-				<Sheet open={transferOpen} onClose={() => setTransferOpen(false)} title="Internal Transfer">
-					<div className="space-y-4">
-						<div>
-							<p className="text-muted-foreground text-sm">
-								From: {account.name} ($
-								{formatBalance(account.balance, 6)})
-							</p>
-						</div>
-						<AccountSelector
-							accounts={accountsWithBalances}
-							selectedAccountId={transferToId}
-							onSelect={setTransferToId}
-							label="To"
-							filterToken={account.tokenSymbol}
-							excludeAccountId={accountId}
-						/>
-						<div>
-							<label htmlFor="transfer-amount" className="mb-1 block text-sm font-medium">
-								Amount
-							</label>
-							<Input
-								id="transfer-amount"
-								type="text"
-								inputMode="decimal"
-								placeholder="0.00"
-								value={transferAmount}
-								onChange={(e) => setTransferAmount(e.target.value)}
-							/>
-						</div>
-						{transferError && <p className="text-sm text-red-600">{transferError}</p>}
-						<Button
-							onClick={handleTransfer}
-							disabled={transferMutation.isPending}
-							className="w-full"
-							size="lg"
-						>
-							{transferMutation.isPending ? "Transferring..." : "Transfer"}
-						</Button>
-					</div>
-				</Sheet>
+				<TransferSheet
+					open={transferOpen}
+					onClose={() => setTransferOpen(false)}
+					accountName={account.name}
+					accountBalance={account.balance}
+					accountTokenSymbol={account.tokenSymbol}
+					accountId={accountId}
+					accounts={accountsWithBalances}
+					transferToId={transferToId}
+					onTransferToSelect={setTransferToId}
+					transferAmount={transferAmount}
+					onTransferAmountChange={setTransferAmount}
+					transferError={transferError}
+					onTransfer={handleTransfer}
+					isPending={transferMutation.isPending}
+				/>
 			</SidebarLayout>
 		</SessionGuard>
 	);

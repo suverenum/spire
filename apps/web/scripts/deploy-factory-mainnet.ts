@@ -1,20 +1,19 @@
 import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { tempo } from "viem/chains";
+import { requireHexKey } from "./demo/env";
 
-const DEPLOYER_KEY = process.env.DEPLOYER_KEY;
-if (!DEPLOYER_KEY) {
-	console.error("Set DEPLOYER_KEY env var");
-	process.exit(1);
-}
+const DEPLOYER_KEY = requireHexKey("DEPLOYER_KEY");
 const RPC = "https://rpc.tempo.xyz";
 const USDC_E = "0x20c000000000000000000000b9537d11c60e8b50" as `0x${string}`;
 
 // Set feeToken on chain so all transactions pay gas in USDC.e
 const chain = { ...tempo, feeToken: USDC_E };
 
-const deployer = privateKeyToAccount(DEPLOYER_KEY as `0x${string}`);
+const deployer = privateKeyToAccount(DEPLOYER_KEY);
 const pub = createPublicClient({ chain, transport: http(RPC) });
 const wallet = createWalletClient({ account: deployer, chain, transport: http(RPC) });
 
@@ -38,9 +37,10 @@ if (balance === 0n) {
 
 // Deploy GuardianFactory
 console.log("\nDeploying GuardianFactory...");
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const artifact = JSON.parse(
 	readFileSync(
-		"/Users/ivorobiev/Desktop/repos/spire/contracts/out/GuardianFactory.sol/GuardianFactory.json",
+		resolve(__dirname, "../../../contracts/out/GuardianFactory.sol/GuardianFactory.json"),
 		"utf-8",
 	),
 );

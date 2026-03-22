@@ -1,19 +1,12 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Check, Send, Shield } from "lucide-react";
 import { useState } from "react";
-import { encodeFunctionData, parseEventLogs, parseUnits } from "viem";
-import { useConfig } from "wagmi";
-import { getPublicClient, getWalletClient } from "wagmi/actions";
+import { parseUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
-import { toast } from "@/components/ui/toast";
-import {
-	addMultisigConfirmation,
-	upsertMultisigTransaction,
-} from "@/domain/multisig/actions/sync-multisig-state";
 import { getMultisigConfig } from "@/domain/multisig/queries/get-multisig-config";
 import { CACHE_KEYS, SUPPORTED_TOKENS, type TokenName } from "@/lib/constants";
 import type { AccountWithBalance } from "@/lib/tempo/types";
@@ -21,49 +14,7 @@ import { formatBalance } from "@/lib/utils";
 import { sendPaymentSchema } from "@/lib/validations";
 import { useBalances } from "../hooks/use-balances";
 import { useSendPayment } from "../hooks/use-send-payment";
-
-const Tip20Abi = [
-	{
-		type: "function",
-		name: "transfer",
-		inputs: [
-			{ name: "to", type: "address" },
-			{ name: "value", type: "uint256" },
-		],
-		outputs: [{ name: "", type: "bool" }],
-		stateMutability: "nonpayable",
-	},
-] as const;
-
-const MultisigSubmitAbi = [
-	{
-		type: "function",
-		name: "submitTransaction",
-		inputs: [
-			{ name: "to", type: "address" },
-			{ name: "value", type: "uint256" },
-			{ name: "data", type: "bytes" },
-		],
-		outputs: [{ name: "txId", type: "uint256" }],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "event",
-		name: "TransactionSubmitted",
-		inputs: [
-			{ name: "txId", type: "uint256", indexed: true },
-			{ name: "to", type: "address", indexed: true },
-			{ name: "value", type: "uint256", indexed: false },
-			{ name: "data", type: "bytes", indexed: false },
-		],
-	},
-] as const;
-
-interface MultisigSubmitResult {
-	txId: string;
-	requiredConfirmations: number;
-	totalSigners: number;
-}
+import { useMultisigSubmit } from "./use-multisig-submit";
 
 interface SendPaymentFormProps {
 	open: boolean;
@@ -82,15 +33,17 @@ export function SendPaymentForm({
 	selectedAccountId,
 	onAccountChange,
 }: SendPaymentFormProps) {
-	const wagmiConfig = useConfig();
-	const queryClient = useQueryClient();
 	const [to, setTo] = useState("");
 	const [amount, setAmount] = useState("");
 	const [token, setToken] = useState<TokenName>("AlphaUSD");
 	const [memo, setMemo] = useState("");
 	const [errors, setErrors] = useState<Record<string, string>>({});
-	const [multisigSubmitting, setMultisigSubmitting] = useState(false);
-	const [multisigResult, setMultisigResult] = useState<MultisigSubmitResult | null>(null);
+	const {
+		submit: multisigSubmit,
+		submitting: multisigSubmitting,
+		result: multisigResult,
+		setResult: setMultisigResult,
+	} = useMultisigSubmit();
 
 	const selectedAccount = accounts?.find((a) => a.id === selectedAccountId);
 	const isMultisig = selectedAccount?.walletType === "multisig";
@@ -163,94 +116,14 @@ export function SendPaymentForm({
 
 	async function handleMultisigSubmit() {
 		if (!selectedAccount || !multisigConfig) return;
-		setMultisigSubmitting(true);
-		try {
-			const publicClient = getPublicClient(wagmiConfig);
-			const walletClient = await getWalletClient(wagmiConfig);
-			if (!publicClient || !walletClient) {
-				toast("Wallet not connected", "error");
-				return;
-			}
-
-			const tokenConfig = SUPPORTED_TOKENS[effectiveToken];
-			const parsedAmount = parseUnits(amount, tokenConfig.decimals);
-
-			// Encode ERC20 transfer as calldata for the multisig
-			const transferData = encodeFunctionData({
-				abi: Tip20Abi,
-				functionName: "transfer",
-				args: [to as `0x${string}`, parsedAmount],
-			});
-
-			// Submit to multisig contract
-			const hash = await walletClient.writeContract({
-				account: walletClient.account!,
-				chain: walletClient.chain,
-				address: selectedAccount.walletAddress as `0x${string}`,
-				abi: MultisigSubmitAbi,
-				functionName: "submitTransaction",
-				args: [tokenConfig.address, 0n, transferData],
-			});
-
-			const receipt = await publicClient.waitForTransactionReceipt({ hash });
-			const logs = parseEventLogs({
-				abi: MultisigSubmitAbi,
-				logs: receipt.logs,
-				eventName: "TransactionSubmitted",
-			});
-
-			if (logs.length === 0) throw new Error("TransactionSubmitted event not found");
-			const txId = logs[0].args.txId.toString();
-
-			// Determine required confirmations from tier config
-			const amountUsd = Number(amount);
-			const sortedTiers = [...multisigConfig.tiersJson].sort(
-				(a, b) => Number(a.maxValue) - Number(b.maxValue),
-			);
-			let reqConf = multisigConfig.defaultConfirmations;
-			for (const tier of sortedTiers) {
-				if (amountUsd * 1e6 <= Number(tier.maxValue)) {
-					reqConf = tier.requiredConfirmations;
-					break;
-				}
-			}
-
-			// Sync to DB
-			const { id: dbTxId } = await upsertMultisigTransaction({
-				accountId: selectedAccount.id,
-				onChainTxId: BigInt(txId),
-				to: tokenConfig.address,
-				value: "0",
-				data: transferData,
-				requiredConfirmations: reqConf,
-				currentConfirmations: 1,
-				executed: false,
-			});
-			// Record submitter's auto-confirmation
-			if (walletClient.account) {
-				await addMultisigConfirmation({
-					multisigTransactionId: dbTxId,
-					signerAddress: walletClient.account.address,
-				});
-			}
-
-			setMultisigResult({
-				txId,
-				requiredConfirmations: reqConf,
-				totalSigners: multisigConfig.owners.length,
-			});
-
-			// Invalidate pending transactions cache
-			void queryClient.invalidateQueries({
-				queryKey: CACHE_KEYS.pendingTransactions(selectedAccount.id),
-			});
-
-			toast("Transaction submitted for approval", "success");
-		} catch (err) {
-			toast(err instanceof Error ? err.message : "Submission failed", "error");
-		} finally {
-			setMultisigSubmitting(false);
-		}
+		await multisigSubmit({
+			accountId: selectedAccount.id,
+			walletAddress: selectedAccount.walletAddress as `0x${string}`,
+			token: effectiveToken,
+			to,
+			amount,
+			multisigConfig,
+		});
 	}
 
 	function handleSubmit() {

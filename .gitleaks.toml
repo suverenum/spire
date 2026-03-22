@@ -1,0 +1,39 @@
+title = "Goldhord Gitleaks Config"
+
+[extend]
+# Use default rule set as base — covers generic private keys, AWS, API tokens, etc.
+useDefault = true
+
+[[rules]]
+id = "ethereum-private-key-inline"
+description = "Ethereum/Tempo private key passed to privateKeyToAccount or similar"
+regex = '''privateKeyToAccount\s*\(\s*["']0x[0-9a-fA-F]{64}["']'''
+tags = ["key", "ethereum"]
+
+# Rule-scoped allowlist — only applies to the custom rule above, not to built-in rules
+[rules.allowlist]
+paths = [
+  '''specs/redesign-code-base/''',
+]
+
+# Global allowlist — suppresses ALL rules for these paths (vendored code, not user-authored)
+[allowlist]
+paths = [
+  '''node_modules/''',
+  '''contracts/lib/''',
+  '''contracts/cache/''',
+  '''contracts/out/''',
+  '''bun\.lock''',
+  '''\.next/''',
+  '''\.env\.local''',
+  '''\.env$''',
+  '''tempo-mppx/''',
+  '''tempo-multisig/''',
+  '''tempo-mpp/''',
+  '''tempo-docs/''',
+  '''specs/''',
+  '''ecosystem\.config''',
+  '''\.test\.ts''',
+  '''\.test\.tsx''',
+  '''README\.md''',
+]

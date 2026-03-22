@@ -15,8 +15,11 @@ function deriveKey(secret: string, salt: Buffer): Buffer {
 }
 
 function getSecret(): string {
-	const secret = process.env.SESSION_SECRET;
-	if (!secret) throw new Error("SESSION_SECRET is required for encryption");
+	const secret = process.env.ENCRYPTION_SECRET ?? process.env.SESSION_SECRET;
+	if (!secret)
+		throw new Error(
+			"ENCRYPTION_SECRET (or SESSION_SECRET) must be set. Add it to .env.local or export it in your shell.",
+		);
 	return secret;
 }
 
@@ -36,7 +39,7 @@ export function encrypt(plaintext: string): string {
 
 	// Pack: salt + iv + ciphertext + authTag
 	const packed = Buffer.concat([salt, iv, encrypted, authTag]);
-	return packed.toString("base64");
+	return `v1:${packed.toString("base64")}`;
 }
 
 /**
@@ -45,7 +48,9 @@ export function encrypt(plaintext: string): string {
  */
 export function decrypt(encryptedBase64: string): string {
 	const secret = getSecret();
-	const packed = Buffer.from(encryptedBase64, "base64");
+	// Support versioned ciphertext (v1: prefix) and unversioned legacy
+	const value = encryptedBase64.startsWith("v1:") ? encryptedBase64.slice(3) : encryptedBase64;
+	const packed = Buffer.from(value, "base64");
 
 	const salt = packed.subarray(0, SALT_LENGTH);
 	const iv = packed.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
