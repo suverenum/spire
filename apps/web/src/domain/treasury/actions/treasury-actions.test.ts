@@ -8,11 +8,26 @@ vi.mock("@/lib/session", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const mockFindFirst = vi.fn();
-const mockInsertReturning = vi.fn().mockResolvedValue([{ id: "t-new" }]);
+const mockInsertReturning = vi.fn();
 const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
 const mockInsert = vi.fn().mockReturnValue({ values: mockInsertValues });
 const mockSet = vi.fn().mockReturnValue({ where: vi.fn() });
 const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
+
+// Track insert call sequence for org → entity → treasury
+let insertCallIndex = 0;
+mockInsertReturning.mockImplementation(() => {
+	insertCallIndex++;
+	if (insertCallIndex === 1) return Promise.resolve([{ id: "org-new", name: "My Treasury" }]); // organizations
+	if (insertCallIndex === 2) return Promise.resolve([{ id: "entity-new" }]); // entities
+	return Promise.resolve([
+		{
+			id: "t-new",
+			name: "My Treasury",
+			tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		},
+	]); // treasuries
+});
 
 vi.mock("@/db", () => ({
 	db: {
@@ -23,7 +38,8 @@ vi.mock("@/db", () => ({
 }));
 
 describe("createTreasuryAction", () => {
-	test("creates treasury successfully", async () => {
+	test("creates organization, entity, and treasury successfully", async () => {
+		insertCallIndex = 0;
 		const { createTreasuryAction } = await import("./treasury-actions");
 		const formData = new FormData();
 		formData.set("name", "My Treasury");
@@ -31,6 +47,8 @@ describe("createTreasuryAction", () => {
 		const result = await createTreasuryAction(formData);
 		expect(result.error).toBeUndefined();
 		expect(result.success).toBe(true);
+		// 3 inserts: organizations, entities, treasuries
+		expect(mockInsert).toHaveBeenCalledTimes(3);
 	});
 
 	test("rejects invalid name (too short)", async () => {
@@ -52,7 +70,11 @@ describe("createTreasuryAction", () => {
 	});
 
 	test("handles PG unique constraint (existing treasury)", async () => {
-		mockInsertReturning.mockRejectedValueOnce({ code: "23505" });
+		insertCallIndex = 0;
+		mockInsertReturning
+			.mockResolvedValueOnce([{ id: "org-new", name: "My Treasury" }]) // org succeeds
+			.mockResolvedValueOnce([{ id: "entity-new" }]) // entity succeeds
+			.mockRejectedValueOnce({ code: "23505" }); // treasury fails with unique violation
 		const { createTreasuryAction } = await import("./treasury-actions");
 		const formData = new FormData();
 		formData.set("name", "My Treasury");

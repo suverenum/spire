@@ -22,6 +22,8 @@ const VALID_SESSION = {
 	treasuryId: "t-123",
 	tempoAddress: "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`,
 	treasuryName: "Test Treasury",
+	organizationId: "org-123",
+	organizationName: "Test Organization",
 };
 
 /**

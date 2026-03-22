@@ -19,6 +19,16 @@ vi.mock("@/db", () => ({
 	},
 }));
 
+vi.mock("@/domain/organizations/actions/organization-actions", () => ({
+	createOrganizationForTreasury: vi.fn(() =>
+		Promise.resolve({ organizationId: "org-new", entityId: "entity-new" }),
+	),
+}));
+
+vi.mock("@/domain/organizations/queries/get-organization", () => ({
+	getOrganization: vi.fn(() => Promise.resolve({ id: "org-1", name: "Test Org" })),
+}));
+
 // Mock redirect to throw (Next.js behavior)
 vi.mock("next/navigation", () => ({
 	redirect: vi.fn(() => {
@@ -33,12 +43,32 @@ describe("loginAction", () => {
 				id: "t-1",
 				name: "My Treasury",
 				tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+				organizationId: "org-1",
 			},
 		]);
 		const { loginAction } = await import("./auth-actions");
 		const result = await loginAction("0x1234567890abcdef1234567890abcdef12345678");
 		expect(result.error).toBeUndefined();
 		expect(result.treasuryName).toBe("My Treasury");
+	});
+
+	test("creates organization on-the-fly for legacy treasury", async () => {
+		mockSelectResult.mockResolvedValue([
+			{
+				id: "t-legacy",
+				name: "Legacy Treasury",
+				tempoAddress: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				organizationId: null,
+			},
+		]);
+		const { loginAction } = await import("./auth-actions");
+		const result = await loginAction("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		expect(result.error).toBeUndefined();
+
+		const { createOrganizationForTreasury } = await import(
+			"@/domain/organizations/actions/organization-actions"
+		);
+		expect(createOrganizationForTreasury).toHaveBeenCalledWith("t-legacy", "Legacy Treasury");
 	});
 
 	test("rejects invalid address format", async () => {
@@ -60,6 +90,7 @@ describe("loginAction", () => {
 				id: "t-1",
 				name: "My Treasury",
 				tempoAddress: "0xabcdef1234567890abcdef1234567890abcdef12",
+				organizationId: "org-1",
 			},
 		]);
 		const { loginAction } = await import("./auth-actions");
@@ -76,6 +107,8 @@ describe("touchSessionAction", () => {
 			tempoAddress: "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`,
 			treasuryName: "Test",
 			authenticatedAt: Date.now(),
+			organizationId: "org-1",
+			organizationName: "Test Org",
 		});
 		const { touchSessionAction } = await import("./auth-actions");
 		await expect(touchSessionAction()).resolves.not.toThrow();

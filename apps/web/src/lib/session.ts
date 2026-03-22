@@ -7,6 +7,8 @@ export interface SessionData {
 	tempoAddress: `0x${string}`;
 	treasuryName: string;
 	authenticatedAt: number;
+	organizationId: string;
+	organizationName: string;
 }
 
 function getSessionSecret(): string {
@@ -40,7 +42,10 @@ function decode(value: string): SessionData | null {
 		const isValid = timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 		if (!isValid) return null;
 
-		return JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
+		const data = JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
+		// Legacy sessions without organizationId are treated as expired (force re-login)
+		if (!data.organizationId) return null;
+		return data;
 	} catch {
 		return null;
 	}

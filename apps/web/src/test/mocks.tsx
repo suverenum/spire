@@ -21,6 +21,8 @@ export const DEFAULT_SESSION = {
 	tempoAddress: "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`,
 	treasuryName: "Test Treasury",
 	authenticatedAt: Date.now(),
+	organizationId: "test-org-id",
+	organizationName: "Test Organization",
 };
 
 export function makeSession(overrides: Partial<typeof DEFAULT_SESSION> = {}) {

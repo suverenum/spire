@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { treasuries } from "@/db/schema";
+import { entities, organizations, treasuries } from "@/db/schema";
 import { createSession, getSession } from "@/lib/session";
 import { createTreasurySchema } from "@/lib/validations";
 
@@ -24,14 +24,30 @@ export async function createTreasuryAction(
 		return { error: "Invalid Tempo address from passkey." };
 	}
 	const tempoAddress = rawAddress.toLowerCase();
+	const name = parsed.data.name;
 
 	let row: { id: string; name: string; tempoAddress: string };
+	let orgId: string;
+	let orgName: string;
 	try {
+		// Create organization → entity → treasury atomically
+		const [org] = await db
+			.insert(organizations)
+			.values({ name })
+			.returning({ id: organizations.id, name: organizations.name });
+
+		const [entity] = await db
+			.insert(entities)
+			.values({ organizationId: org.id, name: "Default" })
+			.returning({ id: entities.id });
+
 		const [inserted] = await db
 			.insert(treasuries)
 			.values({
-				name: parsed.data.name,
+				name,
 				tempoAddress,
+				organizationId: org.id,
+				entityId: entity.id,
 			})
 			.returning({
 				id: treasuries.id,
@@ -39,6 +55,8 @@ export async function createTreasuryAction(
 				tempoAddress: treasuries.tempoAddress,
 			});
 		row = inserted;
+		orgId = org.id;
+		orgName = org.name;
 	} catch (err: unknown) {
 		const pgCode =
 			err != null && typeof err === "object" && "code" in err
@@ -56,6 +74,8 @@ export async function createTreasuryAction(
 		treasuryId: row.id,
 		tempoAddress: row.tempoAddress as `0x${string}`,
 		treasuryName: row.name,
+		organizationId: orgId,
+		organizationName: orgName,
 	});
 
 	return { success: true, treasuryId: row.id };
@@ -78,6 +98,8 @@ export async function updateTreasuryNameAction(formData: FormData): Promise<{ er
 		treasuryId: session.treasuryId,
 		tempoAddress: session.tempoAddress,
 		treasuryName: name,
+		organizationId: session.organizationId,
+		organizationName: session.organizationName,
 	});
 
 	revalidatePath("/dashboard");

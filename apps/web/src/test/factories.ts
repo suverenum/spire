@@ -1,5 +1,49 @@
 import type { AccountWithBalance, Payment, PaymentTransaction } from "@/lib/tempo/types";
 
+// ─── Organization Factory ───────────────────────────────────────────
+
+export interface OrganizationRecord {
+	id: string;
+	name: string;
+	domain: string | null;
+	settings: Record<string, unknown>;
+	createdAt: Date;
+}
+
+export function makeOrganization(overrides: Partial<OrganizationRecord> = {}): OrganizationRecord {
+	return {
+		id: "org-1",
+		name: "Test Organization",
+		domain: null,
+		settings: {},
+		createdAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
+// ─── Entity Factory ─────────────────────────────────────────────────
+
+export interface EntityRecord {
+	id: string;
+	organizationId: string;
+	name: string;
+	jurisdiction: string | null;
+	entityType: string | null;
+	createdAt: Date;
+}
+
+export function makeEntity(overrides: Partial<EntityRecord> = {}): EntityRecord {
+	return {
+		id: "entity-1",
+		organizationId: "org-1",
+		name: "Default",
+		jurisdiction: null,
+		entityType: null,
+		createdAt: new Date("2025-01-01"),
+		...overrides,
+	};
+}
+
 // ─── Account Factory ────────────────────────────────────────────────
 
 export function makeAccount(overrides: Partial<AccountWithBalance> = {}): AccountWithBalance {
@@ -12,6 +56,7 @@ export function makeAccount(overrides: Partial<AccountWithBalance> = {}): Accoun
 		tokenAddress: "0x20c0000000000000000000000000000000000001" as `0x${string}`,
 		walletAddress: "0x1111111111111111111111111111111111111111" as `0x${string}`,
 		walletType: "eoa",
+		accountCategory: null,
 		isDefault: false,
 		createdAt: new Date("2025-01-01"),
 		balance,
@@ -63,6 +108,8 @@ export interface TreasuryRecord {
 	id: string;
 	name: string;
 	tempoAddress: string;
+	organizationId: string | null;
+	entityId: string | null;
 	createdAt: Date;
 }
 
@@ -71,6 +118,8 @@ export function makeTreasury(overrides: Partial<TreasuryRecord> = {}): TreasuryR
 		id: "treasury-1",
 		name: "Test Treasury",
 		tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+		organizationId: "org-1",
+		entityId: "entity-1",
 		createdAt: new Date("2025-01-01"),
 		...overrides,
 	};
