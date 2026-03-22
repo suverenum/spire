@@ -1,79 +1,63 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DEFAULT_SESSION } from "@/test/mocks";
 
 vi.mock("@/lib/session", () => ({
 	getSession: vi.fn(() => Promise.resolve(DEFAULT_SESSION)),
 }));
 
-const mockFindMany = vi.fn();
-const mockFindFirst = vi.fn();
+const mockWhere = vi.fn();
+const mockInnerJoin = vi.fn().mockReturnValue({ where: mockWhere });
+const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin });
+const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
 vi.mock("@/db", () => ({
 	db: {
-		query: {
-			agentWallets: { findMany: () => mockFindMany() },
-			accounts: { findFirst: vi.fn((..._args: unknown[]) => mockFindFirst()) },
-		},
+		select: (...args: unknown[]) => mockSelect(...args),
 	},
 }));
 
+const MOCK_ROW = {
+	id: "w-1",
+	accountId: "acc-1",
+	label: "Bot",
+	guardianAddress: "0x4444",
+	agentKeyAddress: "0x3333",
+	spendingCap: 50000000n,
+	dailyLimit: 10000000n,
+	maxPerTx: 2000000n,
+	allowedVendors: [] as string[],
+	status: "active",
+	deployedAt: new Date("2025-06-01"),
+	tokenSymbol: "AlphaUSD",
+	tokenAddress: "0x20c0",
+};
+
 describe("getAgentWallets", () => {
-	test("returns wallets belonging to current treasury", async () => {
-		mockFindMany.mockResolvedValue([
-			{
-				id: "w-1",
-				accountId: "acc-1",
-				label: "Bot",
-				guardianAddress: "0x4444",
-				agentKeyAddress: "0x3333",
-				spendingCap: 50000000n,
-				dailyLimit: 10000000n,
-				maxPerTx: 2000000n,
-				allowedVendors: [],
-				status: "active",
-				deployedAt: new Date("2025-06-01"),
-				createdAt: new Date("2025-06-01"),
-			},
-		]);
-		mockFindFirst.mockResolvedValue({
-			id: "acc-1",
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			tokenSymbol: "AlphaUSD",
-			tokenAddress: "0x20c0",
-		});
+	beforeEach(() => {
+		mockSelect.mockClear();
+		mockFrom.mockClear();
+		mockInnerJoin.mockClear();
+		mockWhere.mockClear();
+	});
+
+	test("returns wallets belonging to current treasury via JOIN", async () => {
+		mockWhere.mockResolvedValue([MOCK_ROW]);
 		const { getAgentWallets } = await import("./get-agents");
 		const wallets = await getAgentWallets();
 		expect(wallets).toHaveLength(1);
 		expect(wallets[0].label).toBe("Bot");
 		expect(wallets[0].spendingCap).toBe("50000000");
+		expect(wallets[0].tokenSymbol).toBe("AlphaUSD");
 	});
 
-	test("filters out wallets from other treasuries", async () => {
-		mockFindMany.mockResolvedValue([
-			{
-				id: "w-1",
-				accountId: "acc-1",
-				label: "My Bot",
-				guardianAddress: "0x4444",
-				agentKeyAddress: "0x3333",
-				spendingCap: 50000000n,
-				dailyLimit: 10000000n,
-				maxPerTx: 2000000n,
-				allowedVendors: [],
-				status: "active",
-				deployedAt: new Date(),
-				createdAt: new Date(),
-			},
-		]);
-		mockFindFirst.mockResolvedValue({
-			id: "acc-1",
-			treasuryId: "different-treasury",
-			tokenSymbol: "AlphaUSD",
-			tokenAddress: "0x20c0",
-		});
+	test("uses a single query (no N+1)", async () => {
+		mockWhere.mockResolvedValue([MOCK_ROW]);
 		const { getAgentWallets } = await import("./get-agents");
-		const wallets = await getAgentWallets();
-		expect(wallets).toHaveLength(0);
+		await getAgentWallets();
+		// Verify: one select call, one from, one innerJoin, one where
+		expect(mockSelect).toHaveBeenCalledTimes(1);
+		expect(mockFrom).toHaveBeenCalledTimes(1);
+		expect(mockInnerJoin).toHaveBeenCalledTimes(1);
 	});
 
 	test("returns empty array when no session", async () => {
@@ -85,32 +69,32 @@ describe("getAgentWallets", () => {
 	});
 
 	test("converts BigInt fields to strings", async () => {
-		mockFindMany.mockResolvedValue([
+		mockWhere.mockResolvedValue([
 			{
-				id: "w-1",
-				accountId: "acc-1",
-				label: "Bot",
-				guardianAddress: "0x4444",
-				agentKeyAddress: "0x3333",
+				...MOCK_ROW,
 				spendingCap: 999999999n,
 				dailyLimit: 888888888n,
 				maxPerTx: 777777777n,
-				allowedVendors: [],
-				status: "active",
-				deployedAt: new Date("2025-01-01"),
-				createdAt: new Date(),
 			},
 		]);
-		mockFindFirst.mockResolvedValue({
-			id: "acc-1",
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			tokenSymbol: "AlphaUSD",
-			tokenAddress: "0x20c0",
-		});
 		const { getAgentWallets } = await import("./get-agents");
 		const wallets = await getAgentWallets();
 		expect(wallets[0].spendingCap).toBe("999999999");
 		expect(wallets[0].dailyLimit).toBe("888888888");
 		expect(wallets[0].maxPerTx).toBe("777777777");
+	});
+
+	test("returns empty array when no wallets exist", async () => {
+		mockWhere.mockResolvedValue([]);
+		const { getAgentWallets } = await import("./get-agents");
+		const wallets = await getAgentWallets();
+		expect(wallets).toEqual([]);
+	});
+
+	test("converts deployedAt to ISO string", async () => {
+		mockWhere.mockResolvedValue([MOCK_ROW]);
+		const { getAgentWallets } = await import("./get-agents");
+		const wallets = await getAgentWallets();
+		expect(wallets[0].deployedAt).toBe("2025-06-01T00:00:00.000Z");
 	});
 });

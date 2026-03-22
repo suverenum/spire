@@ -2,7 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { accounts } from "@/db/schema";
+import { accounts, agentWallets } from "@/db/schema";
 import { getSession } from "@/lib/session";
 
 export interface AgentWalletData {
@@ -23,37 +23,45 @@ export interface AgentWalletData {
 
 /**
  * Get all agent wallets for the current treasury.
+ * Uses a single JOIN query instead of N+1 individual lookups.
  */
 export async function getAgentWallets(): Promise<AgentWalletData[]> {
 	const session = await getSession();
 	if (!session) return [];
 
-	const wallets = await db.query.agentWallets.findMany();
+	const rows = await db
+		.select({
+			id: agentWallets.id,
+			accountId: agentWallets.accountId,
+			label: agentWallets.label,
+			guardianAddress: agentWallets.guardianAddress,
+			agentKeyAddress: agentWallets.agentKeyAddress,
+			spendingCap: agentWallets.spendingCap,
+			dailyLimit: agentWallets.dailyLimit,
+			maxPerTx: agentWallets.maxPerTx,
+			allowedVendors: agentWallets.allowedVendors,
+			status: agentWallets.status,
+			deployedAt: agentWallets.deployedAt,
+			tokenSymbol: accounts.tokenSymbol,
+			tokenAddress: accounts.tokenAddress,
+		})
+		.from(agentWallets)
+		.innerJoin(accounts, eq(agentWallets.accountId, accounts.id))
+		.where(eq(accounts.treasuryId, session.treasuryId));
 
-	// Filter to only wallets belonging to current treasury
-	const results: AgentWalletData[] = [];
-	for (const wallet of wallets) {
-		const account = await db.query.accounts.findFirst({
-			where: eq(accounts.id, wallet.accountId),
-		});
-		if (account && account.treasuryId === session.treasuryId) {
-			results.push({
-				id: wallet.id,
-				accountId: wallet.accountId,
-				label: wallet.label,
-				guardianAddress: wallet.guardianAddress,
-				agentKeyAddress: wallet.agentKeyAddress,
-				spendingCap: wallet.spendingCap.toString(),
-				dailyLimit: wallet.dailyLimit.toString(),
-				maxPerTx: wallet.maxPerTx.toString(),
-				allowedVendors: wallet.allowedVendors,
-				status: wallet.status,
-				tokenSymbol: account.tokenSymbol,
-				tokenAddress: account.tokenAddress,
-				deployedAt: wallet.deployedAt.toISOString(),
-			});
-		}
-	}
-
-	return results;
+	return rows.map((row) => ({
+		id: row.id,
+		accountId: row.accountId,
+		label: row.label,
+		guardianAddress: row.guardianAddress,
+		agentKeyAddress: row.agentKeyAddress,
+		spendingCap: row.spendingCap.toString(),
+		dailyLimit: row.dailyLimit.toString(),
+		maxPerTx: row.maxPerTx.toString(),
+		allowedVendors: row.allowedVendors,
+		status: row.status,
+		tokenSymbol: row.tokenSymbol,
+		tokenAddress: row.tokenAddress,
+		deployedAt: row.deployedAt.toISOString(),
+	}));
 }
