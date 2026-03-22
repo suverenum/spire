@@ -19,6 +19,7 @@ interface CreateAgentWalletDialogProps {
 const STEP_LABELS: Record<AgentCreationStep, string> = {
 	idle: "",
 	validating: "Validating...",
+	preflight: "Checking balances...",
 	deploying: "Deploying Guardian contract...",
 	funding: "Funding Guardian...",
 	persisting: "Saving to database...",

@@ -54,7 +54,7 @@ export default defineConfig({
 					command: `DATABASE_URL="${TEST_DB_URL}" PORT=${PORT} bun run dev`,
 					url: BASE_URL,
 					reuseExistingServer: !process.env.CI,
-					timeout: 60_000,
+					timeout: 120_000,
 					env: {
 						DATABASE_URL: TEST_DB_URL,
 						SESSION_SECRET: "playwright-session-secret",

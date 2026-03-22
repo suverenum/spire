@@ -53,13 +53,11 @@ export default defineConfig({
 				// Type-only files
 				"src/lib/tempo/types.ts",
 			],
-			// Honest thresholds: server actions/queries/hooks excluded (need integration tests).
-			// This covers: components, utilities, domain logic, client-side hooks.
 			thresholds: {
-				lines: 70,
-				functions: 70,
-				branches: 60,
-				statements: 70,
+				lines: 90,
+				functions: 90,
+				branches: 90,
+				statements: 90,
 			},
 		},
 	},

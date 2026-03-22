@@ -1,39 +1,18 @@
 import { createHmac } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import type { BrowserContext } from "@playwright/test";
 
 /**
  * Load the session secret that matches what the app server is using.
  *
- * Priority order:
- * 1. SESSION_SECRET env var (explicitly set — used in CI and external runs)
- * 2. .env.local file (developer's local secret — matches reused dev server)
- * 3. "playwright-session-secret" (matches playwright.config.ts webServer.env — CI fallback)
+ * Uses SESSION_SECRET env var if set (CI, external runs), otherwise falls back
+ * to "playwright-session-secret" which matches playwright.config.ts webServer.env.
+ *
+ * Does NOT read .env.local — the Playwright webServer always receives its secret
+ * via webServer.env, so the auth helper must use the same source of truth.
+ * When reusing an existing dev server, set SESSION_SECRET in the shell env.
  */
 function loadSessionSecret(): string {
-	if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-	try {
-		const envPath = resolve(process.cwd(), ".env.local");
-		const content = readFileSync(envPath, "utf-8");
-		const match = content.match(/^SESSION_SECRET\s*=\s*(.+)$/m);
-		if (match) {
-			let secret = match[1].trim();
-			if (
-				(secret.startsWith('"') && secret.endsWith('"')) ||
-				(secret.startsWith("'") && secret.endsWith("'"))
-			) {
-				secret = secret.slice(1, -1);
-			}
-			const commentIdx = secret.indexOf(" #");
-			if (commentIdx !== -1) secret = secret.slice(0, commentIdx).trim();
-			return secret;
-		}
-	} catch {
-		// .env.local not found
-	}
-	// Fallback: matches SESSION_SECRET in playwright.config.ts webServer.env
-	return "playwright-session-secret";
+	return process.env.SESSION_SECRET || "playwright-session-secret";
 }
 
 function getCookieDomain(): string {
