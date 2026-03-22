@@ -29,7 +29,10 @@ function getCookieDomain(): string {
 
 const DEV_SECRET = loadSessionSecret();
 const COOKIE_DOMAIN = getCookieDomain();
-const COOKIE_NAME = COOKIE_DOMAIN !== "localhost" ? "__Host-goldhord-session" : "goldhord-session";
+// Match the server's cookie name logic (src/lib/constants.ts): NODE_ENV === "production" → __Host- prefix.
+// Playwright webServer runs in development mode, so this is "goldhord-session" for local E2E.
+const COOKIE_NAME =
+	process.env.NODE_ENV === "production" ? "__Host-goldhord-session" : "goldhord-session";
 
 interface SessionData {
 	treasuryId: string;

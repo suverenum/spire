@@ -132,7 +132,10 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 				// Rethrow user rejections and RPC failures to avoid masking errors.
 				const msg = (err as { shortMessage?: string })?.shortMessage ?? "";
 				const isContractError =
-					msg.includes("revert") || msg.includes("execution") || msg.includes("invalid opcode");
+					msg.includes("revert") ||
+					msg.includes("execution") ||
+					msg.includes("invalid opcode") ||
+					msg.includes("returned no data");
 				if (!isContractError) throw err;
 
 				// Legacy guardian with 2-arg updateLimits(maxPerTx, dailyLimit)
