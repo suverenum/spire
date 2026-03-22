@@ -18,6 +18,8 @@ jobs:
   ci:
     name: Lint, Type Check, Test, Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +46,8 @@ jobs:
   contracts:
     name: Contracts (Foundry + Slither)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: contracts
@@ -78,6 +82,8 @@ jobs:
   secrets:
     name: Secret Scanning
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
