@@ -71,6 +71,19 @@ describe("tempo client", () => {
 		expect(client1).toBe(client2);
 	});
 
+	it("creates client with multicall batching enabled", async () => {
+		const { createPublicClient } = await import("viem");
+		await import("./client");
+		// Force client creation by calling getTempoClient
+		const { getTempoClient } = await import("./client");
+		getTempoClient();
+		expect(createPublicClient).toHaveBeenCalledWith(
+			expect.objectContaining({
+				batch: { multicall: true },
+			}),
+		);
+	});
+
 	describe("fetchBalances error handling", () => {
 		it("returns successful balances when some readContract calls fail", async () => {
 			// Make readContract fail for the first call, succeed for the rest
