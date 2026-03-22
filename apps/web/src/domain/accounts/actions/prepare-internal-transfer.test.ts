@@ -60,16 +60,42 @@ describe("prepareInternalTransfer", () => {
 		expect(result.error).toBe("One or both accounts not found");
 	});
 
-	test("rejects different token types", async () => {
-		mockFindFirst
-			.mockResolvedValueOnce(FROM_ACCOUNT)
-			.mockResolvedValueOnce({ ...TO_ACCOUNT, tokenSymbol: "BetaUSD" });
+	test("allows transfer between accounts with different primary tokens", async () => {
+		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce({
+			...TO_ACCOUNT,
+			tokenSymbol: "BetaUSD",
+			tokenAddress: "0x20c0000000000000000000000000000000000002",
+		});
 		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
 		const result = await prepareInternalTransfer({
 			fromAccountId: "acc-1",
 			toAccountId: "acc-2",
 		});
-		expect(result.error).toContain("same token");
+		expect(result.error).toBeUndefined();
+		expect(result.fromAccount?.tokenSymbol).toBe("AlphaUSD");
+	});
+
+	test("uses explicit tokenSymbol when provided", async () => {
+		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce(TO_ACCOUNT);
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "acc-1",
+			toAccountId: "acc-2",
+			tokenSymbol: "BetaUSD",
+		});
+		expect(result.error).toBeUndefined();
+		expect(result.fromAccount?.tokenSymbol).toBe("BetaUSD");
+		expect(result.toAccount?.tokenSymbol).toBe("BetaUSD");
+	});
+
+	test("falls back to fromAccount primary token when tokenSymbol not provided", async () => {
+		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce(TO_ACCOUNT);
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "acc-1",
+			toAccountId: "acc-2",
+		});
+		expect(result.fromAccount?.tokenSymbol).toBe("AlphaUSD");
 	});
 
 	test("rejects when no session", async () => {

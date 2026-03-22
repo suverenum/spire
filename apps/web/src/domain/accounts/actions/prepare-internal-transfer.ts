@@ -8,9 +8,11 @@ import { getSession } from "@/lib/session";
 export async function prepareInternalTransfer({
 	fromAccountId,
 	toAccountId,
+	tokenSymbol,
 }: {
 	fromAccountId: string;
 	toAccountId: string;
+	tokenSymbol?: string;
 }): Promise<{
 	error?: string;
 	fromAccount?: {
@@ -44,20 +46,23 @@ export async function prepareInternalTransfer({
 		return { error: "One or both accounts not found" };
 	}
 
-	if (fromAccount.tokenSymbol !== toAccount.tokenSymbol) {
-		return { error: "Accounts must hold the same token for internal transfer" };
-	}
+	// Use explicit token if provided, otherwise fall back to fromAccount's primary token.
+	// In the multi-asset model, accounts can hold any token — the user selects which to transfer.
+	const resolvedSymbol = tokenSymbol ?? fromAccount.tokenSymbol;
+	const resolvedAddress = tokenSymbol
+		? fromAccount.tokenAddress // will be resolved by caller from SUPPORTED_TOKENS
+		: fromAccount.tokenAddress;
 
 	return {
 		fromAccount: {
 			walletAddress: fromAccount.walletAddress,
-			tokenAddress: fromAccount.tokenAddress,
-			tokenSymbol: fromAccount.tokenSymbol,
+			tokenAddress: resolvedAddress,
+			tokenSymbol: resolvedSymbol,
 		},
 		toAccount: {
 			walletAddress: toAccount.walletAddress,
 			tokenAddress: toAccount.tokenAddress,
-			tokenSymbol: toAccount.tokenSymbol,
+			tokenSymbol: resolvedSymbol,
 		},
 	};
 }
