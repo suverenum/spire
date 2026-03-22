@@ -68,8 +68,9 @@ export async function authenticateContext(
 		authenticatedAt: opts.authenticatedAt ?? Date.now(),
 	});
 
-	const isExternal = COOKIE_DOMAIN !== "localhost";
 	const baseUrl = process.env.BASE_URL || "http://localhost:11000";
+	const isExternal = COOKIE_DOMAIN !== "localhost";
+	const secure = baseUrl.startsWith("https:");
 	await context.addCookies([
 		{
 			name: COOKIE_NAME,
@@ -77,7 +78,7 @@ export async function authenticateContext(
 			...(isExternal ? { url: baseUrl } : { domain: COOKIE_DOMAIN }),
 			path: "/",
 			httpOnly: true,
-			secure: isExternal,
+			secure,
 			sameSite: "Lax",
 		},
 	]);
