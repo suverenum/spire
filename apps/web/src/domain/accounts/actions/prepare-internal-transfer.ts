@@ -47,16 +47,24 @@ export async function prepareInternalTransfer({
 		return { error: "One or both accounts not found" };
 	}
 
-	// Use explicit token if provided, otherwise fall back to fromAccount's primary token.
-	// In the multi-asset model, accounts can hold any token — the user selects which to transfer.
-	const resolvedSymbol = tokenSymbol ?? fromAccount.tokenSymbol;
-	let resolvedAddress = fromAccount.tokenAddress;
+	// When explicit tokenSymbol is provided, resolve from SUPPORTED_TOKENS (multi-asset transfer).
+	// When omitted, fall back to fromAccount's primary token but enforce same-token guard
+	// to prevent silently transferring the wrong asset to a different-token account.
+	let resolvedSymbol: string;
+	let resolvedAddress: string;
 	if (tokenSymbol) {
 		const token = SUPPORTED_TOKENS[tokenSymbol];
 		if (!token) {
 			return { error: `Unsupported token: ${tokenSymbol}` };
 		}
+		resolvedSymbol = tokenSymbol;
 		resolvedAddress = token.address;
+	} else {
+		if (fromAccount.tokenSymbol !== toAccount.tokenSymbol) {
+			return { error: "Accounts hold different tokens — specify tokenSymbol to transfer" };
+		}
+		resolvedSymbol = fromAccount.tokenSymbol;
+		resolvedAddress = fromAccount.tokenAddress;
 	}
 
 	return {

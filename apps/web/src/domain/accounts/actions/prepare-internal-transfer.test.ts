@@ -97,7 +97,7 @@ describe("prepareInternalTransfer", () => {
 		expect(result.error).toBe("One or both accounts not found");
 	});
 
-	test("allows transfer between accounts with different primary tokens", async () => {
+	test("rejects different primary tokens when tokenSymbol not specified", async () => {
 		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce({
 			...TO_ACCOUNT,
 			tokenSymbol: "BetaUSD",
@@ -108,8 +108,24 @@ describe("prepareInternalTransfer", () => {
 			fromAccountId: "acc-1",
 			toAccountId: "acc-2",
 		});
+		expect(result.error).toBe("Accounts hold different tokens — specify tokenSymbol to transfer");
+	});
+
+	test("allows cross-token transfer when explicit tokenSymbol provided", async () => {
+		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce({
+			...TO_ACCOUNT,
+			tokenSymbol: "BetaUSD",
+			tokenAddress: "0x20c0000000000000000000000000000000000002",
+		});
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "acc-1",
+			toAccountId: "acc-2",
+			tokenSymbol: "AlphaUSD",
+		});
 		expect(result.error).toBeUndefined();
 		expect(result.fromAccount?.tokenSymbol).toBe("AlphaUSD");
+		expect(result.toAccount?.tokenSymbol).toBe("AlphaUSD");
 	});
 
 	test("uses explicit tokenSymbol and resolves address from SUPPORTED_TOKENS", async () => {
