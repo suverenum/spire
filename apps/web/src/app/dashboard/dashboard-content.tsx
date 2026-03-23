@@ -199,7 +199,9 @@ export function DashboardContent({
 						</Link>
 					</div>
 					<AccountGrid
-						accounts={accountsWithBalances.filter((a) => a.walletType === "eoa")}
+						accounts={accountsWithBalances.filter(
+							(a) => a.walletType === "eoa" || a.walletType === "smart-account",
+						)}
 						maxItems={4}
 						showViewAll
 						onRename={setRenameAccount}

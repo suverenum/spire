@@ -44,7 +44,9 @@ export function CashAccountsContent({
 	}));
 
 	const { accounts: accountsWithBalances } = useAllBalances(accounts);
-	const cashAccounts = accountsWithBalances.filter((a) => a.walletType === "eoa");
+	const cashAccounts = accountsWithBalances.filter(
+		(a) => a.walletType === "eoa" || a.walletType === "smart-account",
+	);
 
 	return (
 		<SessionGuard authenticatedAt={authenticatedAt}>
