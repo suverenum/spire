@@ -139,6 +139,59 @@ describe("loginAction", () => {
 			}),
 		);
 	});
+
+	test("recovers from CAS race loss by re-reading winning org", async () => {
+		// Legacy treasury triggers org creation
+		mockSelectResult
+			.mockResolvedValueOnce([
+				{
+					id: "t-race",
+					name: "Race Treasury",
+					tempoAddress: "0xcccccccccccccccccccccccccccccccccccccccc",
+					organizationId: null,
+				},
+			])
+			// Re-read after CAS failure returns the winning org
+			.mockResolvedValueOnce([{ organizationId: "org-winner" }]);
+
+		const { createOrganizationForTreasury } = await import(
+			"@/domain/organizations/actions/organization-actions"
+		);
+		vi.mocked(createOrganizationForTreasury).mockRejectedValueOnce(
+			new Error("Treasury was linked by a concurrent request"),
+		);
+
+		const { loginAction } = await import("./auth-actions");
+		const result = await loginAction("0xcccccccccccccccccccccccccccccccccccccccc");
+
+		expect(result.error).toBeUndefined();
+	});
+
+	test("returns error when CAS race recovery finds no org", async () => {
+		mockSelectResult
+			.mockResolvedValueOnce([
+				{
+					id: "t-fail",
+					name: "Failed Treasury",
+					tempoAddress: "0xdddddddddddddddddddddddddddddddddddddddd",
+					organizationId: null,
+				},
+			])
+			// Re-read after CAS failure returns nothing
+			.mockResolvedValueOnce([{ organizationId: null }]);
+
+		const { createOrganizationForTreasury } = await import(
+			"@/domain/organizations/actions/organization-actions"
+		);
+		vi.mocked(createOrganizationForTreasury).mockRejectedValueOnce(
+			new Error("Treasury was linked by a concurrent request"),
+		);
+
+		const { loginAction } = await import("./auth-actions");
+		const result = await loginAction("0xdddddddddddddddddddddddddddddddddddddddd");
+
+		expect(result.error).toBe("Failed to create organization");
+	});
 });
 
 describe("touchSessionAction", () => {
