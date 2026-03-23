@@ -194,6 +194,19 @@ describe("finalizeAccountCreate", () => {
 		expect(result.error).toBe("Invalid wallet type");
 	});
 
+	test("coerces empty walletType to eoa default", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Empty Type Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x9999999999999999999999999999999999999999",
+			walletType: "",
+		});
+		expect(result.error).toBeUndefined();
+		expect(result.account?.id).toBe("new-acc-id");
+	});
+
 	test("rejects guardian wallet type (requires companion agent_wallets row)", async () => {
 		const { finalizeAccountCreate } = await import("./create-account");
 		const result = await finalizeAccountCreate({

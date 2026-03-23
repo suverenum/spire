@@ -112,10 +112,38 @@ describe("createOrganizationForTreasury", () => {
 	});
 });
 
+vi.mock("@/lib/session", () => ({
+	getSession: vi.fn(() =>
+		Promise.resolve({
+			treasuryId: "t-1",
+			tempoAddress: "0x1234",
+			treasuryName: "Test",
+			authenticatedAt: Date.now(),
+			organizationId: "org-1",
+			organizationName: "Test Org",
+		}),
+	),
+}));
+
 describe("updateOrganizationName", () => {
-	test("updates organization name with correct arguments", async () => {
+	test("updates own organization name", async () => {
 		const { updateOrganizationName } = await import("./organization-actions");
-		await updateOrganizationName("org-1", "New Name");
+		const result = await updateOrganizationName("org-1", "New Name");
+		expect(result.error).toBeUndefined();
 		expect(mockUpdateSet).toHaveBeenCalledWith({ name: "New Name" });
+	});
+
+	test("rejects renaming another organization", async () => {
+		const { updateOrganizationName } = await import("./organization-actions");
+		const result = await updateOrganizationName("org-other", "Hijacked");
+		expect(result.error).toBe("Not authorized to rename this organization");
+	});
+
+	test("rejects when not authenticated", async () => {
+		const { getSession } = await import("@/lib/session");
+		vi.mocked(getSession).mockResolvedValueOnce(null);
+		const { updateOrganizationName } = await import("./organization-actions");
+		const result = await updateOrganizationName("org-1", "New Name");
+		expect(result.error).toBe("Not authenticated");
 	});
 });

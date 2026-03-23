@@ -96,12 +96,13 @@ export async function finalizeAccountCreate({
 		return { error: "Invalid wallet address" };
 	}
 
-	if (walletType && !VALID_WALLET_TYPES.has(walletType)) {
+	const resolvedWalletType = walletType || "eoa";
+	if (!VALID_WALLET_TYPES.has(resolvedWalletType)) {
 		return { error: "Invalid wallet type" };
 	}
 
 	// Smart-account type requires a valid private key that derives the submitted wallet address
-	if (walletType === "smart-account") {
+	if (resolvedWalletType === "smart-account") {
 		if (!privateKey) {
 			return { error: "Private key required for smart-account creation" };
 		}
@@ -142,7 +143,7 @@ export async function finalizeAccountCreate({
 				tokenSymbol,
 				tokenAddress: token.address,
 				walletAddress: walletAddress.toLowerCase(),
-				walletType,
+				walletType: resolvedWalletType,
 				encryptedKey,
 				isDefault,
 			})

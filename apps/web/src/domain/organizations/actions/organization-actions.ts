@@ -59,6 +59,19 @@ export async function createOrganizationForTreasury(
 	});
 }
 
-export async function updateOrganizationName(organizationId: string, name: string): Promise<void> {
+export async function updateOrganizationName(
+	organizationId: string,
+	name: string,
+): Promise<{ error?: string }> {
+	const { getSession } = await import("@/lib/session");
+	const session = await getSession();
+	if (!session) return { error: "Not authenticated" };
+
+	// Only allow renaming the caller's own organization
+	if (session.organizationId !== organizationId) {
+		return { error: "Not authorized to rename this organization" };
+	}
+
 	await db.update(organizations).set({ name }).where(eq(organizations.id, organizationId));
+	return {};
 }
