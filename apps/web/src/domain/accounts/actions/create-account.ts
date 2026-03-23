@@ -103,8 +103,13 @@ export async function finalizeAccountCreate({
 		if (!privateKey) {
 			return { error: "Private key required for smart-account creation" };
 		}
-		const derived = privateKeyToAccount(privateKey);
-		if (derived.address.toLowerCase() !== walletAddress.toLowerCase()) {
+		let derivedAddress: string;
+		try {
+			derivedAddress = privateKeyToAccount(privateKey).address;
+		} catch {
+			return { error: "Invalid private key format" };
+		}
+		if (derivedAddress.toLowerCase() !== walletAddress.toLowerCase()) {
 			return { error: "Private key does not match wallet address" };
 		}
 	}

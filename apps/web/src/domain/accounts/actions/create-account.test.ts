@@ -354,6 +354,23 @@ describe("finalizeAccountCreate", () => {
 		expect(result.account?.id).toBe("new-acc-id");
 	});
 
+	test("rejects smart-account with malformed private key", async () => {
+		const { privateKeyToAccount } = await import("viem/accounts");
+		vi.mocked(privateKeyToAccount).mockImplementationOnce(() => {
+			throw new Error("invalid private key");
+		});
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Bad Key",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x8888888888888888888888888888888888888888",
+			walletType: "smart-account",
+			privateKey: "0xinvalid" as `0x${string}`,
+		});
+		expect(result.error).toBe("Invalid private key format");
+	});
+
 	test("rejects smart-account without private key", async () => {
 		const { finalizeAccountCreate } = await import("./create-account");
 		const result = await finalizeAccountCreate({

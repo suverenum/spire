@@ -67,7 +67,7 @@ export async function prepareInternalTransfer({
 		},
 		toAccount: {
 			walletAddress: toAccount.walletAddress,
-			tokenAddress: toAccount.tokenAddress,
+			tokenAddress: resolvedAddress,
 			tokenSymbol: resolvedSymbol,
 		},
 	};

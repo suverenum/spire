@@ -124,6 +124,7 @@ describe("prepareInternalTransfer", () => {
 		expect(result.fromAccount?.tokenSymbol).toBe("BetaUSD");
 		expect(result.fromAccount?.tokenAddress).toBe("0x20c0000000000000000000000000000000000002");
 		expect(result.toAccount?.tokenSymbol).toBe("BetaUSD");
+		expect(result.toAccount?.tokenAddress).toBe("0x20c0000000000000000000000000000000000002");
 	});
 
 	test("rejects unsupported tokenSymbol", async () => {
