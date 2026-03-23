@@ -10,6 +10,7 @@ export async function getAccounts() {
 	if (!session) throw new Error("Not authenticated");
 
 	return db.query.accounts.findMany({
+		columns: { encryptedKey: false },
 		where: eq(accounts.treasuryId, session.treasuryId),
 		orderBy: (accounts, { asc }) => [asc(accounts.createdAt)],
 	});

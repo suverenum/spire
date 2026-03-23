@@ -14,6 +14,7 @@ export async function getAccount(accountId: string) {
 	if (!UUID_RE.test(accountId)) throw new Error("Account not found");
 
 	const account = await db.query.accounts.findFirst({
+		columns: { encryptedKey: false },
 		where: and(eq(accounts.id, accountId), eq(accounts.treasuryId, session.treasuryId)),
 	});
 

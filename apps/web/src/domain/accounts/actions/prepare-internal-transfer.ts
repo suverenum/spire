@@ -3,6 +3,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
+import { SUPPORTED_TOKENS } from "@/lib/constants";
 import { getSession } from "@/lib/session";
 
 export async function prepareInternalTransfer({
@@ -49,9 +50,14 @@ export async function prepareInternalTransfer({
 	// Use explicit token if provided, otherwise fall back to fromAccount's primary token.
 	// In the multi-asset model, accounts can hold any token — the user selects which to transfer.
 	const resolvedSymbol = tokenSymbol ?? fromAccount.tokenSymbol;
-	const resolvedAddress = tokenSymbol
-		? fromAccount.tokenAddress // will be resolved by caller from SUPPORTED_TOKENS
-		: fromAccount.tokenAddress;
+	let resolvedAddress = fromAccount.tokenAddress;
+	if (tokenSymbol) {
+		const token = SUPPORTED_TOKENS[tokenSymbol];
+		if (!token) {
+			return { error: `Unsupported token: ${tokenSymbol}` };
+		}
+		resolvedAddress = token.address;
+	}
 
 	return {
 		fromAccount: {

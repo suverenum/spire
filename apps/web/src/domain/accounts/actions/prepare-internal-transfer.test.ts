@@ -13,6 +13,23 @@ vi.mock("@/db", () => ({
 	},
 }));
 
+vi.mock("@/lib/constants", () => ({
+	SUPPORTED_TOKENS: {
+		AlphaUSD: {
+			name: "AlphaUSD",
+			symbol: "AlphaUSD",
+			decimals: 6,
+			address: "0x20c0000000000000000000000000000000000001",
+		},
+		BetaUSD: {
+			name: "BetaUSD",
+			symbol: "BetaUSD",
+			decimals: 6,
+			address: "0x20c0000000000000000000000000000000000002",
+		},
+	},
+}));
+
 const FROM_ACCOUNT = {
 	id: "acc-1",
 	treasuryId: DEFAULT_SESSION.treasuryId,
@@ -75,7 +92,7 @@ describe("prepareInternalTransfer", () => {
 		expect(result.fromAccount?.tokenSymbol).toBe("AlphaUSD");
 	});
 
-	test("uses explicit tokenSymbol when provided", async () => {
+	test("uses explicit tokenSymbol and resolves address from SUPPORTED_TOKENS", async () => {
 		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce(TO_ACCOUNT);
 		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
 		const result = await prepareInternalTransfer({
@@ -85,7 +102,19 @@ describe("prepareInternalTransfer", () => {
 		});
 		expect(result.error).toBeUndefined();
 		expect(result.fromAccount?.tokenSymbol).toBe("BetaUSD");
+		expect(result.fromAccount?.tokenAddress).toBe("0x20c0000000000000000000000000000000000002");
 		expect(result.toAccount?.tokenSymbol).toBe("BetaUSD");
+	});
+
+	test("rejects unsupported tokenSymbol", async () => {
+		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce(TO_ACCOUNT);
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "acc-1",
+			toAccountId: "acc-2",
+			tokenSymbol: "FakeToken",
+		});
+		expect(result.error).toBe("Unsupported token: FakeToken");
 	});
 
 	test("falls back to fromAccount primary token when tokenSymbol not provided", async () => {

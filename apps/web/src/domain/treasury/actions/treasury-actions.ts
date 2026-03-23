@@ -30,33 +30,38 @@ export async function createTreasuryAction(
 	let orgId: string;
 	let orgName: string;
 	try {
-		// Create organization → entity → treasury atomically
-		const [org] = await db
-			.insert(organizations)
-			.values({ name })
-			.returning({ id: organizations.id, name: organizations.name });
+		// Create organization → entity → treasury in a single transaction
+		// so a treasury unique-constraint failure doesn't leave orphaned org/entity rows
+		const result = await db.transaction(async (tx) => {
+			const [org] = await tx
+				.insert(organizations)
+				.values({ name })
+				.returning({ id: organizations.id, name: organizations.name });
 
-		const [entity] = await db
-			.insert(entities)
-			.values({ organizationId: org.id, name: "Default" })
-			.returning({ id: entities.id });
+			const [entity] = await tx
+				.insert(entities)
+				.values({ organizationId: org.id, name: "Default" })
+				.returning({ id: entities.id });
 
-		const [inserted] = await db
-			.insert(treasuries)
-			.values({
-				name,
-				tempoAddress,
-				organizationId: org.id,
-				entityId: entity.id,
-			})
-			.returning({
-				id: treasuries.id,
-				name: treasuries.name,
-				tempoAddress: treasuries.tempoAddress,
-			});
-		row = inserted;
-		orgId = org.id;
-		orgName = org.name;
+			const [inserted] = await tx
+				.insert(treasuries)
+				.values({
+					name,
+					tempoAddress,
+					organizationId: org.id,
+					entityId: entity.id,
+				})
+				.returning({
+					id: treasuries.id,
+					name: treasuries.name,
+					tempoAddress: treasuries.tempoAddress,
+				});
+
+			return { treasury: inserted, orgId: org.id, orgName: org.name };
+		});
+		row = result.treasury;
+		orgId = result.orgId;
+		orgName = result.orgName;
 	} catch (err: unknown) {
 		const pgCode =
 			err != null && typeof err === "object" && "code" in err

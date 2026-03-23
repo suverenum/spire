@@ -34,6 +34,14 @@ vi.mock("@/db", () => ({
 		query: { treasuries: { findFirst: (...args: unknown[]) => mockFindFirst(...args) } },
 		insert: (...args: unknown[]) => mockInsert(...args),
 		update: (...args: unknown[]) => mockUpdate(...args),
+		transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+			// Execute the callback with a mock tx that delegates to the same insert/update mocks
+			const tx = {
+				insert: (...args: unknown[]) => mockInsert(...args),
+				update: (...args: unknown[]) => mockUpdate(...args),
+			};
+			return fn(tx);
+		}),
 	},
 }));
 
