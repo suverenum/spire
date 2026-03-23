@@ -5,9 +5,12 @@
  * and testing the logic patterns it uses.
  */
 import { readFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
-const BACKFILL_PATH = "/root/work/spire/apps/web/src/db/seeds/backfill-organizations.ts";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const BACKFILL_PATH = resolve(__dirname, "backfill-organizations.ts");
 
 describe("backfill-organizations migration", () => {
 	let source: string;

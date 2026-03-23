@@ -10,7 +10,7 @@ description = "Ethereum/Tempo private key passed to privateKeyToAccount or simil
 regex = '''privateKeyToAccount\s*\(\s*["']0x[0-9a-fA-F]{64}["']'''
 tags = ["key", "ethereum"]
 
-# Rule-scoped allowlist — only applies to the custom rule above, not to built-in rules
+# Rule-scoped allowlist — only applies to the custom rule above
 [rules.allowlist]
 paths = [
   '''specs/redesign-code-base/''',
@@ -18,7 +18,7 @@ paths = [
   '''\.test\.tsx''',
 ]
 
-# Global allowlist — suppresses ALL rules for these paths (vendored code, not user-authored)
+# Global allowlist — suppresses ALL rules for these paths/patterns
 [allowlist]
 paths = [
   '''node_modules/''',
@@ -35,4 +35,10 @@ paths = [
   '''tempo-docs/''',
   '''specs/''',
   '''ecosystem\.config''',
+]
+# Well-known test values — publicly documented, not real secrets.
+regexes = [
+  '''0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80''',
+  '''cafebabe:deadbeef''',
+  '''playwright-session-secret''',
 ]
