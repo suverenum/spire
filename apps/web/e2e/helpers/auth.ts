@@ -29,16 +29,19 @@ function getCookieDomain(): string {
 
 const DEV_SECRET = loadSessionSecret();
 const COOKIE_DOMAIN = getCookieDomain();
-// Match the server's cookie name logic (src/lib/constants.ts): NODE_ENV === "production" → __Host- prefix.
-// Playwright webServer runs in development mode, so this is "goldhord-session" for local E2E.
-const COOKIE_NAME =
-	process.env.NODE_ENV === "production" ? "__Host-goldhord-session" : "goldhord-session";
+// Derive cookie name from target deployment: HTTPS targets use __Host- prefix (production mode).
+// This matches the server's logic (src/lib/constants.ts) based on the actual deployment,
+// not the local runner's NODE_ENV — so tests against a production URL get the right cookie name.
+const BASE_URL = process.env.BASE_URL || "http://localhost:11000";
+const COOKIE_NAME = BASE_URL.startsWith("https:") ? "__Host-goldhord-session" : "goldhord-session";
 
 interface SessionData {
 	treasuryId: string;
 	tempoAddress: string;
 	treasuryName: string;
 	authenticatedAt: number;
+	organizationId: string;
+	organizationName: string;
 }
 
 function forgeSessionCookie(data: SessionData): string {
@@ -59,6 +62,8 @@ export async function authenticateContext(
 		tempoAddress: string;
 		treasuryName: string;
 		authenticatedAt?: number;
+		organizationId?: string;
+		organizationName?: string;
 	},
 ): Promise<void> {
 	const cookie = forgeSessionCookie({
@@ -66,6 +71,8 @@ export async function authenticateContext(
 		tempoAddress: opts.tempoAddress,
 		treasuryName: opts.treasuryName,
 		authenticatedAt: opts.authenticatedAt ?? Date.now(),
+		organizationId: opts.organizationId ?? opts.treasuryId,
+		organizationName: opts.organizationName ?? opts.treasuryName,
 	});
 
 	const baseUrl = process.env.BASE_URL || "http://localhost:11000";

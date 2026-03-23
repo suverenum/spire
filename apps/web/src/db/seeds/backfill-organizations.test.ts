@@ -37,6 +37,14 @@ describe("backfill-organizations migration", () => {
 		expect(source).toContain('treasury.name || "Unnamed Organization"');
 	});
 
+	test("per-treasury writes are wrapped in a transaction", async () => {
+		source = source || (await readFile(BACKFILL_PATH, "utf-8"));
+		expect(source).toContain("db.transaction(async (tx)");
+		// Verify inserts/updates use tx, not db directly
+		const txBlock = source.slice(source.indexOf("db.transaction"));
+		expect(txBlock).toContain("await tx");
+	});
+
 	test("creates org before entity (entity depends on orgId)", async () => {
 		source = source || (await readFile(BACKFILL_PATH, "utf-8"));
 		const orgInsertIdx = source.indexOf("insert(organizations)");

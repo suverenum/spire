@@ -319,6 +319,19 @@ describe("finalizeAccountCreate", () => {
 		expect(result.account?.id).toBe("new-acc-id");
 	});
 
+	test("rejects smart-account without private key", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Keyless Smart Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x7777777777777777777777777777777777777777",
+			walletType: "smart-account",
+			// No privateKey provided
+		});
+		expect(result.error).toBe("Private key required for smart-account creation");
+	});
+
 	test("rejects name over 100 characters", async () => {
 		const { finalizeAccountCreate } = await import("./create-account");
 		const result = await finalizeAccountCreate({

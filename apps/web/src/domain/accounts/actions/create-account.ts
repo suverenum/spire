@@ -97,6 +97,11 @@ export async function finalizeAccountCreate({
 		return { error: "Invalid wallet type" };
 	}
 
+	// Smart-account type requires a valid private key to avoid stranding funds
+	if (walletType === "smart-account" && !privateKey) {
+		return { error: "Private key required for smart-account creation" };
+	}
+
 	// Encrypt private key if provided (for smart-account type)
 	const encryptedKey = privateKey ? encrypt(privateKey) : undefined;
 

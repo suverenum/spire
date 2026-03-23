@@ -34,29 +34,34 @@ async function main() {
 		try {
 			const orgName = treasury.name || "Unnamed Organization";
 
-			const [org] = await db
-				.insert(organizations)
-				.values({ name: orgName })
-				.returning({ id: organizations.id });
+			// Wrap per-treasury writes in a transaction so partial failures
+			// don't leave orphaned org/entity rows
+			await db.transaction(async (tx) => {
+				const [org] = await tx
+					.insert(organizations)
+					.values({ name: orgName })
+					.returning({ id: organizations.id });
 
-			const [entity] = await db
-				.insert(entities)
-				.values({ organizationId: org.id, name: "Default" })
-				.returning({ id: entities.id });
+				const [entity] = await tx
+					.insert(entities)
+					.values({ organizationId: org.id, name: "Default" })
+					.returning({ id: entities.id });
 
-			await db
-				.update(treasuries)
-				.set({ organizationId: org.id, entityId: entity.id })
-				.where(eq(treasuries.id, treasury.id));
+				await tx
+					.update(treasuries)
+					.set({ organizationId: org.id, entityId: entity.id })
+					.where(eq(treasuries.id, treasury.id));
 
-			// Set accountCategory for guardian accounts belonging to this treasury only
-			await db
-				.update(accounts)
-				.set({ accountCategory: "agent" })
-				.where(and(eq(accounts.walletType, "guardian"), eq(accounts.treasuryId, treasury.id)));
+				// Set accountCategory for guardian accounts belonging to this treasury only
+				await tx
+					.update(accounts)
+					.set({ accountCategory: "agent" })
+					.where(and(eq(accounts.walletType, "guardian"), eq(accounts.treasuryId, treasury.id)));
+
+				console.log(`  Migrated treasury ${treasury.id}: "${orgName}" → org ${org.id}`);
+			});
 
 			migrated++;
-			console.log(`  Migrated treasury ${treasury.id}: "${orgName}" → org ${org.id}`);
 		} catch (err) {
 			failed++;
 			console.error(`  Failed to migrate treasury ${treasury.id}:`, err);
