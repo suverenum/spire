@@ -139,6 +139,30 @@ describe("updateOrganizationName", () => {
 		expect(result.error).toBe("Not authorized to rename this organization");
 	});
 
+	test("rejects empty name", async () => {
+		const { updateOrganizationName } = await import("./organization-actions");
+		const result = await updateOrganizationName("org-1", "");
+		expect(result.error).toBe("Organization name must be 1-100 characters");
+	});
+
+	test("rejects whitespace-only name", async () => {
+		const { updateOrganizationName } = await import("./organization-actions");
+		const result = await updateOrganizationName("org-1", "   ");
+		expect(result.error).toBe("Organization name must be 1-100 characters");
+	});
+
+	test("rejects name over 100 characters", async () => {
+		const { updateOrganizationName } = await import("./organization-actions");
+		const result = await updateOrganizationName("org-1", "x".repeat(101));
+		expect(result.error).toBe("Organization name must be 1-100 characters");
+	});
+
+	test("trims whitespace from name before saving", async () => {
+		const { updateOrganizationName } = await import("./organization-actions");
+		await updateOrganizationName("org-1", "  Trimmed Name  ");
+		expect(mockUpdateSet).toHaveBeenCalledWith({ name: "Trimmed Name" });
+	});
+
 	test("rejects when not authenticated", async () => {
 		const { getSession } = await import("@/lib/session");
 		vi.mocked(getSession).mockResolvedValueOnce(null);

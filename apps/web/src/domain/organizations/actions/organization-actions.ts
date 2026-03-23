@@ -72,6 +72,11 @@ export async function updateOrganizationName(
 		return { error: "Not authorized to rename this organization" };
 	}
 
-	await db.update(organizations).set({ name }).where(eq(organizations.id, organizationId));
+	const trimmed = name.trim();
+	if (!trimmed || trimmed.length > 100) {
+		return { error: "Organization name must be 1-100 characters" };
+	}
+
+	await db.update(organizations).set({ name: trimmed }).where(eq(organizations.id, organizationId));
 	return {};
 }
