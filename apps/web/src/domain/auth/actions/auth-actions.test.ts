@@ -142,18 +142,29 @@ describe("loginAction", () => {
 });
 
 describe("touchSessionAction", () => {
-	test("refreshes session without error", async () => {
-		const { getSession } = await import("@/lib/session");
-		vi.mocked(getSession).mockResolvedValueOnce({
+	test("refreshes session and propagates all fields including org data", async () => {
+		const sessionData = {
 			treasuryId: "t-1",
 			tempoAddress: "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`,
 			treasuryName: "Test",
 			authenticatedAt: Date.now(),
 			organizationId: "org-1",
 			organizationName: "Test Org",
-		});
+		};
+		const { getSession, createSession } = await import("@/lib/session");
+		vi.mocked(getSession).mockResolvedValueOnce(sessionData);
+		vi.mocked(createSession).mockClear();
 		const { touchSessionAction } = await import("./auth-actions");
-		await expect(touchSessionAction()).resolves.not.toThrow();
+		await touchSessionAction();
+		expect(createSession).toHaveBeenCalledWith(
+			expect.objectContaining({
+				treasuryId: "t-1",
+				tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+				treasuryName: "Test",
+				organizationId: "org-1",
+				organizationName: "Test Org",
+			}),
+		);
 	});
 
 	test("does nothing when no session exists", async () => {

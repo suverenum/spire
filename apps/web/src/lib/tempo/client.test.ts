@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockReadContract = vi.fn();
 const mockGetContractEvents = vi.fn();
 const mockGetBlockNumber = vi.fn();
+const mockGetBlock = vi.fn();
 
 // Mock viem before importing the client
 vi.mock("viem", () => ({
@@ -10,6 +11,7 @@ vi.mock("viem", () => ({
 		readContract: mockReadContract,
 		getContractEvents: mockGetContractEvents,
 		getBlockNumber: mockGetBlockNumber,
+		getBlock: mockGetBlock,
 	})),
 	http: vi.fn(),
 }));
@@ -21,10 +23,12 @@ describe("tempo client", () => {
 		mockReadContract.mockReset();
 		mockGetContractEvents.mockReset();
 		mockGetBlockNumber.mockReset();
+		mockGetBlock.mockReset();
 		// Default: successful responses
 		mockReadContract.mockResolvedValue(1000000n);
 		mockGetContractEvents.mockResolvedValue([]);
 		mockGetBlockNumber.mockResolvedValue(200_000n);
+		mockGetBlock.mockResolvedValue({ timestamp: 1700000000n });
 	});
 
 	it("fetches balances with correct values per token", async () => {
@@ -301,6 +305,72 @@ describe("tempo client", () => {
 			const txs = await fetchTransactions(addr);
 			// Should not throw — fromBlock should be 0n
 			expect(Array.isArray(txs)).toBe(true);
+		});
+
+		it("resolves timestamps from block when blockNumber is present", async () => {
+			const knownTimestamp = 1700000000n; // Nov 14, 2023
+			mockGetBlock.mockResolvedValue({ timestamp: knownTimestamp });
+			mockGetContractEvents
+				.mockResolvedValueOnce([
+					{
+						transactionHash: `0x${"ee".repeat(32)}`,
+						logIndex: 0,
+						blockNumber: 42n,
+						args: { from: addr, to: "0xabcdef1234567890abcdef1234567890abcdef12", value: 100n },
+					},
+				])
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			expect(txs.length).toBe(1);
+			// Timestamp should come from block, not Date.now()
+			expect(txs[0].timestamp.getTime()).toBe(Number(knownTimestamp) * 1000);
+			expect(mockGetBlock).toHaveBeenCalledWith({ blockNumber: 42n });
+		});
+
+		it("falls back to Date.now when blockNumber is null", async () => {
+			const before = Date.now();
+			mockGetContractEvents
+				.mockResolvedValueOnce([
+					{
+						transactionHash: `0x${"ff".repeat(32)}`,
+						logIndex: 0,
+						blockNumber: null,
+						args: { from: addr, to: "0xabcdef1234567890abcdef1234567890abcdef12", value: 100n },
+					},
+				])
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			expect(txs.length).toBe(1);
+			// Timestamp should be approximately now (within 5 seconds)
+			expect(txs[0].timestamp.getTime()).toBeGreaterThanOrEqual(before);
+			expect(txs[0].timestamp.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+		});
+
+		it("handles getBlock failure gracefully (falls back to Date.now)", async () => {
+			mockGetBlock.mockRejectedValue(new Error("RPC error"));
+			mockGetContractEvents
+				.mockResolvedValueOnce([
+					{
+						transactionHash: `0x${"aa".repeat(32)}`,
+						logIndex: 0,
+						blockNumber: 99n,
+						args: { from: addr, to: "0xabcdef1234567890abcdef1234567890abcdef12", value: 100n },
+					},
+				])
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			// Should still return the transaction, using Date.now() as fallback
+			expect(txs.length).toBe(1);
+			expect(txs[0].timestamp).toBeInstanceOf(Date);
 		});
 	});
 });

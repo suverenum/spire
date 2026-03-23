@@ -240,6 +240,66 @@ describe("session", () => {
 		expect(result!.organizationName).toBe("Test Organization");
 	});
 
+	test("getSession handles cookie value with multiple dots in payload", async () => {
+		// base64 can contain characters that aren't dots, but ensure lastIndexOf handles edge cases
+		const sessionData = {
+			...VALID_SESSION,
+			authenticatedAt: Date.now(),
+			treasuryName: "A.B.C Treasury", // dots in name
+		};
+		const cookieValue = createSignedCookie(sessionData);
+		mockGet.mockReturnValue({ value: cookieValue });
+
+		const { getSession } = await import("./session");
+		const result = await getSession();
+		expect(result).not.toBeNull();
+		expect(result!.treasuryName).toBe("A.B.C Treasury");
+	});
+
+	// ─── createSession cookie flags ─────────────────────────────
+
+	test("createSession sets secure flag to false in development", async () => {
+		const originalNodeEnv = process.env.NODE_ENV;
+		vi.stubEnv("NODE_ENV", "development");
+
+		const { createSession } = await import("./session");
+		await createSession(VALID_SESSION);
+
+		const [, , options] = mockSet.mock.calls[0];
+		expect(options.secure).toBe(false);
+
+		vi.stubEnv("NODE_ENV", originalNodeEnv ?? "test");
+	});
+
+	test("createSession sets secure flag to true in production", async () => {
+		const originalNodeEnv = process.env.NODE_ENV;
+		vi.stubEnv("NODE_ENV", "production");
+
+		const { createSession } = await import("./session");
+		await createSession(VALID_SESSION);
+
+		const [, , options] = mockSet.mock.calls[0];
+		expect(options.secure).toBe(true);
+
+		vi.stubEnv("NODE_ENV", originalNodeEnv ?? "test");
+	});
+
+	test("createSession roundtrip preserves organizationId and organizationName", async () => {
+		let storedValue: string | undefined;
+		mockSet.mockImplementation((_name: string, value: string) => {
+			storedValue = value;
+		});
+
+		const { createSession, getSession } = await import("./session");
+		await createSession(VALID_SESSION);
+
+		mockGet.mockReturnValue({ value: storedValue });
+		const result = await getSession();
+
+		expect(result!.organizationId).toBe(VALID_SESSION.organizationId);
+		expect(result!.organizationName).toBe(VALID_SESSION.organizationName);
+	});
+
 	// ─── getSessionSecret ───────────────────────────────────────
 
 	test("throws when SESSION_SECRET is not set", async () => {
