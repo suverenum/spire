@@ -47,10 +47,17 @@ async function main() {
 					.values({ organizationId: org.id, name: "Default" })
 					.returning({ id: entities.id });
 
-				await tx
+				// CAS guard: only link if treasury still unlinked (concurrent login may have linked it)
+				const updated = await tx
 					.update(treasuries)
 					.set({ organizationId: org.id, entityId: entity.id })
-					.where(eq(treasuries.id, treasury.id));
+					.where(and(eq(treasuries.id, treasury.id), isNull(treasuries.organizationId)))
+					.returning({ id: treasuries.id });
+
+				if (updated.length === 0) {
+					// Treasury was linked by a concurrent process — roll back this transaction
+					throw new Error(`Treasury ${treasury.id} was already linked concurrently, skipping`);
+				}
 
 				// Set accountCategory for guardian accounts belonging to this treasury only
 				await tx

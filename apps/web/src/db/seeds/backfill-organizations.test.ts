@@ -45,6 +45,14 @@ describe("backfill-organizations migration", () => {
 		expect(txBlock).toContain("await tx");
 	});
 
+	test("treasury update uses CAS guard (organization_id IS NULL)", async () => {
+		source = source || (await readFile(BACKFILL_PATH, "utf-8"));
+		// The update WHERE clause must include isNull check to avoid overwriting concurrent links
+		expect(source).toContain("isNull(treasuries.organizationId)");
+		// Must check affected row count
+		expect(source).toContain("updated.length === 0");
+	});
+
 	test("creates org before entity (entity depends on orgId)", async () => {
 		source = source || (await readFile(BACKFILL_PATH, "utf-8"));
 		const orgInsertIdx = source.indexOf("insert(organizations)");

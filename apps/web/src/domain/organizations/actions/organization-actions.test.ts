@@ -39,11 +39,12 @@ beforeEach(() => {
 });
 
 describe("createOrganizationForTreasury", () => {
-	test("creates organization, default entity, and links to treasury in transaction", async () => {
+	test("creates organization, entity, and links when treasury has no org", async () => {
+		// First select: treasury has no org yet
+		mockSelectWhere.mockResolvedValueOnce([{ organizationId: null, entityId: null }]);
 		mockInsertReturning
 			.mockResolvedValueOnce([{ id: "org-new" }])
 			.mockResolvedValueOnce([{ id: "entity-new" }]);
-		mockUpdateReturning.mockResolvedValueOnce([{ id: "t-1" }]); // treasury update returns row
 
 		const { createOrganizationForTreasury } = await import("./organization-actions");
 		const result = await createOrganizationForTreasury("t-1", "My Org");
@@ -53,23 +54,26 @@ describe("createOrganizationForTreasury", () => {
 		expect(mockInsert).toHaveBeenCalledTimes(2); // org + entity
 
 		const { db } = await import("@/db");
-		expect(db.transaction).toHaveBeenCalledTimes(1); // wrapped in transaction
+		expect(db.transaction).toHaveBeenCalledTimes(1);
 	});
 
-	test("returns existing org when concurrent request already linked", async () => {
-		mockInsertReturning
-			.mockResolvedValueOnce([{ id: "org-new" }])
-			.mockResolvedValueOnce([{ id: "entity-new" }]);
-		mockUpdateReturning.mockResolvedValueOnce([]); // 0 rows updated = race lost
-		mockSelectWhere.mockResolvedValueOnce([{ organizationId: "org-existing" }]);
+	test("returns existing org without inserting when treasury already linked", async () => {
+		// Treasury already has an org — check-first returns it
+		mockSelectWhere.mockResolvedValueOnce([
+			{ organizationId: "org-existing", entityId: "entity-existing" },
+		]);
 
 		const { createOrganizationForTreasury } = await import("./organization-actions");
 		const result = await createOrganizationForTreasury("t-1", "My Org");
 
 		expect(result.organizationId).toBe("org-existing");
+		expect(result.entityId).toBe("entity-existing");
+		// No inserts should have been made
+		expect(mockInsert).not.toHaveBeenCalled();
 	});
 
 	test("propagates org failure to caller", async () => {
+		mockSelectWhere.mockResolvedValueOnce([{ organizationId: null, entityId: null }]);
 		mockInsertReturning.mockRejectedValueOnce(new Error("DB connection lost"));
 
 		const { createOrganizationForTreasury } = await import("./organization-actions");
@@ -79,6 +83,7 @@ describe("createOrganizationForTreasury", () => {
 	});
 
 	test("propagates entity failure to caller", async () => {
+		mockSelectWhere.mockResolvedValueOnce([{ organizationId: null, entityId: null }]);
 		mockInsertReturning
 			.mockResolvedValueOnce([{ id: "org-new" }])
 			.mockRejectedValueOnce(new Error("Entity insert failed"));
