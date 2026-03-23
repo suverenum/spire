@@ -40,10 +40,19 @@ describe("getAccounts", () => {
 		expect(queryOptions.columns).toEqual({ encryptedKey: false });
 	});
 
-	test("orders accounts by createdAt ascending", async () => {
+	test("passes ordering function to query", async () => {
 		const { getAccounts } = await import("./get-accounts");
 		await getAccounts();
 		const queryOptions = mockFindMany.mock.calls[0][0];
-		expect(queryOptions.orderBy).toBeDefined();
+		// orderBy is a function — verify it exists and is callable
+		expect(typeof queryOptions.orderBy).toBe("function");
+	});
+
+	test("scopes query to session treasury", async () => {
+		const { getAccounts } = await import("./get-accounts");
+		await getAccounts();
+		const queryOptions = mockFindMany.mock.calls[0][0];
+		// where clause should be present (treasury scoping)
+		expect(queryOptions.where).toBeDefined();
 	});
 });

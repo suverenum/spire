@@ -72,6 +72,58 @@ describe("assertCanCreateAccount", () => {
 		expect(result.error).toBe("Invalid token for account creation");
 	});
 
+	test("rejects when no session", async () => {
+		const { getSession } = await import("@/lib/session");
+		vi.mocked(getSession).mockResolvedValueOnce(null);
+		const { assertCanCreateAccount } = await import("./create-account");
+		const result = await assertCanCreateAccount({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			tokenSymbol: "AlphaUSD",
+			name: "Savings",
+		});
+		expect(result.error).toBe("Not authenticated");
+	});
+
+	test("rejects name over 100 characters", async () => {
+		const { assertCanCreateAccount } = await import("./create-account");
+		const result = await assertCanCreateAccount({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			tokenSymbol: "AlphaUSD",
+			name: "x".repeat(101),
+		});
+		expect(result.error).toBe("Account name must be 1-100 characters");
+	});
+
+	test("accepts name at exactly 100 characters", async () => {
+		const { assertCanCreateAccount } = await import("./create-account");
+		const result = await assertCanCreateAccount({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			tokenSymbol: "AlphaUSD",
+			name: "x".repeat(100),
+		});
+		expect(result.error).toBeUndefined();
+	});
+
+	test("trims whitespace from name", async () => {
+		const { assertCanCreateAccount } = await import("./create-account");
+		const result = await assertCanCreateAccount({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			tokenSymbol: "AlphaUSD",
+			name: "   Savings   ",
+		});
+		expect(result.error).toBeUndefined();
+	});
+
+	test("rejects whitespace-only name", async () => {
+		const { assertCanCreateAccount } = await import("./create-account");
+		const result = await assertCanCreateAccount({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			tokenSymbol: "AlphaUSD",
+			name: "   ",
+		});
+		expect(result.error).toBe("Account name must be 1-100 characters");
+	});
+
 	test("rejects duplicate name", async () => {
 		mockFindFirst.mockResolvedValueOnce({ id: "existing" } as never);
 		const { assertCanCreateAccount } = await import("./create-account");
@@ -238,6 +290,33 @@ describe("finalizeAccountCreate", () => {
 			privateKey: "0xabcdef" as `0x${string}`,
 		});
 		expect(encrypt).toHaveBeenCalledWith("0xabcdef");
+	});
+
+	test("rejects isDefault when default already exists for token", async () => {
+		mockFindFirst.mockResolvedValueOnce({ id: "existing-default" } as never);
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Second Default",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x5555555555555555555555555555555555555555",
+			isDefault: true,
+		});
+		expect(result.error).toBe("Default account for this token already exists");
+	});
+
+	test("allows isDefault when no default exists for token", async () => {
+		mockFindFirst.mockResolvedValue(null);
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "First Default",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x6666666666666666666666666666666666666666",
+			isDefault: true,
+		});
+		expect(result.error).toBeUndefined();
+		expect(result.account?.id).toBe("new-acc-id");
 	});
 
 	test("rejects name over 100 characters", async () => {

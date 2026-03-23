@@ -8,7 +8,7 @@
  * Usage: bun run src/db/seeds/backfill-organizations.ts
  */
 
-import { eq, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, entities, organizations, treasuries } from "@/db/schema";
 
@@ -49,11 +49,11 @@ async function main() {
 				.set({ organizationId: org.id, entityId: entity.id })
 				.where(eq(treasuries.id, treasury.id));
 
-			// Set accountCategory for guardian accounts
+			// Set accountCategory for guardian accounts belonging to this treasury only
 			await db
 				.update(accounts)
 				.set({ accountCategory: "agent" })
-				.where(eq(accounts.walletType, "guardian"));
+				.where(and(eq(accounts.walletType, "guardian"), eq(accounts.treasuryId, treasury.id)));
 
 			migrated++;
 			console.log(`  Migrated treasury ${treasury.id}: "${orgName}" → org ${org.id}`);

@@ -27,41 +27,39 @@ describe("tempo client", () => {
 		mockGetBlockNumber.mockResolvedValue(200_000n);
 	});
 
-	it("exports fetchBalances function", async () => {
-		const { fetchBalances } = await import("./client");
-		expect(typeof fetchBalances).toBe("function");
-	});
-
-	it("exports fetchTransactions function", async () => {
-		const { fetchTransactions } = await import("./client");
-		expect(typeof fetchTransactions).toBe("function");
-	});
-
-	it("exports getTempoClient function", async () => {
-		const { getTempoClient } = await import("./client");
-		expect(typeof getTempoClient).toBe("function");
-	});
-
-	it("fetches balances for an address", async () => {
+	it("fetches balances with correct values per token", async () => {
+		mockReadContract.mockResolvedValue(5000000n);
 		const { fetchBalances } = await import("./client");
 		const result = await fetchBalances(addr);
 		expect(result.partial).toBe(false);
-		expect(Array.isArray(result.balances)).toBe(true);
-		expect(result.balances.length).toBe(
-			Object.keys((await import("../constants")).SUPPORTED_TOKENS).length,
-		);
+		const tokenCount = Object.keys((await import("../constants")).SUPPORTED_TOKENS).length;
+		expect(result.balances.length).toBe(tokenCount);
 		for (const b of result.balances) {
-			expect(b).toHaveProperty("token");
-			expect(b).toHaveProperty("tokenAddress");
-			expect(b).toHaveProperty("balance");
-			expect(b).toHaveProperty("decimals");
+			expect(b.balance).toBe(5000000n);
+			expect(b.decimals).toBeGreaterThan(0);
+			expect(b.tokenAddress).toMatch(/^0x[0-9a-fA-F]+$/);
 		}
 	});
 
-	it("fetches transactions for an address", async () => {
+	it("fetches transactions and constructs payment objects correctly", async () => {
+		const otherAddr = "0xabcdef1234567890abcdef1234567890abcdef12" as `0x${string}`;
+		mockGetContractEvents
+			.mockResolvedValueOnce([
+				{
+					transactionHash: `0x${"ff".repeat(32)}`,
+					logIndex: 0,
+					blockNumber: 100n,
+					args: { from: addr, to: otherAddr, value: 42000000n },
+				},
+			])
+			.mockResolvedValue([]);
 		const { fetchTransactions } = await import("./client");
 		const txs = await fetchTransactions(addr);
-		expect(Array.isArray(txs)).toBe(true);
+		expect(txs.length).toBe(1);
+		expect(txs[0].from).toBe(addr);
+		expect(txs[0].to).toBe(otherAddr);
+		expect(txs[0].amount).toBe(42000000n);
+		expect(txs[0].status).toBe("confirmed");
 	});
 
 	it("returns cached client instance", async () => {
@@ -244,7 +242,6 @@ describe("tempo client", () => {
 		});
 
 		it("sorts transactions by timestamp descending", async () => {
-			// Mock Date.now to get predictable timestamps
 			mockGetContractEvents
 				.mockResolvedValueOnce([
 					{
@@ -255,6 +252,7 @@ describe("tempo client", () => {
 							to: "0xabcdef1234567890abcdef1234567890abcdef12",
 							value: 100n,
 						},
+						// No blockNumber — both will get Date.now() timestamps
 					},
 					{
 						transactionHash: `0x${"02".repeat(32)}`,
@@ -272,9 +270,37 @@ describe("tempo client", () => {
 			const txs = await fetchTransactions(addr);
 
 			expect(txs.length).toBe(2);
-			// Both have essentially the same timestamp (Date.now()), so just verify they exist
-			expect(txs[0].timestamp).toBeInstanceOf(Date);
-			expect(txs[1].timestamp).toBeInstanceOf(Date);
+			// Verify timestamps are valid dates and in non-ascending order
+			expect(txs[0].timestamp.getTime()).toBeGreaterThanOrEqual(txs[1].timestamp.getTime());
+		});
+
+		it("deduplicates self-transfers that appear in both sent and received logs", async () => {
+			const selfTxHash = `0x${"dd".repeat(32)}`;
+			// Same event appears in both sent (first mock) and received (second mock)
+			const selfTransferLog = {
+				transactionHash: selfTxHash,
+				logIndex: 0,
+				args: { from: addr, to: addr, value: 500n },
+			};
+			mockGetContractEvents
+				.mockResolvedValueOnce([selfTransferLog]) // sent query
+				.mockResolvedValueOnce([selfTransferLog]) // received query
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			// Should appear only once despite being in both sent and received
+			const matching = txs.filter((tx) => tx.txHash === selfTxHash);
+			expect(matching.length).toBe(1);
+		});
+
+		it("handles low block number (fromBlock = 0n)", async () => {
+			mockGetBlockNumber.mockResolvedValue(100n); // Below MAX_BLOCK_RANGE
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+			// Should not throw — fromBlock should be 0n
+			expect(Array.isArray(txs)).toBe(true);
 		});
 	});
 });
