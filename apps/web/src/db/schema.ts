@@ -68,6 +68,7 @@ export const accounts = pgTable(
 		walletAddress: text("wallet_address").notNull(),
 		walletType: text("wallet_type").notNull().default("eoa"), // "eoa" | "multisig" | "guardian" | "smart-account"
 		accountCategory: text("account_category"), // "operating" | "payroll" | "program" | "reserve" | "agent"
+		encryptedKey: text("encrypted_key"), // AES-256-GCM encrypted private key for smart-account type
 		isDefault: boolean("is_default").default(false).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

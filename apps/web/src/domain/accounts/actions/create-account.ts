@@ -5,9 +5,11 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
 import { ACCOUNT_TOKENS } from "@/lib/constants";
+import { encrypt } from "@/lib/crypto";
 import { getSession } from "@/lib/session";
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+const VALID_WALLET_TYPES = new Set(["eoa", "multisig", "guardian", "smart-account"]);
 
 const VALID_TOKEN_SYMBOLS = new Set<string>(ACCOUNT_TOKENS.map((t) => t.name));
 
@@ -60,12 +62,16 @@ export async function finalizeAccountCreate({
 	name,
 	tokenSymbol,
 	walletAddress,
+	walletType = "eoa",
+	privateKey,
 	isDefault = false,
 }: {
 	treasuryId: string;
 	name: string;
 	tokenSymbol: string;
 	walletAddress: string;
+	walletType?: string;
+	privateKey?: `0x${string}`;
 	isDefault?: boolean;
 }): Promise<{ error?: string; account?: { id: string } }> {
 	const session = await getSession();
@@ -86,6 +92,13 @@ export async function finalizeAccountCreate({
 	if (!ADDRESS_RE.test(walletAddress)) {
 		return { error: "Invalid wallet address" };
 	}
+
+	if (walletType && !VALID_WALLET_TYPES.has(walletType)) {
+		return { error: "Invalid wallet type" };
+	}
+
+	// Encrypt private key if provided (for smart-account type)
+	const encryptedKey = privateKey ? encrypt(privateKey) : undefined;
 
 	// Prevent arbitrary isDefault: only allow when a default slot is still open for this token
 	if (isDefault) {
@@ -110,6 +123,8 @@ export async function finalizeAccountCreate({
 				tokenSymbol,
 				tokenAddress: token.address,
 				walletAddress: walletAddress.toLowerCase(),
+				walletType,
+				encryptedKey,
 				isDefault,
 			})
 			.returning({ id: accounts.id });

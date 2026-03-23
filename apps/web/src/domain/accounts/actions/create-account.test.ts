@@ -5,6 +5,9 @@ vi.mock("@/lib/session", () => ({
 	getSession: vi.fn(() => Promise.resolve(DEFAULT_SESSION)),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/lib/crypto", () => ({
+	encrypt: vi.fn((val: string) => `encrypted:${val}`),
+}));
 
 const mockFindFirst = vi.fn(() => Promise.resolve(null));
 const mockInsertReturning = vi.fn().mockResolvedValue([{ id: "new-acc-id" }]);
@@ -97,6 +100,32 @@ describe("finalizeAccountCreate", () => {
 			walletAddress: "not-valid",
 		});
 		expect(result.error).toBe("Invalid wallet address");
+	});
+
+	test("creates smart-account with walletType and encrypted key", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Smart Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x2222222222222222222222222222222222222222",
+			walletType: "smart-account",
+			privateKey: "0xdeadbeef" as `0x${string}`,
+		});
+		expect(result.error).toBeUndefined();
+		expect(result.account?.id).toBe("new-acc-id");
+	});
+
+	test("rejects invalid wallet type", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Bad Type",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+			walletType: "invalid-type",
+		});
+		expect(result.error).toBe("Invalid wallet type");
 	});
 
 	test("handles PG unique constraint for wallet address", async () => {
