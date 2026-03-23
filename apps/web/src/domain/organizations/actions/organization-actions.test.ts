@@ -45,6 +45,8 @@ describe("createOrganizationForTreasury", () => {
 		mockInsertReturning
 			.mockResolvedValueOnce([{ id: "org-new" }])
 			.mockResolvedValueOnce([{ id: "entity-new" }]);
+		// CAS update succeeds (1 row returned)
+		mockUpdateReturning.mockResolvedValueOnce([{ id: "t-1" }]);
 
 		const { createOrganizationForTreasury } = await import("./organization-actions");
 		const result = await createOrganizationForTreasury("t-1", "My Org");
@@ -70,6 +72,21 @@ describe("createOrganizationForTreasury", () => {
 		expect(result.entityId).toBe("entity-existing");
 		// No inserts should have been made
 		expect(mockInsert).not.toHaveBeenCalled();
+	});
+
+	test("throws to roll back inserts when CAS update loses race", async () => {
+		// Select shows no org (both concurrent requests see this)
+		mockSelectWhere.mockResolvedValueOnce([{ organizationId: null, entityId: null }]);
+		mockInsertReturning
+			.mockResolvedValueOnce([{ id: "org-orphan" }])
+			.mockResolvedValueOnce([{ id: "entity-orphan" }]);
+		// CAS update returns 0 rows — another request already linked
+		mockUpdateReturning.mockResolvedValueOnce([]);
+
+		const { createOrganizationForTreasury } = await import("./organization-actions");
+		await expect(createOrganizationForTreasury("t-1", "My Org")).rejects.toThrow(
+			"Treasury was linked by a concurrent request",
+		);
 	});
 
 	test("propagates org failure to caller", async () => {

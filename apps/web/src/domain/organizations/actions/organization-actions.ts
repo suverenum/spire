@@ -43,10 +43,17 @@ export async function createOrganizationForTreasury(
 			.values({ organizationId: org.id, name: "Default" })
 			.returning({ id: entities.id });
 
-		await tx
+		const linked = await tx
 			.update(treasuries)
 			.set({ organizationId: org.id, entityId: entity.id })
-			.where(and(eq(treasuries.id, treasuryId), isNull(treasuries.organizationId)));
+			.where(and(eq(treasuries.id, treasuryId), isNull(treasuries.organizationId)))
+			.returning({ id: treasuries.id });
+
+		if (linked.length === 0) {
+			// CAS lost: a concurrent request already linked this treasury.
+			// Throw to roll back the org/entity inserts from this transaction.
+			throw new Error("Treasury was linked by a concurrent request");
+		}
 
 		return { organizationId: org.id, entityId: entity.id };
 	});

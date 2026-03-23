@@ -32,8 +32,19 @@ export async function loginAction(
 	let orgName = treasury.name;
 
 	if (!orgId) {
-		const { organizationId } = await createOrganizationForTreasury(treasury.id, treasury.name);
-		orgId = organizationId;
+		try {
+			const { organizationId } = await createOrganizationForTreasury(treasury.id, treasury.name);
+			orgId = organizationId;
+		} catch {
+			// CAS race lost — another concurrent login already created the org.
+			// Re-read the treasury to get the winning org ID.
+			const [refreshed] = await db
+				.select({ organizationId: treasuries.organizationId })
+				.from(treasuries)
+				.where(eq(treasuries.tempoAddress, connectedAddress.toLowerCase()));
+			orgId = refreshed?.organizationId ?? null;
+			if (!orgId) return { error: "Failed to create organization" };
+		}
 	} else {
 		const org = await getOrganization(orgId);
 		if (org) orgName = org.name;

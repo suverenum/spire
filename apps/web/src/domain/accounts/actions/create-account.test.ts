@@ -9,6 +9,14 @@ vi.mock("@/lib/crypto", () => ({
 	encrypt: vi.fn((val: string) => `encrypted:${val}`),
 }));
 
+vi.mock("viem/accounts", () => ({
+	privateKeyToAccount: vi.fn((key: string) => ({
+		// Return a deterministic address based on whether the key is the "matching" one
+		address:
+			key === "0xmatchingkey" ? "0x8888888888888888888888888888888888888888" : "0xwrongaddress",
+	})),
+}));
+
 const mockFindFirst = vi.fn(() => Promise.resolve(null));
 const mockInsertReturning = vi.fn().mockResolvedValue([{ id: "new-acc-id" }]);
 const mockInsertValues = vi.fn().mockReturnValue({ returning: mockInsertReturning });
@@ -166,9 +174,9 @@ describe("finalizeAccountCreate", () => {
 			treasuryId: DEFAULT_SESSION.treasuryId,
 			name: "Smart Account",
 			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x2222222222222222222222222222222222222222",
+			walletAddress: "0x8888888888888888888888888888888888888888",
 			walletType: "smart-account",
-			privateKey: "0xdeadbeef" as `0x${string}`,
+			privateKey: "0xmatchingkey" as `0x${string}`,
 		});
 		expect(result.error).toBeUndefined();
 		expect(result.account?.id).toBe("new-acc-id");
@@ -285,11 +293,11 @@ describe("finalizeAccountCreate", () => {
 			treasuryId: DEFAULT_SESSION.treasuryId,
 			name: "Keyed Account",
 			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x4444444444444444444444444444444444444444",
+			walletAddress: "0x8888888888888888888888888888888888888888",
 			walletType: "smart-account",
-			privateKey: "0xabcdef" as `0x${string}`,
+			privateKey: "0xmatchingkey" as `0x${string}`,
 		});
-		expect(encrypt).toHaveBeenCalledWith("0xabcdef");
+		expect(encrypt).toHaveBeenCalledWith("0xmatchingkey");
 	});
 
 	test("rejects isDefault when default already exists for token", async () => {
@@ -314,6 +322,33 @@ describe("finalizeAccountCreate", () => {
 			tokenSymbol: "AlphaUSD",
 			walletAddress: "0x6666666666666666666666666666666666666666",
 			isDefault: true,
+		});
+		expect(result.error).toBeUndefined();
+		expect(result.account?.id).toBe("new-acc-id");
+	});
+
+	test("rejects smart-account when key does not match wallet address", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Mismatched Key",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x8888888888888888888888888888888888888888",
+			walletType: "smart-account",
+			privateKey: "0xwrongkey" as `0x${string}`,
+		});
+		expect(result.error).toBe("Private key does not match wallet address");
+	});
+
+	test("accepts smart-account when key derives correct wallet address", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Matched Key",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x8888888888888888888888888888888888888888",
+			walletType: "smart-account",
+			privateKey: "0xmatchingkey" as `0x${string}`,
 		});
 		expect(result.error).toBeUndefined();
 		expect(result.account?.id).toBe("new-acc-id");

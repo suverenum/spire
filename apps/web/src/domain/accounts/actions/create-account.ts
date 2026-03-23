@@ -2,6 +2,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { privateKeyToAccount } from "viem/accounts";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
 import { ACCOUNT_TOKENS } from "@/lib/constants";
@@ -97,9 +98,15 @@ export async function finalizeAccountCreate({
 		return { error: "Invalid wallet type" };
 	}
 
-	// Smart-account type requires a valid private key to avoid stranding funds
-	if (walletType === "smart-account" && !privateKey) {
-		return { error: "Private key required for smart-account creation" };
+	// Smart-account type requires a valid private key that derives the submitted wallet address
+	if (walletType === "smart-account") {
+		if (!privateKey) {
+			return { error: "Private key required for smart-account creation" };
+		}
+		const derived = privateKeyToAccount(privateKey);
+		if (derived.address.toLowerCase() !== walletAddress.toLowerCase()) {
+			return { error: "Private key does not match wallet address" };
+		}
 	}
 
 	// Encrypt private key if provided (for smart-account type)
