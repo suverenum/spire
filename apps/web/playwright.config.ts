@@ -32,7 +32,24 @@ export default defineConfig({
 		{
 			name: "chromium",
 			testDir: "./e2e",
-			testIgnore: "**/testnet/**",
+			testIgnore: ["**/testnet/**", "**/visual/**"],
+			use: { ...devices["Desktop Chrome"], headless: true },
+		},
+		{
+			name: "firefox",
+			testDir: "./e2e",
+			testIgnore: ["**/testnet/**", "**/visual/**"],
+			use: { ...devices["Desktop Firefox"], headless: true },
+		},
+		{
+			name: "webkit",
+			testDir: "./e2e",
+			testIgnore: ["**/testnet/**", "**/visual/**"],
+			use: { ...devices["Desktop Safari"], headless: true },
+		},
+		{
+			name: "visual",
+			testDir: "./e2e/visual",
 			use: { ...devices["Desktop Chrome"], headless: true },
 		},
 		{
