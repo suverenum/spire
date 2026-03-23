@@ -97,6 +97,48 @@ describe("loginAction", () => {
 		const result = await loginAction("0xABCDEF1234567890ABCDEF1234567890ABCDEF12");
 		expect(result.error).toBeUndefined();
 	});
+
+	test("calls createSession with correct organizationId from existing org", async () => {
+		mockSelectResult.mockResolvedValue([
+			{
+				id: "t-1",
+				name: "My Treasury",
+				tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+				organizationId: "org-1",
+			},
+		]);
+		const { loginAction } = await import("./auth-actions");
+		const { createSession } = await import("@/lib/session");
+		await loginAction("0x1234567890abcdef1234567890abcdef12345678");
+		expect(createSession).toHaveBeenCalledWith(
+			expect.objectContaining({
+				organizationId: "org-1",
+				organizationName: "Test Org",
+			}),
+		);
+	});
+
+	test("falls back to treasury name when getOrganization returns null", async () => {
+		mockSelectResult.mockResolvedValue([
+			{
+				id: "t-1",
+				name: "Treasury Fallback Name",
+				tempoAddress: "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+				organizationId: "org-deleted",
+			},
+		]);
+		const { getOrganization } = await import("@/domain/organizations/queries/get-organization");
+		vi.mocked(getOrganization).mockResolvedValueOnce(null as never);
+		const { loginAction } = await import("./auth-actions");
+		const { createSession } = await import("@/lib/session");
+		await loginAction("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+		expect(createSession).toHaveBeenCalledWith(
+			expect.objectContaining({
+				organizationId: "org-deleted",
+				organizationName: "Treasury Fallback Name",
+			}),
+		);
+	});
 });
 
 describe("touchSessionAction", () => {
@@ -112,5 +154,25 @@ describe("touchSessionAction", () => {
 		});
 		const { touchSessionAction } = await import("./auth-actions");
 		await expect(touchSessionAction()).resolves.not.toThrow();
+	});
+
+	test("does nothing when no session exists", async () => {
+		const { getSession, createSession } = await import("@/lib/session");
+		vi.mocked(getSession).mockResolvedValueOnce(null);
+		vi.mocked(createSession).mockClear();
+		const { touchSessionAction } = await import("./auth-actions");
+		await touchSessionAction();
+		expect(createSession).not.toHaveBeenCalled();
+	});
+});
+
+describe("logoutAction", () => {
+	test("destroys session and redirects", async () => {
+		const { logoutAction } = await import("./auth-actions");
+		const { destroySession } = await import("@/lib/session");
+		const { redirect } = await import("next/navigation");
+		await expect(logoutAction()).rejects.toThrow("NEXT_REDIRECT");
+		expect(destroySession).toHaveBeenCalled();
+		expect(redirect).toHaveBeenCalledWith("/");
 	});
 });

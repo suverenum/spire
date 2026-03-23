@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DEFAULT_SESSION } from "@/test/mocks";
 
 vi.mock("@/lib/session", () => ({
@@ -24,6 +24,12 @@ vi.mock("@/db", () => ({
 		insert: vi.fn(() => mockInsert()),
 	},
 }));
+
+beforeEach(() => {
+	vi.clearAllMocks();
+	mockFindFirst.mockResolvedValue(null);
+	mockInsertReturning.mockResolvedValue([{ id: "new-acc-id" }]);
+});
 
 describe("assertCanCreateAccount", () => {
 	test("accepts valid params", async () => {
@@ -141,5 +147,107 @@ describe("finalizeAccountCreate", () => {
 			walletAddress: "0x1111111111111111111111111111111111111111",
 		});
 		expect(result.error).toBe("Wallet address already registered");
+	});
+
+	test("handles PG unique constraint for default token index", async () => {
+		mockInsertReturning.mockRejectedValueOnce({
+			code: "23505",
+			constraint: "accounts_default_token_idx",
+		});
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Savings",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+		});
+		expect(result.error).toBe("Default account for this token already exists");
+	});
+
+	test("handles PG unique constraint for name (fallback)", async () => {
+		mockInsertReturning.mockRejectedValueOnce({
+			code: "23505",
+			constraint: "accounts_treasury_name_idx",
+		});
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Duplicate Name",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+		});
+		expect(result.error).toBe("Name already taken");
+	});
+
+	test("re-throws non-PG errors", async () => {
+		mockInsertReturning.mockRejectedValueOnce(new Error("Connection lost"));
+		const { finalizeAccountCreate } = await import("./create-account");
+		await expect(
+			finalizeAccountCreate({
+				treasuryId: DEFAULT_SESSION.treasuryId,
+				name: "Savings",
+				tokenSymbol: "AlphaUSD",
+				walletAddress: "0x1111111111111111111111111111111111111111",
+			}),
+		).rejects.toThrow("Connection lost");
+	});
+
+	test("rejects treasury mismatch", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: "wrong-treasury",
+			name: "Savings",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+		});
+		expect(result.error).toBe("Treasury mismatch");
+	});
+
+	test("rejects invalid token in finalize", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Savings",
+			tokenSymbol: "FakeToken",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+		});
+		expect(result.error).toBe("Invalid token");
+	});
+
+	test("does not encrypt key when no privateKey provided", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const { encrypt } = await import("@/lib/crypto");
+		await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "No Key Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x3333333333333333333333333333333333333333",
+		});
+		expect(encrypt).not.toHaveBeenCalled();
+	});
+
+	test("encrypts key when privateKey is provided", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const { encrypt } = await import("@/lib/crypto");
+		await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Keyed Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x4444444444444444444444444444444444444444",
+			walletType: "smart-account",
+			privateKey: "0xabcdef" as `0x${string}`,
+		});
+		expect(encrypt).toHaveBeenCalledWith("0xabcdef");
+	});
+
+	test("rejects name over 100 characters", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "x".repeat(101),
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+		});
+		expect(result.error).toBe("Account name must be 1-100 characters");
 	});
 });

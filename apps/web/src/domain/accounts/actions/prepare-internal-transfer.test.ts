@@ -58,6 +58,26 @@ describe("prepareInternalTransfer", () => {
 		expect(result.toAccount).toBeDefined();
 	});
 
+	test("rejects when only toAccount is not found", async () => {
+		mockFindFirst.mockResolvedValueOnce(FROM_ACCOUNT).mockResolvedValueOnce(null);
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "acc-1",
+			toAccountId: "nonexistent",
+		});
+		expect(result.error).toBe("One or both accounts not found");
+	});
+
+	test("rejects when both accounts are not found", async () => {
+		mockFindFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "nonexistent-1",
+			toAccountId: "nonexistent-2",
+		});
+		expect(result.error).toBe("One or both accounts not found");
+	});
+
 	test("rejects same source and destination", async () => {
 		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
 		const result = await prepareInternalTransfer({

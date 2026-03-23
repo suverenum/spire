@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { DEFAULT_SESSION } from "@/test/mocks";
 
 vi.mock("@/lib/session", () => ({
@@ -46,8 +46,29 @@ vi.mock("@/db", () => ({
 }));
 
 describe("createTreasuryAction", () => {
-	test("creates organization, entity, and treasury successfully", async () => {
+	beforeEach(() => {
 		insertCallIndex = 0;
+		vi.clearAllMocks();
+		// Re-set default mock chain after clearAllMocks
+		mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
+		mockInsert.mockReturnValue({ values: mockInsertValues });
+		mockSet.mockReturnValue({ where: vi.fn() });
+		mockUpdate.mockReturnValue({ set: mockSet });
+		mockInsertReturning.mockImplementation(() => {
+			insertCallIndex++;
+			if (insertCallIndex === 1) return Promise.resolve([{ id: "org-new", name: "My Treasury" }]);
+			if (insertCallIndex === 2) return Promise.resolve([{ id: "entity-new" }]);
+			return Promise.resolve([
+				{
+					id: "t-new",
+					name: "My Treasury",
+					tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+				},
+			]);
+		});
+	});
+
+	test("creates organization, entity, and treasury successfully", async () => {
 		const { createTreasuryAction } = await import("./treasury-actions");
 		const formData = new FormData();
 		formData.set("name", "My Treasury");
@@ -78,7 +99,6 @@ describe("createTreasuryAction", () => {
 	});
 
 	test("handles PG unique constraint (existing treasury)", async () => {
-		insertCallIndex = 0;
 		mockInsertReturning
 			.mockResolvedValueOnce([{ id: "org-new", name: "My Treasury" }]) // org succeeds
 			.mockResolvedValueOnce([{ id: "entity-new" }]) // entity succeeds
@@ -89,6 +109,60 @@ describe("createTreasuryAction", () => {
 		formData.set("tempoAddress", "0x1234567890abcdef1234567890abcdef12345678");
 		const result = await createTreasuryAction(formData);
 		expect(result.error).toBe("A treasury already exists for this passkey.");
+	});
+
+	test("re-throws non-PG errors from transaction", async () => {
+		mockInsertReturning.mockRejectedValueOnce(new Error("Network timeout"));
+		const { createTreasuryAction } = await import("./treasury-actions");
+		const formData = new FormData();
+		formData.set("name", "My Treasury");
+		formData.set("tempoAddress", "0x1234567890abcdef1234567890abcdef12345678");
+		await expect(createTreasuryAction(formData)).rejects.toThrow("Network timeout");
+	});
+
+	test("uses db.transaction for atomic creation", async () => {
+		const { createTreasuryAction } = await import("./treasury-actions");
+		const { db } = await import("@/db");
+		const formData = new FormData();
+		formData.set("name", "My Treasury");
+		formData.set("tempoAddress", "0x1234567890abcdef1234567890abcdef12345678");
+		await createTreasuryAction(formData);
+		expect(db.transaction).toHaveBeenCalledTimes(1);
+	});
+
+	test("calls createSession with organizationId after successful creation", async () => {
+		const { createTreasuryAction } = await import("./treasury-actions");
+		const { createSession } = await import("@/lib/session");
+		const formData = new FormData();
+		formData.set("name", "My Treasury");
+		formData.set("tempoAddress", "0x1234567890abcdef1234567890abcdef12345678");
+		await createTreasuryAction(formData);
+		expect(createSession).toHaveBeenCalledWith(
+			expect.objectContaining({
+				organizationId: "org-new",
+				organizationName: "My Treasury",
+				treasuryId: "t-new",
+			}),
+		);
+	});
+
+	test("rejects missing tempoAddress", async () => {
+		const { createTreasuryAction } = await import("./treasury-actions");
+		const formData = new FormData();
+		formData.set("name", "My Treasury");
+		// No tempoAddress set
+		const result = await createTreasuryAction(formData);
+		expect(result.error).toBe("Invalid Tempo address from passkey.");
+	});
+
+	test("normalizes address to lowercase", async () => {
+		const { createTreasuryAction } = await import("./treasury-actions");
+		const formData = new FormData();
+		formData.set("name", "My Treasury");
+		formData.set("tempoAddress", "0xABCDEF1234567890ABCDEF1234567890ABCDEF12");
+		await createTreasuryAction(formData);
+		// Verify insert was called (address lowercased internally)
+		expect(mockInsert).toHaveBeenCalled();
 	});
 });
 

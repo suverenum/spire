@@ -207,6 +207,39 @@ describe("session", () => {
 		expect(mockDelete).toHaveBeenCalledWith(SESSION_COOKIE_NAME);
 	});
 
+	// ─── Legacy session migration ───────────────────────────────
+
+	test("getSession rejects legacy session without organizationId", async () => {
+		const legacySession = {
+			treasuryId: "t-legacy",
+			tempoAddress: "0x1234567890abcdef1234567890abcdef12345678",
+			treasuryName: "Legacy Treasury",
+			authenticatedAt: Date.now(),
+			// Missing: organizationId, organizationName
+		};
+		const cookieValue = createSignedCookie(legacySession);
+		mockGet.mockReturnValue({ value: cookieValue });
+
+		const { getSession } = await import("./session");
+		const result = await getSession();
+		expect(result).toBeNull();
+	});
+
+	test("getSession accepts session with all required fields including organizationId", async () => {
+		const fullSession = {
+			...VALID_SESSION,
+			authenticatedAt: Date.now(),
+		};
+		const cookieValue = createSignedCookie(fullSession);
+		mockGet.mockReturnValue({ value: cookieValue });
+
+		const { getSession } = await import("./session");
+		const result = await getSession();
+		expect(result).not.toBeNull();
+		expect(result!.organizationId).toBe("org-123");
+		expect(result!.organizationName).toBe("Test Organization");
+	});
+
 	// ─── getSessionSecret ───────────────────────────────────────
 
 	test("throws when SESSION_SECRET is not set", async () => {
