@@ -10,7 +10,9 @@ import { encrypt } from "@/lib/crypto";
 import { getSession } from "@/lib/session";
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
-const VALID_WALLET_TYPES = new Set(["eoa", "multisig", "guardian", "smart-account"]);
+// Only allow types this action can fully provision. Guardian/multisig require
+// companion rows (agent_wallets/multisig_configs) created by their own flows.
+const VALID_WALLET_TYPES = new Set(["eoa", "smart-account"]);
 
 const VALID_TOKEN_SYMBOLS = new Set<string>(ACCOUNT_TOKENS.map((t) => t.name));
 

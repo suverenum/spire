@@ -194,6 +194,30 @@ describe("finalizeAccountCreate", () => {
 		expect(result.error).toBe("Invalid wallet type");
 	});
 
+	test("rejects guardian wallet type (requires companion agent_wallets row)", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Guardian Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+			walletType: "guardian",
+		});
+		expect(result.error).toBe("Invalid wallet type");
+	});
+
+	test("rejects multisig wallet type (requires companion multisig_configs row)", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Multisig Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+			walletType: "multisig",
+		});
+		expect(result.error).toBe("Invalid wallet type");
+	});
+
 	test("handles PG unique constraint for wallet address", async () => {
 		mockInsertReturning.mockRejectedValueOnce({
 			code: "23505",
