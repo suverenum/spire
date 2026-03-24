@@ -179,6 +179,47 @@ contract GuardianFactoryTest is Test {
         factory.createGuardian(agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, emptyAddrs);
     }
 
+    function test_getGuardianAddress_zeroAgent_reverts() public {
+        vm.expectRevert(GuardianFactory.ZeroAddress.selector);
+        factory.getGuardianAddress(owner, address(0), MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, emptyAddrs);
+    }
+
+    function test_getGuardianAddress_zeroRecipient_reverts() public {
+        address[] memory recipients = new address[](1);
+        recipients[0] = address(0);
+
+        vm.expectRevert(GuardianFactory.ZeroAddress.selector);
+        factory.getGuardianAddress(owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, emptyAddrs);
+    }
+
+    function test_getGuardianAddress_zeroToken_reverts() public {
+        address[] memory tokens = new address[](1);
+        tokens[0] = address(0);
+
+        vm.expectRevert(GuardianFactory.ZeroAddress.selector);
+        factory.getGuardianAddress(owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, tokens);
+    }
+
+    function test_getGuardianAddress_tooManyRecipients_reverts() public {
+        address[] memory recipients = new address[](65);
+        for (uint256 i = 0; i < 65; i++) {
+            recipients[i] = vm.addr(200 + i);
+        }
+
+        vm.expectRevert(abi.encodeWithSelector(GuardianFactory.AllowlistTooLarge.selector, 64));
+        factory.getGuardianAddress(owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), recipients, emptyAddrs);
+    }
+
+    function test_getGuardianAddress_tooManyTokens_reverts() public {
+        address[] memory tokens = new address[](65);
+        for (uint256 i = 0; i < 65; i++) {
+            tokens[i] = vm.addr(300 + i);
+        }
+
+        vm.expectRevert(abi.encodeWithSelector(GuardianFactory.AllowlistTooLarge.selector, 64));
+        factory.getGuardianAddress(owner, agentAddr, MAX_PER_TX, DAILY_LIMIT, SPENDING_CAP, bytes32(0), emptyAddrs, tokens);
+    }
+
     // =======================================================================
     // SimpleGuardian: pay() through factory-deployed instance
     // =======================================================================
@@ -434,6 +475,40 @@ contract GuardianFactoryTest is Test {
         SimpleGuardian(guardian).approvePay(1);
     }
 
+    function test_proposePay_reservesBudgetForPendingApprovals() public {
+        address guardian = _deployGuardianCustom(2_000_000, 10_000_000, 10_000_000, bytes32(uint256(1031)));
+        usdc.mint(guardian, 50_000_000);
+
+        vm.prank(agentAddr);
+        SimpleGuardian(guardian).proposePay(address(usdc), vendor, 5_000_000);
+
+        vm.prank(agentAddr);
+        SimpleGuardian(guardian).proposePay(address(usdc), vendor, 5_000_000);
+
+        assertEq(SimpleGuardian(guardian).reservedToday(), 10_000_000);
+        assertEq(SimpleGuardian(guardian).reservedTotal(), 10_000_000);
+
+        vm.prank(agentAddr);
+        vm.expectRevert(abi.encodeWithSelector(SimpleGuardian.DailyLimitExceeded.selector, 11_000_000, 10_000_000));
+        SimpleGuardian(guardian).pay(address(usdc), vendor, 1_000_000);
+
+        vm.prank(owner);
+        SimpleGuardian(guardian).approvePay(1);
+
+        assertEq(SimpleGuardian(guardian).reservedToday(), 5_000_000);
+        assertEq(SimpleGuardian(guardian).reservedTotal(), 5_000_000);
+
+        vm.prank(owner);
+        SimpleGuardian(guardian).approvePay(2);
+
+        assertEq(SimpleGuardian(guardian).pendingCount(), 0);
+        assertEq(SimpleGuardian(guardian).reservedToday(), 0);
+        assertEq(SimpleGuardian(guardian).reservedTotal(), 0);
+        assertEq(SimpleGuardian(guardian).spentToday(), 10_000_000);
+        assertEq(SimpleGuardian(guardian).totalSpent(), 10_000_000);
+        assertEq(usdc.balanceOf(vendor), 10_000_000);
+    }
+
     function test_approvePay_onlyOwner() public {
         address guardian = _deployGuardian(bytes32(uint256(104)));
         usdc.mint(guardian, 50_000_000);
@@ -480,47 +555,38 @@ contract GuardianFactoryTest is Test {
     // =======================================================================
 
     function test_approvePay_countsTowardDailyAndCap() public {
-        // Use a larger daily limit so proposePay doesn't revert at proposal creation
-        // maxPerTx=2, daily=20, cap=50
         address guardian = _deployGuardianCustom(2_000_000, 20_000_000, 50_000_000, bytes32(uint256(110)));
         usdc.mint(guardian, 50_000_000);
-
-        // Spend 18 USDC today via direct payments (9 x 2)
-        for (uint256 i = 0; i < 9; i++) {
-            vm.prank(agentAddr);
-            SimpleGuardian(guardian).pay(address(usdc), vendor, 2_000_000);
-        }
-        assertEq(SimpleGuardian(guardian).spentToday(), 18_000_000);
-
-        // Propose 5 USDC (over perTx=2, but within daily=20 at proposal time: 18+5=23 > 20)
-        // Actually 18+5=23 > 20, so proposePay itself will revert.
-        // Let's spend only 14 so proposal creation succeeds (14+5=19 < 20)
-        // Reset: deploy fresh
-        address guardian2 = _deployGuardianCustom(2_000_000, 20_000_000, 50_000_000, bytes32(uint256(111)));
-        usdc.mint(guardian2, 50_000_000);
 
         // Spend 14 USDC (7 x 2)
         for (uint256 i = 0; i < 7; i++) {
             vm.prank(agentAddr);
-            SimpleGuardian(guardian2).pay(address(usdc), vendor, 2_000_000);
+            SimpleGuardian(guardian).pay(address(usdc), vendor, 2_000_000);
         }
-        assertEq(SimpleGuardian(guardian2).spentToday(), 14_000_000);
+        assertEq(SimpleGuardian(guardian).spentToday(), 14_000_000);
 
         // Propose 5 USDC: 14+5=19 < 20 daily → proposal created (not auto-executed since 5 > maxPerTx=2)
         vm.prank(agentAddr);
-        (uint256 proposalId, bool executed) = SimpleGuardian(guardian2).proposePay(address(usdc), vendor, 5_000_000);
+        (uint256 proposalId, bool executed) = SimpleGuardian(guardian).proposePay(address(usdc), vendor, 5_000_000);
         assertFalse(executed);
         assertEq(proposalId, 1);
+        assertEq(SimpleGuardian(guardian).reservedToday(), 5_000_000);
+        assertEq(SimpleGuardian(guardian).reservedTotal(), 5_000_000);
 
-        // Now spend 2 more USDC to bring daily to 16
+        // Pending reservations count toward the remaining daily budget.
         vm.prank(agentAddr);
-        SimpleGuardian(guardian2).pay(address(usdc), vendor, 2_000_000);
-        assertEq(SimpleGuardian(guardian2).spentToday(), 16_000_000);
+        vm.expectRevert(abi.encodeWithSelector(SimpleGuardian.DailyLimitExceeded.selector, 21_000_000, 20_000_000));
+        SimpleGuardian(guardian).pay(address(usdc), vendor, 2_000_000);
 
-        // Approve 5 USDC: 16+5=21 > 20 daily → should revert
         vm.prank(owner);
-        vm.expectRevert(); // DailyLimitExceeded
-        SimpleGuardian(guardian2).approvePay(1);
+        SimpleGuardian(guardian).approvePay(1);
+
+        assertEq(SimpleGuardian(guardian).pendingCount(), 0);
+        assertEq(SimpleGuardian(guardian).reservedToday(), 0);
+        assertEq(SimpleGuardian(guardian).reservedTotal(), 0);
+        assertEq(SimpleGuardian(guardian).spentToday(), 19_000_000);
+        assertEq(SimpleGuardian(guardian).totalSpent(), 19_000_000);
+        assertEq(usdc.balanceOf(vendor), 19_000_000);
     }
 
     // =======================================================================
@@ -715,7 +781,7 @@ contract GuardianFactoryTest is Test {
     // =======================================================================
 
     function test_pendingQueueFull() public {
-        address guardian = _deployGuardian(bytes32(uint256(170)));
+        address guardian = _deployGuardianCustom(2_000_000, 200_000_000, 500_000_000, bytes32(uint256(170)));
         usdc.mint(guardian, 500_000_000);
 
         // Fill 32 proposals

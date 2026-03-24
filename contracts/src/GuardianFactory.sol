@@ -30,16 +30,7 @@ contract GuardianFactory {
         address[] calldata recipients,
         address[] calldata tokens
     ) external returns (address guardian) {
-        if (agent == address(0)) revert ZeroAddress();
-        if (recipients.length > MAX_ALLOWLIST || tokens.length > MAX_ALLOWLIST) {
-            revert AllowlistTooLarge(MAX_ALLOWLIST);
-        }
-        for (uint256 i = 0; i < recipients.length; i++) {
-            if (recipients[i] == address(0)) revert ZeroAddress();
-        }
-        for (uint256 i = 0; i < tokens.length; i++) {
-            if (tokens[i] == address(0)) revert ZeroAddress();
-        }
+        _validateDeploymentInputs(agent, recipients, tokens);
         bytes32 effectiveSalt = _effectiveSalt(msg.sender, salt);
         guardian = address(
             new SimpleGuardian{salt: effectiveSalt}(
@@ -62,6 +53,7 @@ contract GuardianFactory {
         address[] calldata recipients,
         address[] calldata tokens
     ) external view returns (address) {
+        _validateDeploymentInputs(agent, recipients, tokens);
         bytes32 effectiveSalt = _effectiveSalt(deployer, salt);
         bytes32 initCodeHash = keccak256(
             abi.encodePacked(
@@ -76,5 +68,21 @@ contract GuardianFactory {
 
     function _effectiveSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(deployer, salt));
+    }
+
+    function _validateDeploymentInputs(address agent, address[] calldata recipients, address[] calldata tokens)
+        internal
+        pure
+    {
+        if (agent == address(0)) revert ZeroAddress();
+        if (recipients.length > MAX_ALLOWLIST || tokens.length > MAX_ALLOWLIST) {
+            revert AllowlistTooLarge(MAX_ALLOWLIST);
+        }
+        for (uint256 i = 0; i < recipients.length; i++) {
+            if (recipients[i] == address(0)) revert ZeroAddress();
+        }
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (tokens[i] == address(0)) revert ZeroAddress();
+        }
     }
 }

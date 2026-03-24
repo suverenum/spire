@@ -52,11 +52,14 @@ contract SimpleGuardian {
         uint256 amount;
         uint8 status; // 0 = pending, 1 = approved, 2 = rejected
         uint256 createdAt;
+        uint256 reservedDay;
     }
 
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
     uint256 public pendingCount;
+    uint256 public reservedToday;
+    uint256 public reservedTotal;
     uint256 public constant MAX_PENDING = 32;
 
     // ─── Events ─────────────────────────────────────────────────
@@ -243,8 +246,17 @@ contract SimpleGuardian {
 
         proposalCount++;
         pendingCount++;
+        reservedToday += amount;
+        reservedTotal += amount;
         proposals[proposalCount] =
-            Proposal({token: token, to: to, amount: amount, status: 0, createdAt: block.timestamp});
+            Proposal({
+                token: token,
+                to: to,
+                amount: amount,
+                status: 0,
+                createdAt: block.timestamp,
+                reservedDay: lastResetDay
+            });
 
         emit PaymentProposed(proposalCount, token, to, amount);
         return (proposalCount, false);
@@ -257,6 +269,7 @@ contract SimpleGuardian {
         if (p.status != 0) revert NotPending(proposalId);
 
         _resetDayIfNeeded();
+        _releaseReservation(p);
         _enforceDailyAndCap(p.amount);
 
         p.status = 1;
@@ -273,6 +286,8 @@ contract SimpleGuardian {
         if (proposalId == 0 || p.amount == 0) revert InvalidProposal(proposalId);
         if (p.status != 0) revert NotPending(proposalId);
 
+        _resetDayIfNeeded();
+        _releaseReservation(p);
         p.status = 2;
         pendingCount--;
         emit PaymentRejected(proposalId);
@@ -283,14 +298,25 @@ contract SimpleGuardian {
         uint256 today = block.timestamp / 1 days;
         if (today > lastResetDay) {
             spentToday = 0;
+            reservedToday = 0;
             lastResetDay = today;
         }
     }
 
     function _enforceDailyAndCap(uint256 amount) internal view {
-        if (spentToday + amount > dailyLimit) revert DailyLimitExceeded(spentToday + amount, dailyLimit);
-        if (spendingCap != 0 && totalSpent + amount > spendingCap) {
-            revert SpendingCapExceeded(totalSpent + amount, spendingCap);
+        uint256 newSpentToday = spentToday + reservedToday + amount;
+        if (newSpentToday > dailyLimit) revert DailyLimitExceeded(newSpentToday, dailyLimit);
+
+        uint256 newTotalSpent = totalSpent + reservedTotal + amount;
+        if (spendingCap != 0 && newTotalSpent > spendingCap) {
+            revert SpendingCapExceeded(newTotalSpent, spendingCap);
+        }
+    }
+
+    function _releaseReservation(Proposal storage p) internal {
+        reservedTotal -= p.amount;
+        if (p.reservedDay == lastResetDay) {
+            reservedToday -= p.amount;
         }
     }
 
