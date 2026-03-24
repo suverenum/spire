@@ -289,5 +289,5 @@ A solution that provides a **unified, real-time, programmable financial layer** 
 *This is Part 2 of a 4-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **Corporate Banking** — How large corporations manage finances at scale *(this document)*
-3. **Treasury Management for Large Corporations** — Deep dive into treasury operations, tools, and gaps in current solutions
+3. **[Treasury Management Systems](./treasury-management-systems.md)** — What TMS platforms do and why they're hard to adopt
 4. **Crypto Treasury** — How stablecoins and on-chain infrastructure change the game for enterprise finance
