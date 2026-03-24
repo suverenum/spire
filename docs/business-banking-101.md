@@ -296,5 +296,5 @@ ERP / Treasury                              ┌───────────
 *This is Part 1 of a 4-part series:*
 1. **Business Banking 101** — Overview of banking services by company stage *(this document)*
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
-3. **[Treasury Management Systems](./treasury-management-systems.md)** — What TMS platforms do and why they're hard to adopt
+3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
 4. **Crypto Treasury** — How stablecoins and on-chain infrastructure change the game for enterprise finance
