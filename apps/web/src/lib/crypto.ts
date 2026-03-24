@@ -14,13 +14,26 @@ function deriveKey(secret: string, salt: Buffer): Buffer {
 	return scryptSync(secret, salt, KEY_LENGTH);
 }
 
-function getSecret(): string {
+function getPrimarySecret(): string {
 	const secret = process.env.ENCRYPTION_SECRET ?? process.env.SESSION_SECRET;
-	if (!secret)
+	if (!secret) {
 		throw new Error(
 			"ENCRYPTION_SECRET (or SESSION_SECRET) must be set. Add it to .env.local or export it in your shell.",
 		);
+	}
 	return secret;
+}
+
+function getDecryptionSecrets(): string[] {
+	const secrets = [process.env.ENCRYPTION_SECRET, process.env.SESSION_SECRET].filter(
+		(secret): secret is string => Boolean(secret),
+	);
+	if (secrets.length === 0) {
+		throw new Error(
+			"ENCRYPTION_SECRET (or SESSION_SECRET) must be set. Add it to .env.local or export it in your shell.",
+		);
+	}
+	return [...new Set(secrets)];
 }
 
 /**
@@ -28,7 +41,7 @@ function getSecret(): string {
  * Returns a single base64 string containing salt + iv + ciphertext + authTag.
  */
 export function encrypt(plaintext: string): string {
-	const secret = getSecret();
+	const secret = getPrimarySecret();
 	const salt = randomBytes(SALT_LENGTH);
 	const key = deriveKey(secret, salt);
 	const iv = randomBytes(IV_LENGTH);
@@ -47,7 +60,6 @@ export function encrypt(plaintext: string): string {
  * Throws if the key is wrong or data is tampered.
  */
 export function decrypt(encryptedBase64: string): string {
-	const secret = getSecret();
 	// Support versioned ciphertext (v1: prefix) and unversioned legacy
 	const value = encryptedBase64.startsWith("v1:") ? encryptedBase64.slice(3) : encryptedBase64;
 	const packed = Buffer.from(value, "base64");
@@ -56,11 +68,20 @@ export function decrypt(encryptedBase64: string): string {
 	const iv = packed.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
 	const authTag = packed.subarray(packed.length - TAG_LENGTH);
 	const ciphertext = packed.subarray(SALT_LENGTH + IV_LENGTH, packed.length - TAG_LENGTH);
+	let lastError: Error | undefined;
 
-	const key = deriveKey(secret, salt);
-	const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });
-	decipher.setAuthTag(authTag);
+	for (const secret of getDecryptionSecrets()) {
+		try {
+			const key = deriveKey(secret, salt);
+			const decipher = createDecipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });
+			decipher.setAuthTag(authTag);
 
-	const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-	return decrypted.toString("utf8");
+			const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+			return decrypted.toString("utf8");
+		} catch (error) {
+			lastError = error instanceof Error ? error : new Error("Failed to decrypt data");
+		}
+	}
+
+	throw lastError ?? new Error("Failed to decrypt data");
 }

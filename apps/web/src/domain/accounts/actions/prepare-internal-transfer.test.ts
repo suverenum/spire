@@ -36,6 +36,7 @@ const FROM_ACCOUNT = {
 	tokenSymbol: "AlphaUSD",
 	tokenAddress: "0x20c0000000000000000000000000000000000001",
 	walletAddress: "0x1111111111111111111111111111111111111111",
+	walletType: "eoa",
 };
 const TO_ACCOUNT = {
 	id: "acc-2",
@@ -43,6 +44,7 @@ const TO_ACCOUNT = {
 	tokenSymbol: "AlphaUSD",
 	tokenAddress: "0x20c0000000000000000000000000000000000001",
 	walletAddress: "0x2222222222222222222222222222222222222222",
+	walletType: "eoa",
 };
 
 describe("prepareInternalTransfer", () => {
@@ -152,6 +154,30 @@ describe("prepareInternalTransfer", () => {
 			tokenSymbol: "FakeToken",
 		});
 		expect(result.error).toBe("Unsupported token: FakeToken");
+	});
+
+	test("rejects smart-account as the source account", async () => {
+		mockFindFirst
+			.mockResolvedValueOnce({ ...FROM_ACCOUNT, walletType: "smart-account" })
+			.mockResolvedValueOnce(TO_ACCOUNT);
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "acc-1",
+			toAccountId: "acc-2",
+		});
+		expect(result.error).toBe("Smart accounts are temporarily unavailable for internal transfers");
+	});
+
+	test("rejects smart-account as the destination account", async () => {
+		mockFindFirst
+			.mockResolvedValueOnce(FROM_ACCOUNT)
+			.mockResolvedValueOnce({ ...TO_ACCOUNT, walletType: "smart-account" });
+		const { prepareInternalTransfer } = await import("./prepare-internal-transfer");
+		const result = await prepareInternalTransfer({
+			fromAccountId: "acc-1",
+			toAccountId: "acc-2",
+		});
+		expect(result.error).toBe("Smart accounts are temporarily unavailable for internal transfers");
 	});
 
 	test("falls back to fromAccount primary token when tokenSymbol not provided", async () => {

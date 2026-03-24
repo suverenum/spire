@@ -9,7 +9,6 @@ import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AccountGrid } from "@/domain/accounts/components/account-grid";
-import { CreateAccountForm } from "@/domain/accounts/components/create-account-form";
 import { DeleteDialog } from "@/domain/accounts/components/delete-dialog";
 import { RenameDialog } from "@/domain/accounts/components/rename-dialog";
 import { useAllBalances } from "@/domain/accounts/hooks/use-all-balances";
@@ -45,7 +44,6 @@ export function DashboardContent({
 	const dashboardRouter = useRouter();
 	const [sendOpen, setSendOpen] = useState(false);
 	const [receiveOpen, setReceiveOpen] = useState(false);
-	const [createOpen, setCreateOpen] = useState(false);
 	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(null);
 	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(null);
 	const [transferOpen, setTransferOpen] = useState(false);
@@ -69,6 +67,7 @@ export function DashboardContent({
 	}));
 
 	const { accounts: accountsWithBalances, totalBalance } = useAllBalances(accounts);
+	const spendableCashAccounts = accountsWithBalances.filter((a) => a.walletType === "eoa");
 
 	const { transactions } = useAllTransactions(accounts);
 	const { isConnected } = useMultiAccountWs(accounts);
@@ -78,7 +77,7 @@ export function DashboardContent({
 	const hasAllDefaults = defaultAccountCount >= 1;
 
 	// Default to highest-balance account for send/receive; ties break by creation order
-	const sorted = [...accountsWithBalances].sort((a, b) => {
+	const sorted = [...spendableCashAccounts].sort((a, b) => {
 		const diff = b.balance - a.balance;
 		if (diff !== 0n) return diff > 0n ? 1 : -1;
 		return a.createdAt.getTime() - b.createdAt.getTime();
@@ -90,7 +89,7 @@ export function DashboardContent({
 		setSendOpen(true);
 	}
 
-	const defaultAccount = accountsWithBalances.find((a) => a.isDefault) ?? null;
+	const defaultAccount = spendableCashAccounts.find((a) => a.isDefault) ?? null;
 
 	function handleReceiveOpen() {
 		setSelectedReceiveAccount(defaultAccount);
@@ -175,7 +174,7 @@ export function DashboardContent({
 						<SendIcon className="h-5 w-5" />
 						Withdraw
 					</Button>
-					{accountsWithBalances.length > 1 && (
+					{spendableCashAccounts.length > 1 && (
 						<Button
 							onClick={() => setTransferOpen(true)}
 							variant="outline"
@@ -199,9 +198,7 @@ export function DashboardContent({
 						</Link>
 					</div>
 					<AccountGrid
-						accounts={accountsWithBalances.filter(
-							(a) => a.walletType === "eoa" || a.walletType === "smart-account",
-						)}
+						accounts={spendableCashAccounts}
 						maxItems={4}
 						showViewAll
 						onRename={setRenameAccount}
@@ -249,11 +246,6 @@ export function DashboardContent({
 						if (acct) setSelectedReceiveAccount(acct);
 					}}
 				/>
-				<CreateAccountForm
-					open={createOpen}
-					onClose={() => setCreateOpen(false)}
-					treasuryId={treasuryId}
-				/>
 				<RenameDialog
 					open={!!renameAccount}
 					onClose={() => setRenameAccount(null)}
@@ -294,7 +286,7 @@ export function DashboardContent({
 						setTransferAmount("");
 						setTransferError("");
 					}}
-					accounts={accountsWithBalances}
+					accounts={spendableCashAccounts}
 					fromId={transferFromId}
 					onFromSelect={(id) => {
 						setTransferFromId(id);

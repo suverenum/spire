@@ -2,17 +2,24 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { decrypt, encrypt } from "./crypto";
 
 describe("crypto", () => {
-	const originalEnv = process.env.ENCRYPTION_SECRET;
+	const originalEncryptionSecret = process.env.ENCRYPTION_SECRET;
+	const originalSessionSecret = process.env.SESSION_SECRET;
 
 	beforeEach(() => {
 		process.env.ENCRYPTION_SECRET = "test-secret-key-for-encryption-testing";
+		process.env.SESSION_SECRET = "session-secret-key-for-encryption-testing";
 	});
 
 	afterEach(() => {
-		if (originalEnv) {
-			process.env.ENCRYPTION_SECRET = originalEnv;
+		if (originalEncryptionSecret) {
+			process.env.ENCRYPTION_SECRET = originalEncryptionSecret;
 		} else {
 			delete process.env.ENCRYPTION_SECRET;
+		}
+		if (originalSessionSecret) {
+			process.env.SESSION_SECRET = originalSessionSecret;
+		} else {
+			delete process.env.SESSION_SECRET;
 		}
 	});
 
@@ -67,9 +74,30 @@ describe("crypto", () => {
 	});
 
 	test("different ENCRYPTION_SECRET cannot decrypt", () => {
+		delete process.env.SESSION_SECRET;
 		const encrypted = encrypt("test data");
 		process.env.ENCRYPTION_SECRET = "completely-different-key";
 		expect(() => decrypt(encrypted)).toThrow();
+	});
+
+	test("decrypts legacy SESSION_SECRET data after ENCRYPTION_SECRET is introduced", () => {
+		delete process.env.ENCRYPTION_SECRET;
+		process.env.SESSION_SECRET = "legacy-session-secret";
+		const encrypted = encrypt("legacy data");
+
+		process.env.ENCRYPTION_SECRET = "new-encryption-secret";
+
+		expect(decrypt(encrypted)).toBe("legacy data");
+	});
+
+	test("prefers ENCRYPTION_SECRET for newly encrypted data when both secrets are set", () => {
+		process.env.ENCRYPTION_SECRET = "current-encryption-secret";
+		process.env.SESSION_SECRET = "legacy-session-secret";
+		const encrypted = encrypt("current data");
+
+		process.env.SESSION_SECRET = "different-session-secret";
+
+		expect(decrypt(encrypted)).toBe("current data");
 	});
 
 	test("decrypts legacy unversioned ciphertext", () => {

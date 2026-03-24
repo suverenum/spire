@@ -66,6 +66,7 @@ export function AccountDetailContent({
 
 	const account = accountsWithBalances.find((a) => a.id === accountId);
 	const isMultisig = account?.walletType === "multisig";
+	const isSmartAccount = account?.walletType === "smart-account";
 
 	const { data: multisigConfig } = useQuery({
 		queryKey: CACHE_KEYS.multisigConfig(accountId),
@@ -175,7 +176,11 @@ export function AccountDetailContent({
 	// Same-token accounts for transfer eligibility
 	const sameTokenAccounts = account
 		? accountsWithBalances.filter(
-				(a) => a.id !== accountId && a.tokenSymbol === account.tokenSymbol,
+				(a) =>
+					a.id !== accountId &&
+					a.tokenSymbol === account.tokenSymbol &&
+					a.walletType !== "smart-account" &&
+					account.walletType !== "smart-account",
 			)
 		: [];
 
@@ -271,6 +276,14 @@ export function AccountDetailContent({
 						onConfirm={handleConfirm}
 						onExecute={handleExecute}
 					/>
+				)}
+
+				{isSmartAccount && (
+					<Card className="mb-6 border-amber-500/20 bg-amber-500/10">
+						<p className="text-sm text-amber-400">
+							This smart account is view-only until spending support is completed.
+						</p>
+					</Card>
 				)}
 
 				{sameTokenAccounts.length > 0 && (

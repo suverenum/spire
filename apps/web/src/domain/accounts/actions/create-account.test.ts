@@ -5,17 +5,6 @@ vi.mock("@/lib/session", () => ({
 	getSession: vi.fn(() => Promise.resolve(DEFAULT_SESSION)),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/crypto", () => ({
-	encrypt: vi.fn((val: string) => `encrypted:${val}`),
-}));
-
-vi.mock("viem/accounts", () => ({
-	privateKeyToAccount: vi.fn((key: string) => ({
-		// Return a deterministic address based on whether the key is the "matching" one
-		address:
-			key === "0xmatchingkey" ? "0x8888888888888888888888888888888888888888" : "0xwrongaddress",
-	})),
-}));
 
 const mockFindFirst = vi.fn(() => Promise.resolve(null));
 const mockInsertReturning = vi.fn().mockResolvedValue([{ id: "new-acc-id" }]);
@@ -155,6 +144,13 @@ describe("finalizeAccountCreate", () => {
 		});
 		expect(result.error).toBeUndefined();
 		expect(result.account?.id).toBe("new-acc-id");
+		expect(mockInsertValues).toHaveBeenCalledWith(
+			expect.objectContaining({
+				name: "Savings",
+				walletType: "eoa",
+				walletAddress: "0x1111111111111111111111111111111111111111",
+			}),
+		);
 	});
 
 	test("rejects invalid wallet address", async () => {
@@ -168,7 +164,7 @@ describe("finalizeAccountCreate", () => {
 		expect(result.error).toBe("Invalid wallet address");
 	});
 
-	test("creates smart-account with walletType and encrypted key", async () => {
+	test("rejects smart-account creation", async () => {
 		const { finalizeAccountCreate } = await import("./create-account");
 		const result = await finalizeAccountCreate({
 			treasuryId: DEFAULT_SESSION.treasuryId,
@@ -176,10 +172,8 @@ describe("finalizeAccountCreate", () => {
 			tokenSymbol: "AlphaUSD",
 			walletAddress: "0x8888888888888888888888888888888888888888",
 			walletType: "smart-account",
-			privateKey: "0xmatchingkey" as `0x${string}`,
 		});
-		expect(result.error).toBeUndefined();
-		expect(result.account?.id).toBe("new-acc-id");
+		expect(result.error).toBe("Additional cash accounts are temporarily unavailable");
 	});
 
 	test("rejects invalid wallet type", async () => {
@@ -229,6 +223,19 @@ describe("finalizeAccountCreate", () => {
 			walletType: "multisig",
 		});
 		expect(result.error).toBe("Invalid wallet type");
+	});
+
+	test("rejects private key payloads for cash account creation", async () => {
+		const { finalizeAccountCreate } = await import("./create-account");
+		const result = await finalizeAccountCreate({
+			treasuryId: DEFAULT_SESSION.treasuryId,
+			name: "Private Key Account",
+			tokenSymbol: "AlphaUSD",
+			walletAddress: "0x1111111111111111111111111111111111111111",
+			privateKey:
+				"0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" as `0x${string}`,
+		});
+		expect(result.error).toBe("Additional cash accounts are temporarily unavailable");
 	});
 
 	test("handles PG unique constraint for wallet address", async () => {
@@ -311,32 +318,6 @@ describe("finalizeAccountCreate", () => {
 		expect(result.error).toBe("Invalid token");
 	});
 
-	test("does not encrypt key when no privateKey provided", async () => {
-		const { finalizeAccountCreate } = await import("./create-account");
-		const { encrypt } = await import("@/lib/crypto");
-		await finalizeAccountCreate({
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			name: "No Key Account",
-			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x3333333333333333333333333333333333333333",
-		});
-		expect(encrypt).not.toHaveBeenCalled();
-	});
-
-	test("encrypts key when privateKey is provided", async () => {
-		const { finalizeAccountCreate } = await import("./create-account");
-		const { encrypt } = await import("@/lib/crypto");
-		await finalizeAccountCreate({
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			name: "Keyed Account",
-			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x8888888888888888888888888888888888888888",
-			walletType: "smart-account",
-			privateKey: "0xmatchingkey" as `0x${string}`,
-		});
-		expect(encrypt).toHaveBeenCalledWith("0xmatchingkey");
-	});
-
 	test("rejects isDefault when default already exists for token", async () => {
 		mockFindFirst.mockResolvedValueOnce({ id: "existing-default" } as never);
 		const { finalizeAccountCreate } = await import("./create-account");
@@ -362,63 +343,6 @@ describe("finalizeAccountCreate", () => {
 		});
 		expect(result.error).toBeUndefined();
 		expect(result.account?.id).toBe("new-acc-id");
-	});
-
-	test("rejects smart-account when key does not match wallet address", async () => {
-		const { finalizeAccountCreate } = await import("./create-account");
-		const result = await finalizeAccountCreate({
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			name: "Mismatched Key",
-			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x8888888888888888888888888888888888888888",
-			walletType: "smart-account",
-			privateKey: "0xwrongkey" as `0x${string}`,
-		});
-		expect(result.error).toBe("Private key does not match wallet address");
-	});
-
-	test("accepts smart-account when key derives correct wallet address", async () => {
-		const { finalizeAccountCreate } = await import("./create-account");
-		const result = await finalizeAccountCreate({
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			name: "Matched Key",
-			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x8888888888888888888888888888888888888888",
-			walletType: "smart-account",
-			privateKey: "0xmatchingkey" as `0x${string}`,
-		});
-		expect(result.error).toBeUndefined();
-		expect(result.account?.id).toBe("new-acc-id");
-	});
-
-	test("rejects smart-account with malformed private key", async () => {
-		const { privateKeyToAccount } = await import("viem/accounts");
-		vi.mocked(privateKeyToAccount).mockImplementationOnce(() => {
-			throw new Error("invalid private key");
-		});
-		const { finalizeAccountCreate } = await import("./create-account");
-		const result = await finalizeAccountCreate({
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			name: "Bad Key",
-			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x8888888888888888888888888888888888888888",
-			walletType: "smart-account",
-			privateKey: "0xinvalid" as `0x${string}`,
-		});
-		expect(result.error).toBe("Invalid private key format");
-	});
-
-	test("rejects smart-account without private key", async () => {
-		const { finalizeAccountCreate } = await import("./create-account");
-		const result = await finalizeAccountCreate({
-			treasuryId: DEFAULT_SESSION.treasuryId,
-			name: "Keyless Smart Account",
-			tokenSymbol: "AlphaUSD",
-			walletAddress: "0x7777777777777777777777777777777777777777",
-			walletType: "smart-account",
-			// No privateKey provided
-		});
-		expect(result.error).toBe("Private key required for smart-account creation");
 	});
 
 	test("rejects name over 100 characters", async () => {

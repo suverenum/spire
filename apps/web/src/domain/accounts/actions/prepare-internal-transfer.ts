@@ -46,6 +46,9 @@ export async function prepareInternalTransfer({
 	if (!fromAccount || !toAccount) {
 		return { error: "One or both accounts not found" };
 	}
+	if (fromAccount.walletType === "smart-account" || toAccount.walletType === "smart-account") {
+		return { error: "Smart accounts are temporarily unavailable for internal transfers" };
+	}
 
 	// When explicit tokenSymbol is provided, resolve from SUPPORTED_TOKENS (multi-asset transfer).
 	// When omitted, fall back to fromAccount's primary token but enforce same-token guard
