@@ -20,6 +20,7 @@ export default defineConfig({
 			NEXT_PUBLIC_TOKENS:
 				'[{"name":"AlphaUSD","symbol":"AUSD","decimals":6,"address":"0x20c0000000000000000000000000000000000001"},{"name":"BetaUSD","symbol":"BUSD","decimals":6,"address":"0x20c0000000000000000000000000000000000002"}]',
 			NEXT_PUBLIC_DEFAULT_TOKEN: "AlphaUSD",
+			NEXT_PUBLIC_FEE_TOKEN: "0x20c0000000000000000000000000000000000000",
 			NEXT_PUBLIC_APP_ENV: "development",
 		},
 		include: ["src/**/*.test.{ts,tsx}"],
@@ -28,34 +29,29 @@ export default defineConfig({
 			provider: "v8",
 			include: ["src/**/*.{ts,tsx}"],
 			exclude: [
+				// Test infrastructure
 				"src/test/**",
 				"src/**/*.test.{ts,tsx}",
+				// Next.js framework files (not unit-testable)
 				"src/app/layout.tsx",
 				"src/app/globals.css",
 				"src/sw.ts",
 				"src/app/**/page.tsx",
+				"src/app/global-error.tsx",
+				"src/app/create/page.tsx",
+				// Server-only code (requires Node APIs, can't run in happy-dom)
 				"src/app/api/**",
 				"src/db/index.ts",
-				"src/components/providers.tsx",
-				"src/lib/idb-persister.ts",
 				"src/lib/session.ts",
 				"src/domain/**/actions/**",
 				"src/domain/**/queries/**",
-				"src/domain/**/hooks/**",
-				"src/lib/tempo/types.ts",
-				"src/lib/tempo/client.ts",
-				"src/app/**/dashboard-content.tsx",
-				"src/app/**/dashboard-recent-transactions.tsx",
-				"src/app/**/transactions-content.tsx",
-				"src/app/**/transaction-detail-content.tsx",
-				"src/app/**/settings-content.tsx",
-				"src/app/**/accounts-content.tsx",
-				"src/app/**/account-detail-content.tsx",
-				"src/app/**/swap-content.tsx",
-				"src/app/create/page.tsx",
-				"src/app/global-error.tsx",
+				// Runtime providers and instrumentation
+				"src/components/providers.tsx",
+				"src/lib/idb-persister.ts",
 				"src/sentry-*.ts",
 				"src/instrumentation.ts",
+				// Type-only files
+				"src/lib/tempo/types.ts",
 			],
 			thresholds: {
 				lines: 90,

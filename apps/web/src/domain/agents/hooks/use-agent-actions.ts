@@ -1,120 +1,14 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Address, PublicClient } from "viem";
+import type { Address } from "viem";
 import { useConfig } from "wagmi";
 import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { toast } from "@/components/ui/toast";
 import { CACHE_KEYS, SUPPORTED_TOKENS } from "@/lib/constants";
-
-/** Wait for receipt and throw on revert so onError fires correctly. */
-async function confirmTx(publicClient: PublicClient, hash: `0x${string}`, context: string) {
-	const receipt = await publicClient.waitForTransactionReceipt({ hash });
-	if (receipt.status === "reverted") {
-		throw new Error(`Transaction reverted: ${context} (tx: ${hash.slice(0, 12)}…)`);
-	}
-	return receipt;
-}
-
-// ─── Guardian ABI subset for owner actions ─────────────────────────
-
-const GuardianOwnerAbi = [
-	{
-		type: "function",
-		name: "updateLimits",
-		inputs: [
-			{ name: "_maxPerTx", type: "uint256" },
-			{ name: "_dailyLimit", type: "uint256" },
-		],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "addRecipient",
-		inputs: [{ name: "r", type: "address" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "removeRecipient",
-		inputs: [{ name: "r", type: "address" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "addToken",
-		inputs: [{ name: "t", type: "address" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "withdraw",
-		inputs: [{ name: "token", type: "address" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "approvePay",
-		inputs: [{ name: "proposalId", type: "uint256" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "rejectPay",
-		inputs: [{ name: "proposalId", type: "uint256" }],
-		outputs: [],
-		stateMutability: "nonpayable",
-	},
-	{
-		type: "function",
-		name: "proposalCount",
-		inputs: [],
-		outputs: [{ name: "", type: "uint256" }],
-		stateMutability: "view",
-	},
-	{
-		type: "function",
-		name: "proposals",
-		inputs: [{ name: "", type: "uint256" }],
-		outputs: [
-			{ name: "token", type: "address" },
-			{ name: "to", type: "address" },
-			{ name: "amount", type: "uint256" },
-			{ name: "status", type: "uint8" },
-			{ name: "createdAt", type: "uint256" },
-		],
-		stateMutability: "view",
-	},
-	{
-		type: "event",
-		name: "PaymentProposed",
-		inputs: [
-			{ name: "proposalId", type: "uint256", indexed: true },
-			{ name: "token", type: "address", indexed: true },
-			{ name: "to", type: "address", indexed: true },
-			{ name: "amount", type: "uint256", indexed: false },
-		],
-	},
-] as const;
-
-const Tip20Abi = [
-	{
-		type: "function",
-		name: "transfer",
-		inputs: [
-			{ name: "to", type: "address" },
-			{ name: "amount", type: "uint256" },
-		],
-		outputs: [{ name: "", type: "bool" }],
-		stateMutability: "nonpayable",
-	},
-] as const;
+import { confirmTx } from "@/lib/tempo/confirm-tx";
+import { FEE_TOKEN } from "@/lib/wagmi";
+import { GuardianOwnerAbi, Tip20Abi } from "../abis";
 
 /**
  * Hook for topping up an agent wallet (transferring more tokens to Guardian contract).
@@ -145,6 +39,7 @@ export function useTopUpAgent(treasuryId: string) {
 				abi: Tip20Abi,
 				functionName: "transfer",
 				args: [guardianAddress, amount],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "top up");
@@ -185,6 +80,7 @@ export function useEmergencyWithdraw(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "withdraw",
 				args: [token.address],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "withdraw");
@@ -210,21 +106,59 @@ export function useUpdateGuardianLimits(treasuryId: string) {
 			guardianAddress,
 			maxPerTx,
 			dailyLimit,
+			spendingCap,
 		}: {
 			guardianAddress: Address;
 			maxPerTx: bigint;
 			dailyLimit: bigint;
+			spendingCap: bigint;
 		}) => {
 			const walletClient = await getWalletClient(config);
 			const publicClient = await getPublicClient(config);
 			if (!walletClient || !publicClient) throw new Error("Wallet not connected");
 
-			const hash = await walletClient.writeContract({
-				address: guardianAddress,
-				abi: GuardianOwnerAbi,
-				functionName: "updateLimits",
-				args: [maxPerTx, dailyLimit],
-			});
+			// Try 3-arg updateLimits first (new contract), fall back to 2-arg (legacy)
+			let hash: `0x${string}`;
+			try {
+				hash = await walletClient.writeContract({
+					address: guardianAddress,
+					abi: GuardianOwnerAbi,
+					functionName: "updateLimits",
+					args: [maxPerTx, dailyLimit, spendingCap],
+					...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
+				});
+			} catch (err: unknown) {
+				// Only fall back for ABI/contract mismatch errors (revert, execution reverted).
+				// Rethrow user rejections and RPC failures to avoid masking errors.
+				const msg = (err as { shortMessage?: string })?.shortMessage ?? "";
+				const isContractError =
+					msg.includes("revert") ||
+					msg.includes("execution") ||
+					msg.includes("invalid opcode") ||
+					msg.includes("returned no data");
+				if (!isContractError) throw err;
+
+				// Legacy guardian with 2-arg updateLimits(maxPerTx, dailyLimit)
+				const legacyAbi = [
+					{
+						type: "function" as const,
+						name: "updateLimits",
+						inputs: [
+							{ name: "_maxPerTx", type: "uint256" },
+							{ name: "_dailyLimit", type: "uint256" },
+						],
+						outputs: [],
+						stateMutability: "nonpayable" as const,
+					},
+				];
+				hash = await walletClient.writeContract({
+					address: guardianAddress,
+					abi: legacyAbi,
+					functionName: "updateLimits",
+					args: [maxPerTx, dailyLimit],
+					...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
+				});
+			}
 
 			await confirmTx(publicClient, hash, "update limits");
 			return hash;
@@ -261,6 +195,7 @@ export function useApprovePay(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "approvePay",
 				args: [proposalId],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "approve payment");
@@ -299,6 +234,7 @@ export function useRejectPay(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "rejectPay",
 				args: [proposalId],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "reject payment");
@@ -337,6 +273,7 @@ export function useAddToken(treasuryId: string) {
 				abi: GuardianOwnerAbi,
 				functionName: "addToken",
 				args: [tokenAddress],
+				...(FEE_TOKEN ? { feeToken: FEE_TOKEN } : {}),
 			});
 
 			await confirmTx(publicClient, hash, "add token");

@@ -3,11 +3,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PlusIcon } from "@/components/icons";
 import { SidebarLayout } from "@/components/sidebar-layout";
-import { Button } from "@/components/ui/button";
 import { AccountGrid } from "@/domain/accounts/components/account-grid";
-import { CreateAccountForm } from "@/domain/accounts/components/create-account-form";
 import { DeleteDialog } from "@/domain/accounts/components/delete-dialog";
 import { RenameDialog } from "@/domain/accounts/components/rename-dialog";
 import { useAllBalances } from "@/domain/accounts/hooks/use-all-balances";
@@ -29,7 +26,6 @@ export function CashAccountsContent({
 }: CashAccountsContentProps) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
-	const [createOpen, setCreateOpen] = useState(false);
 	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(null);
 	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(null);
 
@@ -49,24 +45,17 @@ export function CashAccountsContent({
 	return (
 		<SessionGuard authenticatedAt={authenticatedAt}>
 			<SidebarLayout treasuryName={treasuryName}>
-				<div className="mb-4 flex items-center justify-between">
+				<div className="mb-4">
 					<h1 className="text-2xl font-semibold">Cash accounts</h1>
-					<Button onClick={() => setCreateOpen(true)}>
-						<PlusIcon className="h-4 w-4" />
-						New account
-					</Button>
+					<p className="text-muted-foreground mt-1 text-sm">
+						New cash account creation is temporarily unavailable.
+					</p>
 				</div>
 
 				<AccountGrid
 					accounts={cashAccounts}
 					onRename={setRenameAccount}
 					onDelete={setDeleteAccount}
-				/>
-
-				<CreateAccountForm
-					open={createOpen}
-					onClose={() => setCreateOpen(false)}
-					treasuryId={treasuryId}
 				/>
 				<RenameDialog
 					open={!!renameAccount}

@@ -78,12 +78,25 @@ Each domain is self-contained:
 
 ```
 domain/
-├── auth/           # Passkey authentication, session management
-├── payments/       # Send, receive, transaction history
-├── treasury/       # Treasury CRUD, header, settings
-├── accounts/       # Multi-account management (create, rename, delete, transfer, grouping)
-└── swap/           # Token swaps via Tempo DEX
+├── auth/              # Passkey authentication, session management
+├── organizations/     # Organization + entity CRUD, legacy treasury migration
+├── treasury/          # Treasury CRUD, header, settings (creates org → entity → treasury)
+├── accounts/          # Multi-account management (EOA, smart-account, guardian, multisig)
+├── agents/            # Agent wallets (Guardian contracts), spending limits, vendor management
+├── multisig/          # Multi-signature accounts with tiered approval policies
+├── payments/          # Send, receive, transaction history
+└── swap/              # Token swaps via Tempo DEX
 ```
+
+### Data Model
+
+```
+organizations 1→* entities 1→* treasuries 1→* accounts
+                                                ├── agent_wallets (1:1, for guardian type)
+                                                └── multisig_configs (1:1, for multisig type)
+```
+
+Account types: `eoa` (passkey address), `smart-account` (generated keypair), `guardian` (agent wallet), `multisig`
 
 ## Key Patterns
 
@@ -93,11 +106,37 @@ domain/
 - **Biome** handles both linting and formatting in one pass
 - **Turborepo** caches and parallelizes across packages
 
+## Deployment
+
+### PM2 (self-hosted, port 11000)
+```bash
+bun run build                          # Build all packages
+pm2 restart goldhord                   # Restart Next.js production server
+```
+
+### Database Migrations
+```bash
+# Apply new migrations (from apps/web/)
+psql "$DATABASE_URL" -f drizzle/0009_tiresome_bullseye.sql
+psql "$DATABASE_URL" -f drizzle/0010_bitter_photon.sql
+
+# Rollback if needed
+psql "$DATABASE_URL" -f drizzle/0010_bitter_photon.down.sql
+psql "$DATABASE_URL" -f drizzle/0009_tiresome_bullseye.down.sql
+```
+
+### Legacy Data Backfill
+Existing treasuries without organizations are auto-migrated on next login. For bulk migration:
+```bash
+cd apps/web && DATABASE_URL="$DATABASE_URL" bun run src/db/seeds/backfill-organizations.ts
+```
+
 ## Environment Variables
 
 ```
 DATABASE_URL          # Neon Postgres connection string
 SESSION_SECRET        # HMAC key for session cookies
+ENCRYPTION_SECRET     # AES-256-GCM key for smart-account private keys (falls back to SESSION_SECRET)
 NEXT_PUBLIC_SENTRY_DSN # Sentry client DSN
 SENTRY_AUTH_TOKEN     # Sentry source maps (CI)
 NEXT_PUBLIC_POSTHOG_KEY # PostHog analytics

@@ -4,6 +4,9 @@ const TEST_DB_URL =
 	process.env.TEST_DATABASE_URL || "postgresql://postgres:testpass@localhost:5432/goldhord_test";
 
 // Known test data IDs (deterministic for test assertions)
+export const TEST_ORG_ID = "00000000-0000-0000-0000-000000000099";
+export const TEST_ORG_NAME = "E2E Test Organization";
+export const TEST_ENTITY_ID = "00000000-0000-0000-0000-000000000098";
 export const TEST_TREASURY_ID = "00000000-0000-0000-0000-000000000001";
 export const TEST_TEMPO_ADDRESS = "0x9F3D0d56Aae3bA5a77A57901D356C847CC5157c0";
 export const TEST_TREASURY_NAME = "E2E Test Treasury";
@@ -37,6 +40,25 @@ export async function seedTestData(): Promise<void> {
 	await client.connect();
 
 	try {
+		// Ensure schema matches (columns may not exist if migrations haven't run)
+		await client.query(
+			"ALTER TABLE agent_wallets ADD COLUMN IF NOT EXISTS key_exported_at TIMESTAMP",
+		);
+		await client.query(
+			"CREATE TABLE IF NOT EXISTS organizations (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT NOT NULL, domain TEXT, settings JSONB DEFAULT '{}'::jsonb, created_at TIMESTAMP DEFAULT now() NOT NULL)",
+		);
+		await client.query(
+			"CREATE TABLE IF NOT EXISTS entities (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), organization_id UUID NOT NULL REFERENCES organizations(id), name TEXT NOT NULL, jurisdiction TEXT, entity_type TEXT, created_at TIMESTAMP DEFAULT now() NOT NULL)",
+		);
+		await client.query(
+			"ALTER TABLE treasuries ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id)",
+		);
+		await client.query(
+			"ALTER TABLE treasuries ADD COLUMN IF NOT EXISTS entity_id UUID REFERENCES entities(id)",
+		);
+		await client.query("ALTER TABLE accounts ADD COLUMN IF NOT EXISTS account_category TEXT");
+		await client.query("ALTER TABLE accounts ADD COLUMN IF NOT EXISTS encrypted_key TEXT");
+
 		// Clean slate
 		await client.query("DELETE FROM agent_wallets");
 		await client.query("DELETE FROM multisig_confirmations");
@@ -44,13 +66,25 @@ export async function seedTestData(): Promise<void> {
 		await client.query("DELETE FROM multisig_configs");
 		await client.query("DELETE FROM accounts");
 		await client.query("DELETE FROM treasuries");
+		await client.query("DELETE FROM entities");
+		await client.query("DELETE FROM organizations");
 
-		// Insert treasury
-		await client.query(`INSERT INTO treasuries (id, name, tempo_address) VALUES ($1, $2, $3)`, [
-			TEST_TREASURY_ID,
-			TEST_TREASURY_NAME,
-			TEST_TEMPO_ADDRESS,
+		// Insert organization + entity
+		await client.query(`INSERT INTO organizations (id, name) VALUES ($1, $2)`, [
+			TEST_ORG_ID,
+			TEST_ORG_NAME,
 		]);
+		await client.query(`INSERT INTO entities (id, organization_id, name) VALUES ($1, $2, $3)`, [
+			TEST_ENTITY_ID,
+			TEST_ORG_ID,
+			"Default",
+		]);
+
+		// Insert treasury (linked to org + entity)
+		await client.query(
+			`INSERT INTO treasuries (id, name, tempo_address, organization_id, entity_id) VALUES ($1, $2, $3, $4, $5)`,
+			[TEST_TREASURY_ID, TEST_TREASURY_NAME, TEST_TEMPO_ADDRESS, TEST_ORG_ID, TEST_ENTITY_ID],
+		);
 
 		// Insert EOA account
 		await client.query(
@@ -230,6 +264,8 @@ export async function cleanTestData(): Promise<void> {
 		await client.query("DELETE FROM multisig_configs");
 		await client.query("DELETE FROM accounts");
 		await client.query("DELETE FROM treasuries");
+		await client.query("DELETE FROM entities");
+		await client.query("DELETE FROM organizations");
 	} finally {
 		await client.end();
 	}

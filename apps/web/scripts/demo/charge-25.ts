@@ -2,10 +2,9 @@ import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { readContract, waitForTransactionReceipt } from "viem/actions";
 import { tempoModerato } from "viem/chains";
+import { requireAddress, requireHexKey } from "./env";
 
-const agent = privateKeyToAccount(
-	"0x2804cbba04cea055984b27972abf6eb63f95bd4d0d8f1e395a41dca8966f4907",
-);
+const agent = privateKeyToAccount(requireHexKey("AGENT_KEY"));
 const pub = createPublicClient({
 	chain: tempoModerato,
 	transport: http("https://rpc.moderato.tempo.xyz"),
@@ -16,9 +15,9 @@ const aw = createWalletClient({
 	transport: http("https://rpc.moderato.tempo.xyz"),
 });
 
-const G = "0x303b28924076a9863e6717ed77bd6975ebd79558" as const;
-const TOKEN = "0x20c0000000000000000000000000000000000001" as const;
-const VENDOR = "0x0000000000000000000000000000000000000001" as const;
+const G = requireAddress("GUARDIAN_ADDRESS");
+const TOKEN = requireAddress("TOKEN_ADDRESS");
+const VENDOR = requireAddress("VENDOR_ADDRESS");
 const abi = parseAbi([
 	"function pay(address,address,uint256) external",
 	"function proposePay(address,address,uint256) external returns (uint256,bool)",

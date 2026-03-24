@@ -31,14 +31,16 @@ function fmt(r) {
 	return (Number(r) / 1e6).toFixed(2);
 }
 
-// YOUR wallet
-const AGENT_KEY = "0x2804cbba04cea055984b27972abf6eb63f95bd4d0d8f1e395a41dca8966f4907";
-const GUARDIAN = "0x303b28924076a9863e6717ed77bd6975ebd79558";
-const ALPHAUSD = "0x20c0000000000000000000000000000000000001";
+import { requireAddress, requireHexKey } from "./env";
+
+// YOUR wallet — loaded from environment
+const AGENT_KEY = requireHexKey("AGENT_KEY");
+const GUARDIAN = requireAddress("GUARDIAN_ADDRESS");
+const ALPHAUSD = requireAddress("TOKEN_ADDRESS");
 const EXPLORER = "https://explore.moderato.tempo.xyz";
 
 // Vendor address that's in the allowlist
-const VENDOR_ADDR = "0x0000000000000000000000000000000000000001";
+const VENDOR_ADDR = requireAddress("VENDOR_ADDRESS");
 
 const GuardianAbi = parseAbi([
 	"function pay(address,address,uint256) external",

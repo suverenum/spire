@@ -3,13 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CreateAccountForm } from "./create-account-form";
 
-const mockMutate = vi.fn();
-
 vi.mock("../hooks/use-create-account", () => ({
-	useCreateAccount: () => ({
-		mutate: mockMutate,
-		isPending: false,
-	}),
+	CREATE_ACCOUNT_UNAVAILABLE_ERROR: "Additional cash accounts are temporarily unavailable",
 }));
 
 afterEach(() => {
@@ -18,64 +13,18 @@ afterEach(() => {
 });
 
 describe("CreateAccountForm", () => {
-	it("renders form fields when open", () => {
+	it("renders the availability notice", () => {
 		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		expect(screen.getByLabelText("Account Name")).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Create Account" })).toBeInTheDocument();
+		expect(
+			screen.getByText(/additional cash accounts are temporarily unavailable/i),
+		).toBeInTheDocument();
+		expect(screen.getAllByRole("button", { name: "Close" })).toHaveLength(2);
 	});
 
-	it("shows error when name is empty", async () => {
-		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
-		expect(screen.getByText("Account name is required")).toBeInTheDocument();
-		expect(mockMutate).not.toHaveBeenCalled();
-	});
-
-	it("shows error when name is too long", async () => {
-		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		const input = screen.getByLabelText("Account Name");
-		await userEvent.type(input, "a".repeat(101));
-		await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
-		expect(screen.getByText("Account name must be 100 characters or less")).toBeInTheDocument();
-		expect(mockMutate).not.toHaveBeenCalled();
-	});
-
-	it("calls mutate with correct params on valid submit", async () => {
-		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		await userEvent.type(screen.getByLabelText("Account Name"), "My Account");
-		await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
-		expect(mockMutate).toHaveBeenCalledWith(
-			{ treasuryId: "t-1", tokenSymbol: "AlphaUSD", name: "My Account" },
-			expect.objectContaining({
-				onSuccess: expect.any(Function),
-				onError: expect.any(Function),
-			}),
-		);
-	});
-
-	it("calls onClose on success callback", async () => {
-		mockMutate.mockImplementation((_data: unknown, opts: { onSuccess?: () => void }) => {
-			opts.onSuccess?.();
-		});
+	it("closes the sheet", async () => {
 		const onClose = vi.fn();
 		render(<CreateAccountForm open onClose={onClose} treasuryId="t-1" />);
-		await userEvent.type(screen.getByLabelText("Account Name"), "Test");
-		await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
+		await userEvent.click(screen.getAllByRole("button", { name: "Close" })[1]);
 		expect(onClose).toHaveBeenCalled();
-	});
-
-	it("shows error from mutation onError callback", async () => {
-		mockMutate.mockImplementation((_data: unknown, opts: { onError?: (err: Error) => void }) => {
-			opts.onError?.(new Error("Name already taken"));
-		});
-		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		await userEvent.type(screen.getByLabelText("Account Name"), "Test");
-		await userEvent.click(screen.getByRole("button", { name: "Create Account" }));
-		expect(screen.getByText("Name already taken")).toBeInTheDocument();
-	});
-
-	it("shows token selector when multiple options available", () => {
-		render(<CreateAccountForm open onClose={vi.fn()} treasuryId="t-1" />);
-		expect(screen.getByLabelText("Token")).toBeInTheDocument();
 	});
 });

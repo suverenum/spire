@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockReadContract = vi.fn();
 const mockGetContractEvents = vi.fn();
 const mockGetBlockNumber = vi.fn();
+const mockGetBlock = vi.fn();
 
 // Mock viem before importing the client
 vi.mock("viem", () => ({
@@ -10,6 +11,7 @@ vi.mock("viem", () => ({
 		readContract: mockReadContract,
 		getContractEvents: mockGetContractEvents,
 		getBlockNumber: mockGetBlockNumber,
+		getBlock: mockGetBlock,
 	})),
 	http: vi.fn(),
 }));
@@ -21,47 +23,47 @@ describe("tempo client", () => {
 		mockReadContract.mockReset();
 		mockGetContractEvents.mockReset();
 		mockGetBlockNumber.mockReset();
+		mockGetBlock.mockReset();
 		// Default: successful responses
 		mockReadContract.mockResolvedValue(1000000n);
 		mockGetContractEvents.mockResolvedValue([]);
 		mockGetBlockNumber.mockResolvedValue(200_000n);
+		mockGetBlock.mockResolvedValue({ timestamp: 1700000000n });
 	});
 
-	it("exports fetchBalances function", async () => {
-		const { fetchBalances } = await import("./client");
-		expect(typeof fetchBalances).toBe("function");
-	});
-
-	it("exports fetchTransactions function", async () => {
-		const { fetchTransactions } = await import("./client");
-		expect(typeof fetchTransactions).toBe("function");
-	});
-
-	it("exports getTempoClient function", async () => {
-		const { getTempoClient } = await import("./client");
-		expect(typeof getTempoClient).toBe("function");
-	});
-
-	it("fetches balances for an address", async () => {
+	it("fetches balances with correct values per token", async () => {
+		mockReadContract.mockResolvedValue(5000000n);
 		const { fetchBalances } = await import("./client");
 		const result = await fetchBalances(addr);
 		expect(result.partial).toBe(false);
-		expect(Array.isArray(result.balances)).toBe(true);
-		expect(result.balances.length).toBe(
-			Object.keys((await import("../constants")).SUPPORTED_TOKENS).length,
-		);
+		const tokenCount = Object.keys((await import("../constants")).SUPPORTED_TOKENS).length;
+		expect(result.balances.length).toBe(tokenCount);
 		for (const b of result.balances) {
-			expect(b).toHaveProperty("token");
-			expect(b).toHaveProperty("tokenAddress");
-			expect(b).toHaveProperty("balance");
-			expect(b).toHaveProperty("decimals");
+			expect(b.balance).toBe(5000000n);
+			expect(b.decimals).toBeGreaterThan(0);
+			expect(b.tokenAddress).toMatch(/^0x[0-9a-fA-F]+$/);
 		}
 	});
 
-	it("fetches transactions for an address", async () => {
+	it("fetches transactions and constructs payment objects correctly", async () => {
+		const otherAddr = "0xabcdef1234567890abcdef1234567890abcdef12" as `0x${string}`;
+		mockGetContractEvents
+			.mockResolvedValueOnce([
+				{
+					transactionHash: `0x${"ff".repeat(32)}`,
+					logIndex: 0,
+					blockNumber: 100n,
+					args: { from: addr, to: otherAddr, value: 42000000n },
+				},
+			])
+			.mockResolvedValue([]);
 		const { fetchTransactions } = await import("./client");
 		const txs = await fetchTransactions(addr);
-		expect(Array.isArray(txs)).toBe(true);
+		expect(txs.length).toBe(1);
+		expect(txs[0].from).toBe(addr);
+		expect(txs[0].to).toBe(otherAddr);
+		expect(txs[0].amount).toBe(42000000n);
+		expect(txs[0].status).toBe("confirmed");
 	});
 
 	it("returns cached client instance", async () => {
@@ -69,6 +71,19 @@ describe("tempo client", () => {
 		const client1 = getTempoClient();
 		const client2 = getTempoClient();
 		expect(client1).toBe(client2);
+	});
+
+	it("creates client with multicall batching enabled", async () => {
+		const { createPublicClient } = await import("viem");
+		await import("./client");
+		// Force client creation by calling getTempoClient
+		const { getTempoClient } = await import("./client");
+		getTempoClient();
+		expect(createPublicClient).toHaveBeenCalledWith(
+			expect.objectContaining({
+				batch: { multicall: true },
+			}),
+		);
 	});
 
 	describe("fetchBalances error handling", () => {
@@ -231,7 +246,6 @@ describe("tempo client", () => {
 		});
 
 		it("sorts transactions by timestamp descending", async () => {
-			// Mock Date.now to get predictable timestamps
 			mockGetContractEvents
 				.mockResolvedValueOnce([
 					{
@@ -242,6 +256,7 @@ describe("tempo client", () => {
 							to: "0xabcdef1234567890abcdef1234567890abcdef12",
 							value: 100n,
 						},
+						// No blockNumber — both will get Date.now() timestamps
 					},
 					{
 						transactionHash: `0x${"02".repeat(32)}`,
@@ -259,9 +274,103 @@ describe("tempo client", () => {
 			const txs = await fetchTransactions(addr);
 
 			expect(txs.length).toBe(2);
-			// Both have essentially the same timestamp (Date.now()), so just verify they exist
+			// Verify timestamps are valid dates and in non-ascending order
+			expect(txs[0].timestamp.getTime()).toBeGreaterThanOrEqual(txs[1].timestamp.getTime());
+		});
+
+		it("deduplicates self-transfers that appear in both sent and received logs", async () => {
+			const selfTxHash = `0x${"dd".repeat(32)}`;
+			// Same event appears in both sent (first mock) and received (second mock)
+			const selfTransferLog = {
+				transactionHash: selfTxHash,
+				logIndex: 0,
+				args: { from: addr, to: addr, value: 500n },
+			};
+			mockGetContractEvents
+				.mockResolvedValueOnce([selfTransferLog]) // sent query
+				.mockResolvedValueOnce([selfTransferLog]) // received query
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			// Should appear only once despite being in both sent and received
+			const matching = txs.filter((tx) => tx.txHash === selfTxHash);
+			expect(matching.length).toBe(1);
+		});
+
+		it("handles low block number (fromBlock = 0n)", async () => {
+			mockGetBlockNumber.mockResolvedValue(100n); // Below MAX_BLOCK_RANGE
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+			// Should not throw — fromBlock should be 0n
+			expect(Array.isArray(txs)).toBe(true);
+		});
+
+		it("resolves timestamps from block when blockNumber is present", async () => {
+			const knownTimestamp = 1700000000n; // Nov 14, 2023
+			mockGetBlock.mockResolvedValue({ timestamp: knownTimestamp });
+			mockGetContractEvents
+				.mockResolvedValueOnce([
+					{
+						transactionHash: `0x${"ee".repeat(32)}`,
+						logIndex: 0,
+						blockNumber: 42n,
+						args: { from: addr, to: "0xabcdef1234567890abcdef1234567890abcdef12", value: 100n },
+					},
+				])
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			expect(txs.length).toBe(1);
+			// Timestamp should come from block, not Date.now()
+			expect(txs[0].timestamp.getTime()).toBe(Number(knownTimestamp) * 1000);
+			expect(mockGetBlock).toHaveBeenCalledWith({ blockNumber: 42n });
+		});
+
+		it("falls back to Date.now when blockNumber is null", async () => {
+			const before = Date.now();
+			mockGetContractEvents
+				.mockResolvedValueOnce([
+					{
+						transactionHash: `0x${"ff".repeat(32)}`,
+						logIndex: 0,
+						blockNumber: null,
+						args: { from: addr, to: "0xabcdef1234567890abcdef1234567890abcdef12", value: 100n },
+					},
+				])
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			expect(txs.length).toBe(1);
+			// Timestamp should be approximately now (within 5 seconds)
+			expect(txs[0].timestamp.getTime()).toBeGreaterThanOrEqual(before);
+			expect(txs[0].timestamp.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+		});
+
+		it("handles getBlock failure gracefully (falls back to Date.now)", async () => {
+			mockGetBlock.mockRejectedValue(new Error("RPC error"));
+			mockGetContractEvents
+				.mockResolvedValueOnce([
+					{
+						transactionHash: `0x${"aa".repeat(32)}`,
+						logIndex: 0,
+						blockNumber: 99n,
+						args: { from: addr, to: "0xabcdef1234567890abcdef1234567890abcdef12", value: 100n },
+					},
+				])
+				.mockResolvedValue([]);
+
+			const { fetchTransactions } = await import("./client");
+			const txs = await fetchTransactions(addr);
+
+			// Should still return the transaction, using Date.now() as fallback
+			expect(txs.length).toBe(1);
 			expect(txs[0].timestamp).toBeInstanceOf(Date);
-			expect(txs[1].timestamp).toBeInstanceOf(Date);
 		});
 	});
 });

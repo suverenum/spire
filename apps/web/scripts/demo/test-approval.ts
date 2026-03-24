@@ -40,7 +40,7 @@ const PATHUSD = "0x20c0000000000000000000000000000000000000";
 const VENDOR = "0x0000000000000000000000000000000000000042";
 
 const FactoryAbi = parseAbi([
-	"function createGuardian(address,uint256,uint256,uint256,bytes32) external returns (address)",
+	"function createGuardian(address,uint256,uint256,uint256,bytes32,address[],address[]) external returns (address)",
 ]);
 const GuardianAbi = parseAbi([
 	"function proposePay(address,address,uint256) external returns (uint256,bool)",
@@ -112,7 +112,7 @@ async function main() {
 		address: FACTORY,
 		abi: FactoryAbi,
 		functionName: "createGuardian",
-		args: [agentAcc.address, 2_000_000n, 10_000_000n, 50_000_000n, salt],
+		args: [agentAcc.address, 2_000_000n, 10_000_000n, 50_000_000n, salt, [VENDOR], [PATHUSD]],
 	});
 	const dr = await waitForTransactionReceipt(pub, { hash: dh });
 	var guardian = `0x${dr.logs[0].topics[1].slice(26)}`;

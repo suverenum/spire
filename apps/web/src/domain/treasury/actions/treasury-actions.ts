@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { treasuries } from "@/db/schema";
+import { entities, organizations, treasuries } from "@/db/schema";
 import { createSession, getSession } from "@/lib/session";
 import { createTreasurySchema } from "@/lib/validations";
 
@@ -24,21 +24,44 @@ export async function createTreasuryAction(
 		return { error: "Invalid Tempo address from passkey." };
 	}
 	const tempoAddress = rawAddress.toLowerCase();
+	const name = parsed.data.name;
 
 	let row: { id: string; name: string; tempoAddress: string };
+	let orgId: string;
+	let orgName: string;
 	try {
-		const [inserted] = await db
-			.insert(treasuries)
-			.values({
-				name: parsed.data.name,
-				tempoAddress,
-			})
-			.returning({
-				id: treasuries.id,
-				name: treasuries.name,
-				tempoAddress: treasuries.tempoAddress,
-			});
-		row = inserted;
+		// Create organization → entity → treasury in a single transaction
+		// so a treasury unique-constraint failure doesn't leave orphaned org/entity rows
+		const result = await db.transaction(async (tx) => {
+			const [org] = await tx
+				.insert(organizations)
+				.values({ name })
+				.returning({ id: organizations.id, name: organizations.name });
+
+			const [entity] = await tx
+				.insert(entities)
+				.values({ organizationId: org.id, name: "Default" })
+				.returning({ id: entities.id });
+
+			const [inserted] = await tx
+				.insert(treasuries)
+				.values({
+					name,
+					tempoAddress,
+					organizationId: org.id,
+					entityId: entity.id,
+				})
+				.returning({
+					id: treasuries.id,
+					name: treasuries.name,
+					tempoAddress: treasuries.tempoAddress,
+				});
+
+			return { treasury: inserted, orgId: org.id, orgName: org.name };
+		});
+		row = result.treasury;
+		orgId = result.orgId;
+		orgName = result.orgName;
 	} catch (err: unknown) {
 		const pgCode =
 			err != null && typeof err === "object" && "code" in err
@@ -56,6 +79,8 @@ export async function createTreasuryAction(
 		treasuryId: row.id,
 		tempoAddress: row.tempoAddress as `0x${string}`,
 		treasuryName: row.name,
+		organizationId: orgId,
+		organizationName: orgName,
 	});
 
 	return { success: true, treasuryId: row.id };
@@ -78,6 +103,8 @@ export async function updateTreasuryNameAction(formData: FormData): Promise<{ er
 		treasuryId: session.treasuryId,
 		tempoAddress: session.tempoAddress,
 		treasuryName: name,
+		organizationId: session.organizationId,
+		organizationName: session.organizationName,
 	});
 
 	revalidatePath("/dashboard");

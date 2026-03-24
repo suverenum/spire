@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { treasuries } from "@/db/schema";
+import { createOrganizationForTreasury } from "@/domain/organizations/actions/organization-actions";
+import { getOrganization } from "@/domain/organizations/queries/get-organization";
 import { createSession, destroySession, getSession } from "@/lib/session";
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
@@ -25,10 +27,35 @@ export async function loginAction(
 		return { error: "No treasury found for this passkey" };
 	}
 
+	// Resolve or create organization (migration path for legacy treasuries)
+	let orgId = treasury.organizationId;
+	let orgName = treasury.name;
+
+	if (!orgId) {
+		try {
+			const { organizationId } = await createOrganizationForTreasury(treasury.id, treasury.name);
+			orgId = organizationId;
+		} catch {
+			// CAS race lost — another concurrent login already created the org.
+			// Re-read the treasury to get the winning org ID.
+			const [refreshed] = await db
+				.select({ organizationId: treasuries.organizationId })
+				.from(treasuries)
+				.where(eq(treasuries.tempoAddress, connectedAddress.toLowerCase()));
+			orgId = refreshed?.organizationId ?? null;
+			if (!orgId) return { error: "Failed to create organization" };
+		}
+	} else {
+		const org = await getOrganization(orgId);
+		if (org) orgName = org.name;
+	}
+
 	await createSession({
 		treasuryId: treasury.id,
 		tempoAddress: treasury.tempoAddress as `0x${string}`,
 		treasuryName: treasury.name,
+		organizationId: orgId,
+		organizationName: orgName,
 	});
 
 	return { tempoAddress: treasury.tempoAddress, treasuryName: treasury.name };
@@ -41,6 +68,8 @@ export async function touchSessionAction(): Promise<void> {
 		treasuryId: session.treasuryId,
 		tempoAddress: session.tempoAddress,
 		treasuryName: session.treasuryName,
+		organizationId: session.organizationId,
+		organizationName: session.organizationName,
 	});
 }
 

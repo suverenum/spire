@@ -7,7 +7,8 @@ const mockMutate = vi.fn();
 const mockUseSendPayment = vi.fn();
 const mockUseBalances = vi.fn();
 
-vi.mock("wagmi", () => ({
+vi.mock("wagmi", async (importOriginal) => ({
+	...(await importOriginal<typeof import("wagmi")>()),
 	useConfig: () => ({}),
 }));
 

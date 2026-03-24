@@ -31,7 +31,8 @@ export interface AccountRecord {
 	tokenSymbol: string;
 	tokenAddress: string;
 	walletAddress: string;
-	walletType: string; // "eoa" | "multisig"
+	walletType: string; // "eoa" | "multisig" | "guardian" | "smart-account"
+	accountCategory?: string | null; // "operating" | "payroll" | "program" | "reserve" | "agent"
 	isDefault: boolean;
 	createdAt: Date;
 }

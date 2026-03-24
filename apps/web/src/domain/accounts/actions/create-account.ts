@@ -8,6 +8,7 @@ import { ACCOUNT_TOKENS } from "@/lib/constants";
 import { getSession } from "@/lib/session";
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+const VALID_WALLET_TYPES = new Set(["eoa"]);
 
 const VALID_TOKEN_SYMBOLS = new Set<string>(ACCOUNT_TOKENS.map((t) => t.name));
 
@@ -60,12 +61,16 @@ export async function finalizeAccountCreate({
 	name,
 	tokenSymbol,
 	walletAddress,
+	walletType = "eoa",
+	privateKey,
 	isDefault = false,
 }: {
 	treasuryId: string;
 	name: string;
 	tokenSymbol: string;
 	walletAddress: string;
+	walletType?: string;
+	privateKey?: `0x${string}`;
 	isDefault?: boolean;
 }): Promise<{ error?: string; account?: { id: string } }> {
 	const session = await getSession();
@@ -85,6 +90,17 @@ export async function finalizeAccountCreate({
 
 	if (!ADDRESS_RE.test(walletAddress)) {
 		return { error: "Invalid wallet address" };
+	}
+
+	const resolvedWalletType = walletType || "eoa";
+	if (resolvedWalletType === "smart-account") {
+		return { error: "Additional cash accounts are temporarily unavailable" };
+	}
+	if (!VALID_WALLET_TYPES.has(resolvedWalletType)) {
+		return { error: "Invalid wallet type" };
+	}
+	if (privateKey) {
+		return { error: "Additional cash accounts are temporarily unavailable" };
 	}
 
 	// Prevent arbitrary isDefault: only allow when a default slot is still open for this token
@@ -110,6 +126,7 @@ export async function finalizeAccountCreate({
 				tokenSymbol,
 				tokenAddress: token.address,
 				walletAddress: walletAddress.toLowerCase(),
+				walletType: resolvedWalletType,
 				isDefault,
 			})
 			.returning({ id: accounts.id });

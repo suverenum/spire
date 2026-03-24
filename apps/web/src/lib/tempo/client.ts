@@ -22,6 +22,7 @@ export function getTempoClient(): PublicClient {
 		clientInstance = createPublicClient({
 			chain: tempoChain,
 			transport: http(TEMPO_RPC_URL),
+			batch: { multicall: true },
 		});
 	}
 	return clientInstance;

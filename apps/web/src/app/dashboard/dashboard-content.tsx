@@ -8,11 +8,7 @@ import { PlusIcon, SendIcon, TransferIcon } from "@/components/icons";
 import { SidebarLayout } from "@/components/sidebar-layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Sheet } from "@/components/ui/sheet";
 import { AccountGrid } from "@/domain/accounts/components/account-grid";
-import { AccountSelector } from "@/domain/accounts/components/account-selector";
-import { CreateAccountForm } from "@/domain/accounts/components/create-account-form";
 import { DeleteDialog } from "@/domain/accounts/components/delete-dialog";
 import { RenameDialog } from "@/domain/accounts/components/rename-dialog";
 import { useAllBalances } from "@/domain/accounts/hooks/use-all-balances";
@@ -29,6 +25,7 @@ import { ACCOUNT_TOKENS, CACHE_KEYS } from "@/lib/constants";
 import type { AccountRecord, AccountWithBalance } from "@/lib/tempo/types";
 import { formatBalance } from "@/lib/utils";
 import { DashboardRecentTransactions } from "./dashboard-recent-transactions";
+import { MoveFundsSheet } from "./move-funds-sheet";
 
 interface DashboardContentProps {
 	treasuryName: string;
@@ -47,7 +44,6 @@ export function DashboardContent({
 	const dashboardRouter = useRouter();
 	const [sendOpen, setSendOpen] = useState(false);
 	const [receiveOpen, setReceiveOpen] = useState(false);
-	const [createOpen, setCreateOpen] = useState(false);
 	const [renameAccount, setRenameAccount] = useState<AccountWithBalance | null>(null);
 	const [deleteAccount, setDeleteAccount] = useState<AccountWithBalance | null>(null);
 	const [transferOpen, setTransferOpen] = useState(false);
@@ -71,6 +67,7 @@ export function DashboardContent({
 	}));
 
 	const { accounts: accountsWithBalances, totalBalance } = useAllBalances(accounts);
+	const spendableCashAccounts = accountsWithBalances.filter((a) => a.walletType === "eoa");
 
 	const { transactions } = useAllTransactions(accounts);
 	const { isConnected } = useMultiAccountWs(accounts);
@@ -80,7 +77,7 @@ export function DashboardContent({
 	const hasAllDefaults = defaultAccountCount >= 1;
 
 	// Default to highest-balance account for send/receive; ties break by creation order
-	const sorted = [...accountsWithBalances].sort((a, b) => {
+	const sorted = [...spendableCashAccounts].sort((a, b) => {
 		const diff = b.balance - a.balance;
 		if (diff !== 0n) return diff > 0n ? 1 : -1;
 		return a.createdAt.getTime() - b.createdAt.getTime();
@@ -92,7 +89,7 @@ export function DashboardContent({
 		setSendOpen(true);
 	}
 
-	const defaultAccount = accountsWithBalances.find((a) => a.isDefault) ?? null;
+	const defaultAccount = spendableCashAccounts.find((a) => a.isDefault) ?? null;
 
 	function handleReceiveOpen() {
 		setSelectedReceiveAccount(defaultAccount);
@@ -177,7 +174,7 @@ export function DashboardContent({
 						<SendIcon className="h-5 w-5" />
 						Withdraw
 					</Button>
-					{accountsWithBalances.length > 1 && (
+					{spendableCashAccounts.length > 1 && (
 						<Button
 							onClick={() => setTransferOpen(true)}
 							variant="outline"
@@ -201,7 +198,7 @@ export function DashboardContent({
 						</Link>
 					</div>
 					<AccountGrid
-						accounts={accountsWithBalances.filter((a) => a.walletType === "eoa")}
+						accounts={spendableCashAccounts}
 						maxItems={4}
 						showViewAll
 						onRename={setRenameAccount}
@@ -249,11 +246,6 @@ export function DashboardContent({
 						if (acct) setSelectedReceiveAccount(acct);
 					}}
 				/>
-				<CreateAccountForm
-					open={createOpen}
-					onClose={() => setCreateOpen(false)}
-					treasuryId={treasuryId}
-				/>
 				<RenameDialog
 					open={!!renameAccount}
 					onClose={() => setRenameAccount(null)}
@@ -285,7 +277,7 @@ export function DashboardContent({
 						}
 					}}
 				/>
-				<Sheet
+				<MoveFundsSheet
 					open={transferOpen}
 					onClose={() => {
 						setTransferOpen(false);
@@ -294,55 +286,21 @@ export function DashboardContent({
 						setTransferAmount("");
 						setTransferError("");
 					}}
-					title="Move Funds"
-				>
-					<div className="space-y-4">
-						<AccountSelector
-							accounts={accountsWithBalances}
-							selectedAccountId={transferFromId}
-							onSelect={(id) => {
-								setTransferFromId(id);
-								if (id === transferToId) setTransferToId("");
-							}}
-							label="From"
-						/>
-						{transferFromAccount && (
-							<p className="text-muted-foreground text-xs">
-								Available: {formatBalance(transferFromAccount.balance, 6)}{" "}
-								{transferFromAccount.tokenSymbol}
-							</p>
-						)}
-						<AccountSelector
-							accounts={accountsWithBalances}
-							selectedAccountId={transferToId}
-							onSelect={setTransferToId}
-							label="To"
-							excludeAccountId={transferFromId}
-						/>
-						<div>
-							<label htmlFor="transfer-amount" className="mb-1 block text-sm font-medium">
-								Amount
-							</label>
-							<Input
-								id="transfer-amount"
-								type="text"
-								inputMode="decimal"
-								placeholder="0.00"
-								value={transferAmount}
-								onChange={(e) => setTransferAmount(e.target.value)}
-							/>
-						</div>
-						{transferError && <p className="text-sm text-red-600">{transferError}</p>}
-						<Button
-							onClick={handleTransfer}
-							disabled={transferMutation.isPending}
-							className="w-full"
-							size="lg"
-						>
-							{transferMutation.isPending ? "Moving..." : "Move"}
-						</Button>
-					</div>
-				</Sheet>
+					accounts={spendableCashAccounts}
+					fromId={transferFromId}
+					onFromSelect={(id) => {
+						setTransferFromId(id);
+						if (id === transferToId) setTransferToId("");
+					}}
+					toId={transferToId}
+					onToSelect={setTransferToId}
+					fromAccount={transferFromAccount}
+					amount={transferAmount}
+					onAmountChange={setTransferAmount}
+					error={transferError}
+					onSubmit={handleTransfer}
+					isPending={transferMutation.isPending}
+				/>
 			</SidebarLayout>
 		</SessionGuard>
 	);

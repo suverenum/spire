@@ -12,12 +12,48 @@ import {
 	uuid,
 } from "drizzle-orm/pg-core";
 
-export const treasuries = pgTable("treasuries", {
+// ─── Organization & Entity Tables ────────────────────────────────────
+
+export const organizations = pgTable("organizations", {
 	id: uuid("id").defaultRandom().primaryKey(),
 	name: text("name").notNull(),
-	tempoAddress: text("tempo_address").notNull().unique(),
+	domain: text("domain"),
+	settings: jsonb("settings").$type<Record<string, unknown>>().default({}),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const entities = pgTable(
+	"entities",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		organizationId: uuid("organization_id")
+			.references(() => organizations.id)
+			.notNull(),
+		name: text("name").notNull(),
+		jurisdiction: text("jurisdiction"),
+		entityType: text("entity_type"), // "subsidiary" | "branch" | "holding"
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [index("entities_organization_id_idx").on(table.organizationId)],
+);
+
+// ─── Treasury & Account Tables ───────────────────────────────────────
+
+export const treasuries = pgTable(
+	"treasuries",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		name: text("name").notNull(),
+		tempoAddress: text("tempo_address").notNull().unique(),
+		organizationId: uuid("organization_id").references(() => organizations.id),
+		entityId: uuid("entity_id").references(() => entities.id),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("treasuries_organization_id_idx").on(table.organizationId),
+		index("treasuries_entity_id_idx").on(table.entityId),
+	],
+);
 
 export const accounts = pgTable(
 	"accounts",
@@ -30,7 +66,9 @@ export const accounts = pgTable(
 		tokenSymbol: text("token_symbol").notNull(),
 		tokenAddress: text("token_address").notNull(),
 		walletAddress: text("wallet_address").notNull(),
-		walletType: text("wallet_type").notNull().default("eoa"), // "eoa" | "multisig" | "guardian"
+		walletType: text("wallet_type").notNull().default("eoa"), // "eoa" | "multisig" | "guardian" | "smart-account"
+		accountCategory: text("account_category"), // "operating" | "payroll" | "program" | "reserve" | "agent"
+		encryptedKey: text("encrypted_key"), // AES-256-GCM encrypted private key for smart-account type
 		isDefault: boolean("is_default").default(false).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
@@ -60,6 +98,7 @@ export const agentWallets = pgTable("agent_wallets", {
 	maxPerTx: bigint("max_per_tx", { mode: "bigint" }).notNull(),
 	allowedVendors: jsonb("allowed_vendors").notNull().$type<string[]>(),
 	status: text("status").notNull().default("active"), // "active" | "revoked"
+	keyExportedAt: timestamp("key_exported_at"), // null = never exported, set on first export
 	deployedAt: timestamp("deployed_at").defaultNow().notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });

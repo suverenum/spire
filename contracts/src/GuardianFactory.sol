@@ -5,7 +5,13 @@ import {SimpleGuardian} from "./SimpleGuardian.sol";
 
 /// @title GuardianFactory
 /// @notice Deploys SimpleGuardian instances via CREATE2 for deterministic addresses.
+///         Salt is combined with msg.sender to prevent front-running (EIP-1014).
 contract GuardianFactory {
+    error ZeroAddress();
+    error AllowlistTooLarge(uint256 max);
+
+    uint256 public constant MAX_ALLOWLIST = 64;
+
     event GuardianCreated(
         address indexed guardian,
         address indexed owner,
@@ -24,6 +30,7 @@ contract GuardianFactory {
         address[] calldata recipients,
         address[] calldata tokens
     ) external returns (address guardian) {
+        _validateDeploymentInputs(agent, recipients, tokens);
         bytes32 effectiveSalt = _effectiveSalt(msg.sender, salt);
         guardian = address(
             new SimpleGuardian{salt: effectiveSalt}(
@@ -33,6 +40,9 @@ contract GuardianFactory {
         emit GuardianCreated(guardian, msg.sender, agent, maxPerTx, dailyLimit, spendingCap);
     }
 
+    /// @notice Compute the deterministic CREATE2 address for a Guardian before deployment.
+    /// @dev Uses EIP-1014 formula: keccak256(0xff ++ factory ++ salt ++ keccak256(initCode)).
+    ///      Salt is derived from deployer + user-salt to prevent front-running.
     function getGuardianAddress(
         address deployer,
         address agent,
@@ -43,6 +53,7 @@ contract GuardianFactory {
         address[] calldata recipients,
         address[] calldata tokens
     ) external view returns (address) {
+        _validateDeploymentInputs(agent, recipients, tokens);
         bytes32 effectiveSalt = _effectiveSalt(deployer, salt);
         bytes32 initCodeHash = keccak256(
             abi.encodePacked(
@@ -57,5 +68,21 @@ contract GuardianFactory {
 
     function _effectiveSalt(address deployer, bytes32 salt) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(deployer, salt));
+    }
+
+    function _validateDeploymentInputs(address agent, address[] calldata recipients, address[] calldata tokens)
+        internal
+        pure
+    {
+        if (agent == address(0)) revert ZeroAddress();
+        if (recipients.length > MAX_ALLOWLIST || tokens.length > MAX_ALLOWLIST) {
+            revert AllowlistTooLarge(MAX_ALLOWLIST);
+        }
+        for (uint256 i = 0; i < recipients.length; i++) {
+            if (recipients[i] == address(0)) revert ZeroAddress();
+        }
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (tokens[i] == address(0)) revert ZeroAddress();
+        }
     }
 }

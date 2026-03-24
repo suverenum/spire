@@ -16,18 +16,20 @@ import { Mppx as Mppx_client, tempo as tempo_client } from "./src/client/index.j
 import { Credential } from "./src/index.js";
 import { Mppx as Mppx_server, tempo as tempo_server } from "./src/server/index.js";
 
+import { requireAddress, requireHexKey } from "./env";
+
 // ─── CONFIG ───────────────────────────────────────────────────────
-const AGENT_KEY = "0x4d36f122c42947023c04e3b0cb1c6bfbed7b2f47064d2ad15382b293f62e72c7";
-const GUARDIAN = "0xa8b929d2f30bdf78e22cfc794c38d85041ed4dde";
+const AGENT_KEY = requireHexKey("AGENT_KEY");
+const GUARDIAN = requireAddress("GUARDIAN_ADDRESS");
 const RPC = "https://rpc.moderato.tempo.xyz";
 const EXPLORER = "https://explore.moderato.tempo.xyz";
-const PATHUSD = "0x20c0000000000000000000000000000000000000";
-const ALPHAUSD = "0x20c0000000000000000000000000000000000000"; // Using pathUSD (allowed in Guardian)
+const PATHUSD = requireAddress("TOKEN_ADDRESS");
+const ALPHAUSD = PATHUSD; // Using same token (allowed in Guardian)
 
-// Allowed vendor (OpenAI placeholder)
-const ALLOWED_VENDOR = "0x0000000000000000000000000000000000000001";
-// NOT allowed vendor
-const BLOCKED_VENDOR = "0x000000000000000000000000000000000000dead";
+// Allowed vendor
+const ALLOWED_VENDOR = requireAddress("VENDOR_ADDRESS");
+// NOT allowed vendor (hardcoded dead address for testing — not a secret)
+const BLOCKED_VENDOR = "0x000000000000000000000000000000000000dead" as `0x${string}`;
 
 const GREEN = "\x1b[32m";
 const RED = "\x1b[31m";
@@ -309,7 +311,9 @@ async function main() {
 	// ─── Test 6: Non-agent caller ─────────────────────────────────
 	step(6, "Edge case — non-agent tries to call pay()");
 
-	const randomKey = "0x0000000000000000000000000000000000000000000000000000000000000099";
+	// Generate a random key for testing unauthorized access — NOT a real secret
+	const { generatePrivateKey } = await import("viem/accounts");
+	const randomKey = generatePrivateKey();
 	const randomAccount = privateKeyToAccount(randomKey);
 	const randomWallet = createWalletClient({
 		account: randomAccount,

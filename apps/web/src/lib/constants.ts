@@ -41,7 +41,8 @@ export const KEYCHAIN_ADDRESS = "0xAAAAAAAA00000000000000000000000000000000" as 
 
 // ─── App constants (not environment-dependent) ──────────────────────
 export const SESSION_MAX_AGE_MS = 15 * 60 * 1000; // 15 minutes
-export const SESSION_COOKIE_NAME = "goldhord-session";
+export const SESSION_COOKIE_NAME =
+	process.env.NODE_ENV === "production" ? "__Host-goldhord-session" : "goldhord-session";
 
 export const CACHE_KEYS = {
 	balances: (address: string) => ["balances", address] as const,

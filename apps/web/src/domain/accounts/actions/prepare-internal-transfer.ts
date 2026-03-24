@@ -3,14 +3,17 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts } from "@/db/schema";
+import { SUPPORTED_TOKENS } from "@/lib/constants";
 import { getSession } from "@/lib/session";
 
 export async function prepareInternalTransfer({
 	fromAccountId,
 	toAccountId,
+	tokenSymbol,
 }: {
 	fromAccountId: string;
 	toAccountId: string;
+	tokenSymbol?: string;
 }): Promise<{
 	error?: string;
 	fromAccount?: {
@@ -43,21 +46,40 @@ export async function prepareInternalTransfer({
 	if (!fromAccount || !toAccount) {
 		return { error: "One or both accounts not found" };
 	}
+	if (fromAccount.walletType === "smart-account" || toAccount.walletType === "smart-account") {
+		return { error: "Smart accounts are temporarily unavailable for internal transfers" };
+	}
 
-	if (fromAccount.tokenSymbol !== toAccount.tokenSymbol) {
-		return { error: "Accounts must hold the same token for internal transfer" };
+	// When explicit tokenSymbol is provided, resolve from SUPPORTED_TOKENS (multi-asset transfer).
+	// When omitted, fall back to fromAccount's primary token but enforce same-token guard
+	// to prevent silently transferring the wrong asset to a different-token account.
+	let resolvedSymbol: string;
+	let resolvedAddress: string;
+	if (tokenSymbol) {
+		const token = SUPPORTED_TOKENS[tokenSymbol];
+		if (!token) {
+			return { error: `Unsupported token: ${tokenSymbol}` };
+		}
+		resolvedSymbol = tokenSymbol;
+		resolvedAddress = token.address;
+	} else {
+		if (fromAccount.tokenSymbol !== toAccount.tokenSymbol) {
+			return { error: "Accounts hold different tokens — specify tokenSymbol to transfer" };
+		}
+		resolvedSymbol = fromAccount.tokenSymbol;
+		resolvedAddress = fromAccount.tokenAddress;
 	}
 
 	return {
 		fromAccount: {
 			walletAddress: fromAccount.walletAddress,
-			tokenAddress: fromAccount.tokenAddress,
-			tokenSymbol: fromAccount.tokenSymbol,
+			tokenAddress: resolvedAddress,
+			tokenSymbol: resolvedSymbol,
 		},
 		toAccount: {
 			walletAddress: toAccount.walletAddress,
-			tokenAddress: toAccount.tokenAddress,
-			tokenSymbol: toAccount.tokenSymbol,
+			tokenAddress: resolvedAddress,
+			tokenSymbol: resolvedSymbol,
 		},
 	};
 }

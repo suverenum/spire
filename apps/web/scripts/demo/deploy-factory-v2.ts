@@ -1,10 +1,13 @@
 import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { tempoModerato } from "viem/chains";
 import { withFeePayer } from "viem/tempo";
+import { requireHexKey } from "./env";
 
-const DEPLOYER_KEY = "0xe2b52d60ad2a7a53019f5f5a242999d74770c23b2bdf61bf971881c1cf3f8807";
+const DEPLOYER_KEY = requireHexKey("DEPLOYER_KEY");
 const RPC = "https://rpc.moderato.tempo.xyz";
 const SPONSOR = "https://sponsor.moderato.tempo.xyz";
 
@@ -15,8 +18,9 @@ const wallet = createWalletClient({ account: deployer, chain: tempoModerato, tra
 
 console.log(`Deployer: ${deployer.address}`);
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const artifact = JSON.parse(
-	readFileSync("/root/work/spire/contracts/out/GuardianFactory.sol/GuardianFactory.json", "utf-8"),
+	readFileSync(resolve(__dirname, "../../../../contracts/out/GuardianFactory.sol/GuardianFactory.json"), "utf-8"),
 );
 
 // Skip gas estimation by providing gas directly
