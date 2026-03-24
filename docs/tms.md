@@ -2,7 +2,7 @@
 
 What TMS platforms actually do, how they work, why they're painful to adopt, and what this means for on-chain treasury.
 
-*Part 3 of a 4-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 3 of a 5-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -263,8 +263,9 @@ The positioning is not "replace your banks" but rather: **a global digital treas
 
 ---
 
-*This is Part 3 of a 4-part series:*
+*This is Part 3 of a 5-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **Treasury Management Systems** — What TMS platforms do and why they're hard to adopt *(this document)*
-4. **Crypto Treasury** — How stablecoins and on-chain infrastructure change the game for enterprise finance
+4. **[ERP](./erp.md)** — What Enterprise Resource Planning systems are and why they matter
+5. **Crypto-Native Banking** — How crypto companies organize their financial operations
