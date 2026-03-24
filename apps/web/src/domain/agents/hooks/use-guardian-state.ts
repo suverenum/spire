@@ -11,7 +11,7 @@ const GuardianReadAbi = parseAbi([
 	"function maxPerTx() external view returns (uint256)",
 	"function lastResetDay() external view returns (uint256)",
 	"function proposalCount() external view returns (uint256)",
-	"function proposals(uint256) external view returns (address token, address to, uint256 amount, uint8 status, uint256 createdAt)",
+	"function proposals(uint256) external view returns (address token, address to, uint256 amount, uint8 status, uint256 createdAt, uint256 reservedDay)",
 ]);
 
 const Tip20ReadAbi = parseAbi(["function balanceOf(address) external view returns (uint256)"]);

@@ -70,6 +70,7 @@ export const GuardianOwnerAbi = [
 			{ name: "amount", type: "uint256" },
 			{ name: "status", type: "uint8" },
 			{ name: "createdAt", type: "uint256" },
+			{ name: "reservedDay", type: "uint256" },
 		],
 		stateMutability: "view",
 	},
