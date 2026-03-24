@@ -293,9 +293,10 @@ ERP / Treasury                              ┌───────────
 
 ---
 
-*This is Part 1 of a 5-part series:*
+*This is Part 1 of a 6-part series:*
 1. **Business Banking 101** — Overview of banking services by company stage *(this document)*
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
 4. **[ERP](./erp.md)** — What Enterprise Resource Planning systems are and why they matter
 5. **[Crypto-Native Banking](./crypto-native-banking.md)** — How crypto companies organize their financial operations
+6. **[Payment Corridors](./payment-corridors.md)** — What multi-entity corporations need and which corridors matter
