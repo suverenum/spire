@@ -7,13 +7,67 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+const mockTxInsertReturning = vi.fn();
+const mockTxInsertValues = vi.fn().mockReturnValue({ returning: mockTxInsertReturning });
+const mockTxInsert = vi.fn().mockReturnValue({ values: mockTxInsertValues });
+const mockTxUpdateReturning = vi.fn();
+const mockTxUpdateWhere = vi.fn().mockReturnValue({ returning: mockTxUpdateReturning });
+const mockTxUpdateSet = vi.fn().mockReturnValue({ where: mockTxUpdateWhere });
+const mockTxUpdate = vi.fn().mockReturnValue({ set: mockTxUpdateSet });
+const mockDbUpdateWhere = vi.fn();
+const mockDbUpdateSet = vi.fn().mockReturnValue({ where: mockDbUpdateWhere });
+const mockDbUpdate = vi.fn().mockReturnValue({ set: mockDbUpdateSet });
+const mockTransaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
+	const tx = {
+		insert: (...args: unknown[]) => mockTxInsert(...args),
+		update: (...args: unknown[]) => mockTxUpdate(...args),
+	};
+	return fn(tx);
+});
+
+vi.mock("@/db", () => ({
+	db: {
+		transaction: mockTransaction,
+		update: mockDbUpdate,
+	},
+}));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BACKFILL_PATH = resolve(__dirname, "backfill-organizations.ts");
 
 describe("backfill-organizations migration", () => {
 	let source: string;
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockTxInsertValues.mockReturnValue({ returning: mockTxInsertReturning });
+		mockTxInsert.mockReturnValue({ values: mockTxInsertValues });
+		mockTxUpdateWhere.mockReturnValue({ returning: mockTxUpdateReturning });
+		mockTxUpdateSet.mockReturnValue({ where: mockTxUpdateWhere });
+		mockTxUpdate.mockReturnValue({ set: mockTxUpdateSet });
+		mockDbUpdateSet.mockReturnValue({ where: mockDbUpdateWhere });
+		mockDbUpdate.mockReturnValue({ set: mockDbUpdateSet });
+	});
+
+	test("treats CAS-lost treasuries as already migrated and still backfills guardian categories", async () => {
+		mockTxInsertReturning
+			.mockResolvedValueOnce([{ id: "org-1" }])
+			.mockResolvedValueOnce([{ id: "entity-1" }]);
+		mockTxUpdateReturning.mockResolvedValueOnce([]);
+		mockDbUpdateWhere.mockResolvedValueOnce(undefined);
+
+		const { migrateTreasury } = await import("./backfill-organizations");
+		const result = await migrateTreasury({ id: "treasury-1", name: "Treasury" });
+
+		expect(result).toBe("already-linked");
+		expect(mockTransaction).toHaveBeenCalledTimes(1);
+		expect(mockTxInsert).toHaveBeenCalledTimes(2);
+		expect(mockTxUpdate).toHaveBeenCalledTimes(1);
+		expect(mockDbUpdate).toHaveBeenCalledTimes(1);
+		expect(mockDbUpdateWhere).toHaveBeenCalledTimes(1);
+	});
 
 	test("script is idempotent: only queries treasuries with NULL organizationId", async () => {
 		source = await readFile(BACKFILL_PATH, "utf-8");
@@ -24,7 +78,7 @@ describe("backfill-organizations migration", () => {
 		source = source || (await readFile(BACKFILL_PATH, "utf-8"));
 		// Must use and() to combine walletType and treasuryId conditions
 		expect(source).toContain("and(eq(accounts.walletType");
-		expect(source).toContain("eq(accounts.treasuryId, treasury.id)");
+		expect(source).toContain("eq(accounts.treasuryId, treasuryId)");
 	});
 
 	test("individual treasury failure does not stop migration (try/catch in loop)", async () => {
@@ -54,6 +108,7 @@ describe("backfill-organizations migration", () => {
 		expect(source).toContain("isNull(treasuries.organizationId)");
 		// Must check affected row count
 		expect(source).toContain("updated.length === 0");
+		expect(source).toContain('return "already-linked" as const');
 	});
 
 	test("creates org before entity (entity depends on orgId)", async () => {
@@ -79,6 +134,6 @@ describe("backfill-organizations migration", () => {
 		source = source || (await readFile(BACKFILL_PATH, "utf-8"));
 		expect(source).toContain("migrated++");
 		expect(source).toContain("failed++");
-		expect(source).toContain("${migrated} migrated");
+		expect(source).toContain(`\${migrated} migrated`);
 	});
 });
