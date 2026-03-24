@@ -268,4 +268,4 @@ The positioning is not "replace your banks" but rather: **a global digital treas
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **Treasury Management Systems** — What TMS platforms do and why they're hard to adopt *(this document)*
 4. **[ERP](./erp.md)** — What Enterprise Resource Planning systems are and why they matter
-5. **Crypto-Native Banking** — How crypto companies organize their financial operations
+5. **[Crypto-Native Banking](./crypto-native-banking.md)** — How crypto companies organize their financial operations
