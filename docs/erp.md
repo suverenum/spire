@@ -2,7 +2,7 @@
 
 What ERP systems are, why companies adopt them, and what this means for building on-chain treasury products.
 
-*Part 4 of an 11-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 4 of a 12-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -176,7 +176,7 @@ The on-chain treasury opportunity is at the **payment rail and account layer** �
 
 ---
 
-*This is Part 4 of an 11-part series:*
+*This is Part 4 of a 12-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
@@ -188,3 +188,4 @@ The on-chain treasury opportunity is at the **payment rail and account layer** �
 9. **[MPC 101](./mpc.md)** — Multi-Party Computation, threshold signatures, and custody architecture
 10. **[Security Architecture](./cosigner-security-models.md)** — Defense-in-depth security for a blockchain treasury app
 11. **[Custody Models](./custody.md)** — Custodial vs. self-custodial, regulatory implications, and the path to licensed custodian
+12. **[Cross-Border Compliance](./compliance.md)** — Regulatory requirements, who bears the burden, and what tooling to build

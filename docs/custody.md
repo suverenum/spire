@@ -2,7 +2,7 @@
 
 Custodial vs. self-custodial — who holds the keys, what it means for regulation, insurance, and product strategy, and why the answer for mid-market companies is "start self-custodial, become a custodian."
 
-*Part 11 of an 11-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 11 of a 12-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -241,7 +241,7 @@ The companies that will use on-chain treasury first are exploring cautiously. Th
 
 ---
 
-*This is Part 11 of an 11-part series:*
+*This is Part 11 of a 12-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
@@ -253,3 +253,4 @@ The companies that will use on-chain treasury first are exploring cautiously. Th
 9. **[MPC 101](./mpc.md)** — Multi-Party Computation, threshold signatures, and custody architecture
 10. **[Security Architecture](./cosigner-security-models.md)** — Defense-in-depth security for a blockchain treasury app
 11. **Custody Models** — Custodial vs. self-custodial, regulatory implications, and the path from self-custody to licensed custodian *(this document)*
+12. **[Cross-Border Compliance](./compliance.md)** — Regulatory requirements, who bears the burden, and what tooling to build

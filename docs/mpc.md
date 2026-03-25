@@ -3,7 +3,7 @@
 **Multi-Party Computation · Threshold Signatures · Institutional Custody**
 **MPC vs Multisig · Fireblocks Architecture · Provider Landscape**
 
-*Part 9 of an 11-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 9 of a 12-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -277,7 +277,7 @@ The choice between MPC, multisig, hardware wallets, and HSM-based solutions is a
 
 ---
 
-*This is Part 9 of an 11-part series:*
+*This is Part 9 of a 12-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
@@ -289,3 +289,4 @@ The choice between MPC, multisig, hardware wallets, and HSM-based solutions is a
 9. **MPC 101** — Multi-Party Computation, threshold signatures, and custody architecture *(this document)*
 10. **[Security Architecture](./cosigner-security-models.md)** — Defense-in-depth security for a blockchain treasury app
 11. **[Custody Models](./custody.md)** — Custodial vs. self-custodial, regulatory implications, and the path to licensed custodian
+12. **[Cross-Border Compliance](./compliance.md)** — Regulatory requirements, who bears the burden, and what tooling to build

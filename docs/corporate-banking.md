@@ -2,7 +2,7 @@
 
 How large corporations manage their finances — team structures, tooling, and pain points at scale.
 
-*Part 2 of an 11-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 2 of a 12-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -286,7 +286,7 @@ A solution that provides a **unified, real-time, programmable financial layer** 
 
 ---
 
-*This is Part 2 of an 11-part series:*
+*This is Part 2 of a 12-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **Corporate Banking** — How large corporations manage finances at scale *(this document)*
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
@@ -298,3 +298,4 @@ A solution that provides a **unified, real-time, programmable financial layer** 
 9. **[MPC 101](./mpc.md)** — Multi-Party Computation, threshold signatures, and custody architecture
 10. **[Security Architecture](./cosigner-security-models.md)** — Defense-in-depth security for a blockchain treasury app
 11. **[Custody Models](./custody.md)** — Custodial vs. self-custodial, regulatory implications, and the path to licensed custodian
+12. **[Cross-Border Compliance](./compliance.md)** — Regulatory requirements, who bears the burden, and what tooling to build
