@@ -4,6 +4,8 @@
 
 The sections below cover each security layer with practical implementation patterns, real-world precedents, and concrete architecture decisions.
 
+*Part 10 of an 11-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+
 ---
 
 ## 1. The MPC co-signer acts as an invisible, un-bypassable fraud guardian
@@ -164,3 +166,18 @@ The most practical architecture layers MPC co-signing on top of the existing pro
 The security model described here creates **five independent barriers** an attacker must overcome: biometric-gated passkey authentication, hardware wallet confirmation for elevated operations, an MPC guardian policy engine evaluating every transaction against neobank-grade fraud signals, smart-contract-enforced spending limits and timelocks, and a social recovery system with guardian-based key rotation. No single layer's failure compromises the treasury.
 
 The key architectural insight is that **MPC co-signing and smart contract policies are complementary, not competing**. MPC provides invisible, gas-free, cross-chain fraud prevention at the signing layer. Smart contract modules provide tamper-proof, transparent, on-chain guardrails that persist even if the off-chain systems are compromised. The off-chain staging pattern for payment delays, per-counterparty deposit addresses for privacy, and layered spam filtering complete the defensive perimeter. This hybrid approach — borrowing Revolut's ML fraud scoring, Fireblocks' policy architecture, Argent's guardian recovery, and Safe's modular enforcement — represents the current state of the art for blockchain treasury security.
+
+---
+
+*This is Part 10 of an 11-part series:*
+1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
+2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
+3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
+4. **[ERP](./erp.md)** — What Enterprise Resource Planning systems are and why they matter
+5. **[Crypto-Native Banking](./crypto-native-banking.md)** — How crypto companies organize their financial operations
+6. **[Payment Corridors](./payment-corridors.md)** — What multi-entity corporations need and which corridors matter
+7. **[Specialist Segments](./specialist-segments.md)** — Why importers/exporters, emerging-market businesses, and crypto companies are weaker targets
+8. **[Product Strategy](./product-strategy.md)** — What to build, for whom, and why
+9. **[MPC 101](./mpc.md)** — Multi-Party Computation, threshold signatures, and custody architecture
+10. **Security Architecture** — Defense-in-depth security for a blockchain treasury app *(this document)*
+11. **[Custody Models](./custody.md)** — Custodial vs. self-custodial, regulatory implications, and the path to licensed custodian

@@ -2,7 +2,7 @@
 
 How crypto companies organize their finances — what's unique, what's the same as any other business, and what the pain points are.
 
-*Part 5 of a 9-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 5 of an 11-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -184,7 +184,7 @@ While crypto companies are a small market, their experience highlights patterns 
 
 ---
 
-*This is Part 5 of a 9-part series:*
+*This is Part 5 of an 11-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
@@ -194,3 +194,5 @@ While crypto companies are a small market, their experience highlights patterns 
 7. **[Specialist Segments](./specialist-segments.md)** — Why importers/exporters, emerging-market businesses, and crypto companies are weaker targets
 8. **[Product Strategy](./product-strategy.md)** — What to build, for whom, and why
 9. **[MPC 101](./mpc.md)** — Multi-Party Computation, threshold signatures, and custody architecture
+10. **[Security Architecture](./cosigner-security-models.md)** — Defense-in-depth security for a blockchain treasury app
+11. **[Custody Models](./custody.md)** — Custodial vs. self-custodial, regulatory implications, and the path to licensed custodian
