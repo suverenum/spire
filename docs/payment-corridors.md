@@ -2,7 +2,7 @@
 
 What multi-entity multinational corporations need from on-chain treasury — corridors, on/off-ramp, netting, and the MVP feature set.
 
-*Part 6 of a 6-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 6 of a 7-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -264,10 +264,11 @@ Summarizing what's needed to serve a multi-entity corporation:
 
 ---
 
-*This is Part 6 of a 6-part series:*
+*This is Part 6 of a 7-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
 4. **[ERP](./erp.md)** — What Enterprise Resource Planning systems are and why they matter
 5. **[Crypto-Native Banking](./crypto-native-banking.md)** — How crypto companies organize their financial operations
 6. **Payment Corridors** — What multi-entity corporations need and which corridors matter *(this document)*
+7. **[Specialist Segments](./specialist-segments.md)** — Why importers/exporters, emerging-market businesses, and crypto companies are weaker targets
