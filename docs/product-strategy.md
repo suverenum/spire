@@ -2,7 +2,7 @@
 
 So what? After analyzing every segment, here's what to build, for whom, and why — with a competitive landscape map and open research questions.
 
-*Part 8 of an 8-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
+*Part 8 of a 9-part series. See [Business Banking 101](./business-banking-101.md) for the full lifecycle overview.*
 
 ---
 
@@ -337,7 +337,7 @@ Six areas were investigated. Key findings and remaining unknowns:
 
 ---
 
-*This is Part 8 of an 8-part series:*
+*This is Part 8 of a 9-part series:*
 1. **[Business Banking 101](./business-banking-101.md)** — Overview of banking services by company stage
 2. **[Corporate Banking](./corporate-banking.md)** — How large corporations manage finances at scale
 3. **[Treasury Management Systems](./tms.md)** — What TMS platforms do and why they're hard to adopt
@@ -346,3 +346,4 @@ Six areas were investigated. Key findings and remaining unknowns:
 6. **[Payment Corridors](./payment-corridors.md)** — What multi-entity corporations need and which corridors matter
 7. **[Specialist Segments](./specialist-segments.md)** — Why importers/exporters, emerging-market businesses, and crypto companies are weaker targets
 8. **Product Strategy** — What to build, for whom, and why *(this document)*
+9. **[MPC 101](./mpc.md)** — Multi-Party Computation, threshold signatures, and custody architecture
