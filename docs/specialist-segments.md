@@ -25,7 +25,7 @@ Previous lectures established that the strongest segment for on-chain treasury i
 Importers and exporters deal with the same broken payment corridors discussed in [Part 6](./payment-corridors.md) — Europe/US to Latin America, Africa, Asia. The problems are real:
 
 - **SWIFT is slow** — Cross-border payments through correspondent banking take days
-- **Costs are high** — Not just the wire fee itself, but the FX markup. Total cost through SWIFT to emerging markets can reach up to 50% when markups are included (stablecoins: 1–3%), though this needs verification per corridor
+- **Costs are high** — Not just the wire fee itself, but the FX markup. World Bank data (Q1 2025) puts the global average cost of sending $200 through banks at 14.55%, with Sub-Saharan Africa averaging 8.4%. Typical bank-to-bank costs to emerging markets run 6–15% for small transactions, dropping to 2–7% for larger B2B amounts. Enterprise stablecoin users with direct mint-and-burn relationships achieve 0.5–3% all-in, though SMBs going through exchanges face 2–5% when including on/off-ramp fees and FX conversion
 - **Access is limited** — In some countries, businesses have difficulty converting local currency to USD due to capital controls and banking restrictions
 
 ### What they actually need
@@ -56,7 +56,7 @@ First World (sender)              Third World (receiver)
 └─────────────────────┘           └─────────────────────┘
 ```
 
-**First-world side (senders/importers):** This would be a **secondary bank** for them. They already have Revolut Business, Mercury, traditional banks. They don't have a burning problem — their banks work, just not optimally for certain corridors. Low urgency.
+**First-world side (senders/importers):** This would be a **secondary bank** for them. They already have deep, established alternatives — Wise Business (697K business customers, $185B+ cross-border volume in FY2025), Airwallex ($800M–$1B ARR, $130B+ annualized TPV), Payoneer (5M+ users, 190+ countries), plus specialized players like Convera, Corpay, Ebury, iBanFirst, and Banking Circle. They don't have a burning problem — their banks and fintechs work, just not optimally for certain corridors. Low urgency.
 
 **Third-world side (receivers/exporters):** Higher urgency because they often lack dollar access entirely. But serving them means:
 - Building in local languages
@@ -66,9 +66,9 @@ First World (sender)              Third World (receiver)
 
 ### Why this segment is weak
 
-**From the European/US side:** Not a burning problem. Competitors like Revolut Business can add stablecoin payment support relatively easily. Once EU banks support stablecoin transfers (which is technically trivial for them), this advantage evaporates. **Not defensible.**
+**From the European/US side:** Not a burning problem. The cross-border B2B payments space is deep and well-established — Wise, Airwallex, Payoneer, Convera, Corpay, Revolut Business (767K business customers, $5.2B total revenue in 2025) all serve this market today. EU banks will eventually add stablecoin support, though this is a multi-year infrastructure challenge — not trivial. Société Générale-Forge took 3+ years from initial licensing to MiCA-compliant stablecoin operations. A nine-bank consortium (ING, UniCredit, CaixaBank, Danske Bank) announced in September 2025 expects launch no earlier than H2 2026. Only 17 authorized EMT issuers exist across 10 EU countries with just 25 approved stablecoins total. So the window is longer than "any day now" — but the competitive moat is still thin because the incumbent cross-border payment players are strong. **Not defensible long-term.**
 
-**From the emerging-market side:** The need is real, but the market is already crowded with stablecoin banking solutions. You'd be runner #11 entering a race that's been going for 2–3 years. Each country is a small market requiring localization. **Painful to enter, hard to scale.**
+**From the emerging-market side:** The need is real, but the infrastructure layer is crowded. In LATAM alone, 15+ companies compete for enterprise B2B stablecoin clients — Conduit ($10B annualized volume), Bitso ($6.5B in US-Mexico crypto remittances in 2024), Mural, Bridge/Stripe, and others. In Africa: Yellow Card, Chipper Cash (5M+ customers), AZA Finance, Flutterwave. That said, the market is not truly "saturated" — 63% of Africa's population remains unbanked, and B2B stablecoin payments represent less than 0.5% of global B2B flows. But the space is volatile: Buenbit cut 45% of staff, Lemon Cash cut 38%, Bitso laid off ~100 employees. Each country remains a small market requiring localization. **Crowded infrastructure, painful to enter.**
 
 ---
 
@@ -84,45 +84,48 @@ In countries with weak, volatile local currencies, businesses want:
 
 ### Why it looks like an opportunity
 
-There's genuine demand. In countries like Argentina, Nigeria, Turkey, and others, holding stablecoins is sometimes the only practical way to preserve purchasing power. Local businesses would pay for reliable dollar access.
+There's genuine demand. In Argentina, over 60% of crypto users regularly convert pesos to stablecoins for dollar savings. In Venezuela, residents colloquially call stablecoin holdings "Binance dollars." A 2024 Visa survey found 47% of crypto users in emerging markets cited saving in USD as a primary motivation. Sub-Saharan Africa processed ~$54 billion in stablecoin transactions in 2024, nearly 50% of all regional crypto activity. LATAM crypto adoption grew 63% between mid-2024 and mid-2025.
 
 ### Why it's a trap
 
-This segment requires building a **full-stack bank**, not a treasury product:
+This segment pulls you toward building **full business banking**, not a treasury product. The dominant multi-country model is licensing + partnerships (not building a bank per country — dLocal serves 40+ countries through a single API using 30+ country-specific payment licenses), but even this lighter approach is complex:
 
-| What they need | Why it's painful to build |
+| What they need | Why it's painful |
 |---------------|--------------------------|
-| Dollar accounts | Regulatory complexity per country |
-| Cards | Partnership, licensing, compliance |
-| Full banking suite | Invoicing, payroll, expense management |
+| Dollar accounts | Each country requires separate regulatory compliance — Brazil mandates local incorporation (R$2–7M capital), Nigeria requires CBN licensing (₦2B capital for payment service banks) |
+| Cards | Partnership, licensing, compliance per jurisdiction |
+| Full banking suite | Invoicing, payroll, expense management — the demands expand fast |
 | Local language support | Per-country localization |
 | Local payment methods | PIX, SPEI, M-Pesa — different per market |
-| Local compliance | Banking licenses or partnerships per jurisdiction |
+| Local compliance | Payment/fintech licenses are sufficient (not full banking licenses), but still require country-by-country work. Brazil's new VASP rules (February 2026) require foreign companies to establish local entities |
+
+The good news: you don't literally need to build a "full-stack bank" per country. Airwallex operates across 60 countries, pursuing full banking licenses only in key hubs (U.S., U.K.) while using payment licenses elsewhere. But the complexity is still significant and capital-intensive.
 
 ### Competitive landscape
 
-The market is already saturated:
+The infrastructure layer is crowded (though not truly saturated — 63% of Africa remains unbanked, only 12.1% of LATAM holds digital currencies):
 
-- **Local crypto banks** have sprouted "like mushrooms" across LATAM and Africa
+- **Local stablecoin fintechs** have proliferated across LATAM and Africa — Yellow Card, Chipper Cash (5M+ customers), Breet (250K+ active users in Nigeria), Lemon Cash (5M users in Argentina)
 - **Global players** (Revolut, etc.) are aggressively expanding into these markets
-- **Crypto exchanges** (Binance, etc.) already serve as de facto dollar accounts
-- Each country is a separate, relatively small market
+- **Crypto exchanges** serve as savings vehicles for individuals hedging currency depreciation, but lack real business banking features (no invoicing, payroll, tax reporting, deposit insurance). Binance exited Nigeria in March 2024 after government detained executives and filed an $81.5B lawsuit
+- **Payment incumbents acquiring stablecoin infra** — Stripe acquired Bridge ($1.1B, Feb 2025), Mastercard acquiring BVNK (up to $1.8B, March 2026), Visa launched Stablecoin Platform
+- Each country is a separate, relatively small market with volatile local players (Buenbit cut 45% of staff, Lemon Cash cut 38%)
 
 ### The squeeze
 
 Emerging-market banking is a **two-front war**:
 
 ```
-Local players                    Global players
-(2-3 year head start,            (Revolut, Mercury, etc.
-local knowledge,                  entering with brand,
-local languages)                  capital, existing infra)
+Local players                    Global players + incumbents
+(2-3 year head start,            (Revolut, Stripe/Bridge,
+local knowledge,                  Mastercard/BVNK, Visa entering
+local languages)                  with brand, capital, existing infra)
         ↘                      ↙
-         Crowded, low-margin
-         market per country
+         Crowded infrastructure,
+         volatile market per country
 ```
 
-You'd be entering late, competing against both entrenched local players and well-funded global ones expanding downmarket.
+You'd be entering late, competing against both entrenched local players and well-funded global ones (including Stripe/Bridge, Mastercard/BVNK, and Visa) expanding downmarket.
 
 ---
 
@@ -132,7 +135,9 @@ You'd be entering late, competing against both entrenched local players and well
 
 ### The core proposition
 
-Crypto companies can't get bank accounts → you onboard them when others won't → you charge a premium for compliance risk.
+Crypto companies face **structural, political exclusion** from mainstream banking — not just stricter KYB. A House Financial Services Committee report documented at least 30 digital asset entities losing banking access during 2022–2024 under "Operation Choke Point 2.0." The FDIC sent "pause letters" to ~24 banks requesting they halt crypto activities. AIMA data shows 98% of crypto-focused hedge funds facing account termination received no justification. Companies with pristine compliance reputations were systematically debanked.
+
+The proposition: you onboard them when others won't, providing both banking access and specialized crypto-native financial tooling.
 
 ### Why it's fragile
 
@@ -140,21 +145,23 @@ Crypto companies can't get bank accounts → you onboard them when others won't 
 |------|--------|
 | **Small market** | Despite attractive transaction volumes, the actual number of companies is limited |
 | **Hard to acquire** | Crypto companies are skeptical, well-networked, and shop aggressively |
-| **Compliance dependency** | Your entire moat is willingness to take compliance risk |
-| **Competitor policy change** | If Mercury loosens KYB rules tomorrow, your customers leave |
+| **Regulatory shifts** | Trump administration reversed Operation Choke Point 2.0 (rescinded SAB 121, signed GENIUS Act July 2025) — banks remain cautious, but the structural barrier is eroding |
+| **Competitor policy change** | Mercury now markets to crypto companies (basic USD banking only — no stablecoin holding, no on/off-ramps, 3% foreign transaction fee). If it or others expand crypto support, customers leave |
 | **Full suite demanded** | Because they've been rejected everywhere, they want everything — invoicing, cards, the works |
-| **Multi-sig already solved** | Safe, Squads, Fireblocks already exist; on-chain custody is not a differentiator |
+| **Custody is complex, not "solved"** | Safe (EVM-only, $50–100B+ AUC), Squads (Solana-only, $10B+), and Fireblocks ($8B valuation, 80+ blockchains, $200B/month) serve different markets with different technologies. Fireblocks uses MPC (multi-party computation), not multi-sig — a fundamentally different approach. The Bybit hack ($1.5B, February 2025) compromised even cold storage with multisig, proving custody security remains an active, unsolved problem. But the existence of these players means custody alone is not a differentiator |
 
-### The business model problem
+### The real value proposition
 
-This becomes a **compliance arbitrage business**, not a product business:
+The "compliance arbitrage" framing is too simplistic. Crypto-native companies have **genuinely distinct financial needs** that traditional banking cannot address: multi-chain treasury management, token payroll with vesting schedules, 24/7 settlement, DeFi yield management, smart contract risk monitoring, and on-chain accounting.
 
-1. You take on higher KYB/KYC risk than competitors
-2. You charge more because of that risk
-3. Your "moat" is willingness to accept risk others won't
-4. If risk appetite shifts across the industry, your moat disappears
+The problem is that even with genuine specialized needs, the business model has structural risks:
 
-That's an inherently unstable position. One regulatory change or one competitor policy update can collapse the entire value proposition.
+1. The debanking problem is political, not permanent — regulatory winds have already shifted
+2. Specialized tooling (Coinshift, Request Finance, Superfluid) already exists for crypto-native treasury, but monetization is hard — Parcel shut down in 2025 despite processing $250M in payments, Multis was acqui-hired by Safe
+3. The market is small and the full banking suite they demand is expensive to build
+4. One regulatory change or competitor policy update can shift the landscape rapidly
+
+The opportunity is real but narrow — and building for it pulls you into full-stack banking rather than focused treasury.
 
 ---
 
@@ -166,21 +173,24 @@ Comparing all three specialist segments against the core target (multi-entity co
 |----------|-------------------|--------------------|--------------------|-----------------|
 | **Problem severity** | High | Medium | High | High |
 | **Willingness to pay** | High | Medium | Medium | High |
-| **Defensibility** | Strong (complex product) | Weak (commodity) | Weak (local competition) | Weak (compliance play) |
-| **Competition** | Low (enterprise is hard) | High | Very high | High |
-| **Product complexity** | Manageable (treasury) | Low (payments) | Very high (full bank) | High (full suite) |
+| **Defensibility** | Strong (complex product) | Weak (deep incumbent competition) | Weak (crowded infra + local players) | Weak (political, not structural moat) |
+| **Competition** | Low (enterprise is hard) | Very high (Wise, Airwallex, Payoneer, etc.) | High (local + global incumbents entering) | High (Safe, Fireblocks + neobanks expanding) |
+| **Product complexity** | Manageable (treasury) | Low (payments) | High (licensing + partnerships per country) | High (full suite + specialized tooling) |
 | **Scalability** | Good (English, global) | Limited (per-corridor) | Limited (per-country) | Limited (small market) |
 | **Time to revenue** | Longer | Shorter | Longer | Medium |
+| **Current readiness** | Medium-term (tools serve DAOs today, not Fortune 500) | Near-term | Long-term | Near-term but narrow |
 
 ### Verdict
 
 **None of these three segments should be the primary target.** Each has fundamental problems:
 
-1. **Importers/exporters** — Not defensible. Traditional banks and fintechs will add stablecoin payments. You're building a commodity.
+1. **Importers/exporters** — The cross-border B2B payments space already has deep, well-funded competitors (Wise, Airwallex, Payoneer, Convera, Corpay). EU bank stablecoin support is coming — not overnight (3+ year timelines), but inevitably. You're building into an established competitive landscape.
 
-2. **Emerging-market businesses** — Requires building a full bank per country. Local competition, language barriers, small individual markets. You're entering a crowded race late.
+2. **Emerging-market businesses** — The infrastructure layer is crowded, but the business banking layer has enormous unmet demand (63% of Africa unbanked). The issue isn't market size — it's that serving it requires per-country licensing, local partnerships, localization, and increasingly a full banking suite. Payment incumbents (Stripe/Bridge, Mastercard/BVNK) are entering with billions in capital.
 
-3. **Crypto companies** — Compliance arbitrage isn't a moat. Small addressable market. One competitor policy change kills the business.
+3. **Crypto companies** — The debanking problem is real and political, not mere compliance arbitrage. Crypto companies have genuine specialized needs (multi-chain treasury, token payroll, 24/7 settlement). But the regulatory winds are shifting (GENIUS Act, SAB 121 rescinded), the market is small, and existing tooling has struggled to monetize.
+
+**Important caveat on multi-entity corps:** This is a compelling **medium-term** opportunity, not today's proven market. Current on-chain treasury tools (Coinshift, Request Finance, Superfluid) primarily serve DAOs and crypto-native companies. Parcel shut down in 2025, Multis was acqui-hired. 56% of corporates want stablecoin solutions embedded in existing treasury platforms, and ~70% demand ERP integration — capabilities no on-chain tool offers yet. Traditional TMS platforms like Kyriba (3,400 clients, $15T in annual payments) are deeply entrenched. But validation signals are strong: 23% of large-company CFOs plan treasury crypto use within 2 years (39% among $10B+ revenue), and Ripple's $1B acquisition of GTreasury (October 2025) confirms blockchain-TMS convergence is coming.
 
 ---
 
@@ -207,13 +217,25 @@ This should **not** be the target segment. But it could serve as:
 
 The moment it starts requiring cards, full banking suite, or local-language support — stop. That's scope creep into an indefensible market.
 
+### Market context: stablecoin B2B payments are real but early
+
+The underlying market is growing fast from a tiny base:
+
+- Total stablecoin supply exceeded **$300 billion** (135% increase from 2024), with on-chain transfer volume hitting **$33 trillion** in 2025
+- B2B stablecoin payments are at **$226 billion annualized** with **733% year-over-year growth**
+- But this is still **less than 0.5%** of global B2B flows
+- **75% of CFOs** have no immediate plans to use digital money (Bain & Company, October 2025)
+- The defining trend is payment incumbents acquiring stablecoin infrastructure: Stripe/Bridge ($1.1B), Mastercard/BVNK ($1.8B), Ripple/GTreasury ($1B), Visa Stablecoin Platform ($225M+ settled)
+
+The opportunity is real — but it's rapidly consolidating around payment giants, which makes it harder for startups to compete on the payments layer alone.
+
 ### The pattern across all specialist segments
 
 Every specialist segment, when examined closely, reveals the same dynamic:
 
 > The businesses that most need stablecoin access are the ones that require the **most** surrounding infrastructure (full bank, cards, invoicing, local compliance). And that infrastructure is exactly where incumbents have the strongest advantage.
 
-The right strategy is to serve businesses where the **treasury product itself** is the value — not the banking suite around it. That points back to multi-entity corporations, where the complexity of managing money across entities and jurisdictions is the actual problem, and where a focused treasury product (not a full bank) is what's needed.
+The right strategy is to serve businesses where the **treasury product itself** is the value — not the banking suite around it. That points back to multi-entity corporations, where the complexity of managing money across entities and jurisdictions is the actual problem, and where a focused treasury product (not a full bank) is what's needed. This is a medium-term bet — current tooling serves crypto-native orgs, not Fortune 500 — but the convergence signals (Ripple/GTreasury, 23% of large-company CFOs planning crypto treasury use) are the strongest in the market.
 
 ---
 
