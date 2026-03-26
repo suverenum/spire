@@ -233,6 +233,7 @@ Our revenue per client: **$100K-$200K/year** (platform + FX/off-ramp + yield mar
 - Passkeys as the base authentication layer
 - Hardware Ledger for elevated operations
 - OTP with second factor as an option
+- Account recovery (social recovery, guardian-based key rotation)
 
 **11. Custodian capabilities (future)**
 - Ability to block transactions and freeze accounts (mandatory for licensed custody)
@@ -274,7 +275,7 @@ Demonstrate the core loop end-to-end on mainnet:
 
 First real transactions on mainnet with 1-2 friendly customers:
 
-- **Account security** (#10) -- passkeys + hardware Ledger
+- **Account security** (#10) -- passkeys + hardware Ledger + account recovery
 - **KYB** (#4) -- client onboarding via Sumsub, pass data to payment providers
 - **On/off-ramp** (#3) -- fiat on-ramp and off-ramp across multiple countries via Due Network (single provider, broad coverage including US, EU, UK, LATAM, India, Africa, SEA)
 - **Fee management** (#5) -- free intercompany transfers, transparent FX markup on off-ramp
